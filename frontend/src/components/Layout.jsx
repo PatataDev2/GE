@@ -115,6 +115,12 @@ const getMenuItems = (role) => {
         { path: '/employee/subir-documentos', label: 'Subir Documentos', icon: Icons.Upload },
         { path: '/employee/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
       ];
+    case 'user':
+      return [
+        ...commonItems,
+        { path: '/user/profile', label: 'Mi Perfil', icon: Icons.Settings },
+        { path: '/user/expedientes', label: 'Mis Expedientes', icon: Icons.Folder }
+      ];
     default:
       return commonItems;
   }
@@ -125,6 +131,7 @@ const getRoleName = (role) => {
     case 'admin': return 'Administrador';
     case 'analyst': return 'Analista';
     case 'employee': return 'Empleado';
+    case 'user': return 'Usuario Normal';
     default: return 'Usuario';
   }
 };

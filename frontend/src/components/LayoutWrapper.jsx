@@ -1,16 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
 import Layout from './Layout';
-
-const getMockUser = () => {
-  const storedRole = localStorage.getItem('userRole');
-  return {
-    id: 1,
-    username: 'usuario_demo',
-    email: 'demo@empresa.com',
-    role: storedRole || 'employee'
-  };
-};
+import { getCurrentUser } from '../api/users.api';
 
 export default function LayoutWrapper() {
   const navigate = useNavigate();
@@ -18,15 +9,33 @@ export default function LayoutWrapper() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('access');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+    const loadUser = async () => {
+      const token = localStorage.getItem('access');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
 
-    const userData = getMockUser();
-    setUser(userData);
-    setLoading(false);
+      try {
+        const response = await getCurrentUser();
+        const userData = {
+          id: response.data.id,
+          username: response.data.username,
+          email: response.data.email,
+          role: response.data.role_name || 'user'
+        };
+        setUser(userData);
+      } catch (error) {
+        console.error('Error loading user:', error);
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        navigate('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
   }, [navigate]);
 
   if (loading) {
