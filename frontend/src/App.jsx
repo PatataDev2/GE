@@ -31,9 +31,9 @@
           <Route path="/" element={<LayoutWrapper />}>
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="admin/backup-config" element={<BackupConfig />} />
-            <Route path="admin/user-management" element={<UserManagement />} />
-            <Route path="admin/activity-logs" element={<ActivityLogs />} />
+            <Route path="admin/backup" element={<BackupConfig />} />
+            <Route path="admin/users" element={<UserManagement />} />
+            <Route path="admin/logs" element={<ActivityLogs />} />
             <Route path="analyst/expedientes" element={<Expedientes />} />
             <Route path="analyst/validar" element={<ValidarExpedientes />} />
             <Route path="analyst/reportes" element={<Reportes />} />

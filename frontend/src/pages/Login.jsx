@@ -39,30 +39,30 @@ export default function Login() {
 
 
        
-<div className="h-screen bg-blue-300 flex flex-col items-center justify-center">
+<div className="h-screen bg-green-300 flex flex-col items-center justify-center">
   <div className="w-full max-w-xs bg-white rounded-lg shadow-md p-6">
     <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center">Login</h2>
     <form className="flex flex-col" onSubmit={handleSubmit}>
       <input 
         type="text" 
-        className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150" 
+        className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150" 
         placeholder="Username" 
         onChange={e => setData({...data, username: e.target.value})}
       />
       <input 
         type="password" 
         placeholder='Contraseña'
-        className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150"  
+        className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150"
         onChange={e => setData({...data, password: e.target.value})}
       />
       <div className="flex items-center justify-between flex-wrap">
        
         {/* <Link to="" className="text-sm text-blue-500 hover:underline mb-0.5">Forgot password?</Link> */}
         <p className="text-gray-900 mt-4">
-          No tienes una cuenta?     <Link to="/register" className="text-sm text-blue-500 hover:underline ml-1">Registrate</Link>
+          No tienes una cuenta?               <Link to="/register" className="text-sm text-green-600 hover:underline ml-1">Registrate</Link>
         </p>
       </div>
-      <button onClick={handleSubmit} className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold py-2 px-4 rounded-md mt-4 hover:bg-indigo-600 hover:to-blue-600 transition ease-in-out duration-150">
+      <button onClick={handleSubmit} className="bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-2 px-4 rounded-md mt-4 hover:from-green-600 hover:to-green-700 transition ease-in-out duration-150">
         Login
       </button>
     </form>

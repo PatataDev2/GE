@@ -93,15 +93,15 @@ export default function Register() {
   };
 
   return (
-    <div className="h-screen bg-blue-300 flex flex-col items-center justify-center">
+    <div className="h-screen bg-green-300 flex flex-col items-center justify-center">
       <div className="w-full max-w-xs bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl w-10 h-10 flex justify-center items-center font-bold text-gray-900 mb-4 rounded-full hover:bg-blue-600 hover:cursor-pointer bg-blue-300"  onClick={handleBack} ><i class='bxr  bx-chevron-left'  ></i> </h2>
+                <h2 className="text-2xl w-10 h-10 flex justify-center items-center font-bold text-gray-900 mb-4 rounded-full hover:bg-green-600 hover:cursor-pointer bg-green-300"  onClick={handleBack} ><i class='bxr  bx-chevron-left'  ></i> </h2>
         <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center">Register</h2>
         
         <form className='flex flex-col' onSubmit={handleSubmit}>
           {/* Username */}
           <input 
-            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150 ${errors.username && 'border-red-500 border'}`}
+            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150 ${errors.username && 'border-red-500 border'}`}
             name='username' 
             type="text" 
             placeholder='Usuario' 
@@ -112,7 +112,7 @@ export default function Register() {
 
           {/* Email */}
           <input 
-            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150 ${errors.email && 'border-red-500 border'}`}
+            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150 ${errors.email && 'border-red-500 border'}`}
             name='email' 
             type="email" 
             placeholder='Email' 
@@ -123,7 +123,7 @@ export default function Register() {
 
           {/* Cédula (solo números) */}
           <input 
-            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150 ${errors.cedula && 'border-red-500 border'}`}
+            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150 ${errors.cedula && 'border-red-500 border'}`}
             name='cedula' 
             type="text" 
             placeholder='Cédula' 
@@ -135,7 +135,7 @@ export default function Register() {
 
           {/* Teléfono (solo números y validación Venezuela) */}
           <input 
-            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150 ${errors.phone && 'border-red-500 border'}`}
+            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150 ${errors.phone && 'border-red-500 border'}`}
             name='phone' 
             type="text" 
             placeholder='Teléfono (04121234567)' 
@@ -147,7 +147,7 @@ export default function Register() {
 
           {/* Password */}
           <input 
-            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150 ${errors.password && 'border-red-500 border'}`}
+            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150 ${errors.password && 'border-red-500 border'}`}
             name='password' 
             type="password" 
             placeholder='Contraseña' 
@@ -158,7 +158,7 @@ export default function Register() {
 
           {/* Confirm Password */}
           <input 
-            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150 ${errors.password2 && 'border-red-500 border'}`}
+            className={`bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-1 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150 ${errors.password2 && 'border-red-500 border'}`}
             name='password2' 
             type="password" 
             placeholder='Confirmar Contraseña' 
@@ -168,7 +168,7 @@ export default function Register() {
           {errors.password2 && <p className="text-red-500 text-xs mb-3">{errors.password2}</p>}
 
           <button 
-            className='bg-blue-500 text-white border-0 rounded-md h-10 hover:bg-blue-600 cursor-pointer transition duration-300 mt-4' 
+            className='bg-green-500 text-white border-0 rounded-md h-10 hover:bg-green-600 cursor-pointer transition duration-300 mt-4' 
             type="submit"
           >
             Registrar

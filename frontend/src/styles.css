@@ -28,7 +28,7 @@ body {
 .sidebar {
   width: 260px;
   height: 100vh;
-  background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+  background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
   position: fixed;
   left: 0;
   top: 0;
@@ -345,12 +345,12 @@ tr:hover {
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: #16a34a;
   color: white;
 }
 
 .btn-primary:hover {
-  background: var(--primary-hover);
+  background: #15803d;
 }
 
 .btn-secondary {

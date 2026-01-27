@@ -18,7 +18,7 @@ const statusLabels = {
   cerrado: { label: 'Cerrado', class: 'badge-secondary' }
 };
 
-const departamentos = ['Recursos Humanos', 'Contabilidad', 'Tecnología', 'Ventas', 'Marketing', 'Operaciones'];
+const departamentos = ['sala situacional', 'gestion humana', 'administracion', 'asesoria legal', 'direccion', 'taquilla unica', 'ecosocialismo', 'division de gestion integral de la basura', 'formacion', 'diversidad biologica', 'patrimonio forestal', 'fiscalizacion', 'area 3', 'guarderia ambiental', 'oficina de la UPA'];
 
 export default function Expedientes() {
   const [expedientes, setExpedientes] = useState(mockExpedientes);
