@@ -32,7 +32,7 @@ export const getCurrentUser = () => {  return api.get('me/');  };
   export const createUser = (userData) => api.post('admin/create-user/', userData);
   export const updateUserRole = (userId, roleId) => api.put(`users/${userId}/update-role/`, { role: roleId });
   export const getRoles = () => api.get('roles/');
-  export const updateUser = (userId, userData) => api.put(`users/${userId}/`, userData);
+  export const updateUser = (userId, userData) => api.patch(`users/${userId}/`, userData);
   export const deleteUser = (userId) => api.delete(`users/${userId}/`);
 
   export default api;

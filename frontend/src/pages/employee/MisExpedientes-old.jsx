@@ -6,6 +6,8 @@ import { getExpedientes, iniciarProceso, getDocumentos, uploadDocumento } from '
 import { getDocumentTypes } from '../../api/document-types.api';
 import { getCurrentUser } from '../../api/users.api';
 
+
+
 const statusLabels = {
   solicitado: { label: 'Solicitado', class: 'badge-warning' },
   en_proceso: { label: 'En Proceso', class: 'badge-info' },
@@ -52,11 +54,12 @@ export default function MisExpedientes() {
       setLoading(true);
       const response = await getExpedientes();
       console.log('Expedientes response:', response.data);
+      // La API está devolviendo un objeto con URLs, necesitamos verificar si hay un array de resultados
       const expedientesData = Array.isArray(response.data) ? response.data : response.data.results || [];
       setExpedientes(expedientesData);
     } catch (error) {
       console.error('Error fetching expedientes:', error);
-      setExpedientes([]);
+      setExpedientes([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -79,10 +82,11 @@ export default function MisExpedientes() {
 
   const handleCreateExpediente = async (formData) => {
     try {
+      // El empleado no crea expedientes, solo inicia proceso de solicitudes existentes
       await fetchExpedientes();
       setIsCreateModalOpen(false);
     } catch (error) {
-      console.error('Error creating expediente:', error);
+      console.error('Error:', error);
       alert('Error al procesar expediente');
     }
   };
@@ -149,59 +153,54 @@ export default function MisExpedientes() {
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
             </svg>
           </div>
-          <div>
-            <div className="stat-value">{expedientes.length}</div>
-            <div className="stat-label">Mis Expedientes</div>
+            <div>
+              <div className="stat-value">{expedientes.length}</div>
+              <div className="stat-label">Mis Expedientes</div>
+            </div>
           </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon green">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="stat-card">
+            <div className="stat-icon green">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
+              </svg>
+            </div>
+            <div>
+              <div className="stat-value">{expedientes.filter(e => e.estado === 'aprobado').length}</div>
+              <div className="stat-label">Aprobados</div>
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{expedientes.filter(e => e.estado === 'aprobado').length}</div>
-            <div className="stat-label">Aprobados</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon yellow">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="stat-card">
+            <div className="stat-icon yellow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
-            </svg>
+              </svg>
+            </div>
+            <div>
+              <div className="stat-value">{expedientes.filter(e => e.estado === 'revision_analista').length}</div>
+              <div className="stat-label">En Revisión</div>
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{expedientes.filter(e => e.estado === 'revision_analista').length}</div>
-            <div className="stat-label">En Revisión</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon red">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="stat-card">
+            <div className="stat-icon red">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="15" y1="9" x2="9" y2="15"/>
                 <line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
+              </svg>
+            </div>
+            <div>
+              <div className="stat-value">{expedientes.filter(e => e.estado === 'rechazado').length}</div>
+              <div className="stat-label">Requieren Atención</div>
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{expedientes.filter(e => e.estado === 'rechazado').length}</div>
-            <div className="stat-label">Requieren Atención</div>
-          </div>
-        </div>
       </div>
 
       {/* Expedientes List */}
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Mis Expedientes</h3>
-        </div>
-
-        {expedientes.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <p style={{ color: '#64748b', marginBottom: '1rem' }}>No tienes expedientes solicitados.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -215,19 +214,19 @@ export default function MisExpedientes() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                        <span style={{ fontFamily: 'monospace', fontWeight: '600', color: '#2563eb' }}>{exp.codigo}</span>
-                        <span className={`badge ${statusLabels[exp.estado].class}`}>
-                          {statusLabels[exp.estado].label}
-                        </span>
+                       <span style={{ fontFamily: 'monospace', fontWeight: '600', color: '#2563eb' }}>{exp.codigo}</span>
+                       <span className={`badge ${statusLabels[exp.estado].class}`}>
+                         {statusLabels[exp.estado].label}
+                       </span>
                      </div>
-                     <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                      <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>
                         {exp.nombre_expediente || `Expediente - ${exp.departamento}`}
-                     </h4>
+                      </h4>
                      <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                        Código: {exp.codigo} · Creado: {new Date(exp.fecha_creacion).toLocaleDateString()} · Actualizado: {new Date(exp.fecha_actualizacion).toLocaleDateString()}
+                       Código: {exp.codigo} · Creado: {new Date(exp.fecha_creacion).toLocaleDateString()} · Actualizado: {new Date(exp.fecha_actualizacion).toLocaleDateString()}
                      </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                      <button className="btn btn-secondary" onClick={() => handleViewExpediente(exp)}>
                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -254,7 +253,7 @@ export default function MisExpedientes() {
                          Subir Documentos
                        </button>
                      )}
-                  </div>
+                   </div>
                 </div>
 
                 {/* Documentos */}
@@ -285,30 +284,30 @@ export default function MisExpedientes() {
                           {docStatusLabels[doc.estado].label}
                         </span>
                        </div>
-                    ))}
-                  </div>
-                </div>
+                     ))}
+                   </div>
+                 </div>
 
-                {/* Observaciones si hay rechazo */}
-                {exp.estado === 'rechazado' && exp.observaciones && (
-                  <div style={{ 
-                    marginTop: '1rem', 
-                    padding: '0.75rem', 
-                    background: '#fee2e2', 
-                    borderRadius: '0.5rem',
-                    borderLeft: '4px solid #ef4444'
-                  }}>
-                    <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#991b1b', marginBottom: '0.25rem' }}>
+                 {/* Observaciones si hay rechazo */}
+                 {exp.estado === 'rechazado' && exp.observaciones && (
+                   <div style={{ 
+                     marginTop: '1rem', 
+                     padding: '0.75rem', 
+                     background: '#fee2e2', 
+                     borderRadius: '0.5rem',
+                     borderLeft: '4px solid #ef4444'
+                   }}>
+                      <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#991b1b', marginBottom: '0.25rem' }}>
                         Motivo del rechazo
-                    </p>
-                    <p style={{ fontSize: '0.875rem', color: '#7f1d1d' }}>{exp.observaciones}</p>
-                  </div>
-                )}
-              </div>
-            ))}
+                      </p>
+                     <p style={{ fontSize: '0.875rem', color: '#7f1d1d' }}>{exp.observaciones}</p>
+                   </div>
+                 )}
+                </div>
+             ))}
           </div>
         )}
-      </div>
+        </div>
 
       {/* View Modal */}
       <Modal
@@ -361,9 +360,9 @@ export default function MisExpedientes() {
               </div>
             </div>
 
-            <h5 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Documentos</h5>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {(selectedExpediente.documentos || []).map((doc, idx) => (
+             <h5 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Documentos</h5>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+               {(selectedExpediente.documentos || []).map((doc, idx) => (
                 <div key={idx} className="document-item">
                   <div className="document-icon" style={{ 
                     background: doc.estado === 'aprobado' ? '#d1fae5' : doc.estado === 'rechazado' ? '#fee2e2' : '#fef3c7',
@@ -374,13 +373,13 @@ export default function MisExpedientes() {
                       <polyline points="14 2 14 8 20 8"/>
                     </svg>
                   </div>
-                  <div className="document-info">
+                   <div className="document-info">
                      <div className="document-name">{doc.nombre_archivo}</div>
                      <div className="document-size">{doc.tipo_documento?.name || 'Sin tipo'} · {new Date(doc.fecha_subida).toLocaleDateString()}</div>
-                  </div>
-                  <span className={`badge ${docStatusLabels[doc.estado].class}`}>
-                    {docStatusLabels[doc.estado].label}
-                  </span>
+                   </div>
+                   <span className={`badge ${docStatusLabels[doc.estado].class}`}>
+                     {docStatusLabels[doc.estado].label}
+                   </span>
                 </div>
               ))}
             </div>
@@ -401,67 +400,11 @@ export default function MisExpedientes() {
       </Modal>
 
       {/* Create Expediente Modal */}
-      <Modal
+      <CreateExpedienteModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Información del Expediente"
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={() => setIsCreateModalOpen(false)}>
-              Cerrar
-            </button>
-          </>
-        }
-      >
-        {currentUser && (
-          <div className="form-group">
-            <label className="form-label">Empleado</label>
-            <input
-              type="text"
-              className="form-input"
-              value={`${currentUser.username} - ${currentUser.email}`}
-              disabled
-              style={{ background: '#f8fafc' }}
-            />
-          </div>
-        )}
-        
-        <div className="form-group">
-          <label className="form-label">Nombre del Expediente</label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="Ej: Solicitud de Vacaciones, Ingreso de Documentos..."
-            disabled
-            style={{ background: '#f8fafc' }}
-          />
-        </div>
-        
-        <div style={{ 
-          padding: '1rem', 
-          background: '#fef3c7', 
-          borderRadius: '0.5rem',
-          borderLeft: '4px solid #f59e0b',
-          marginBottom: '1rem'
-        }}>
-          <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#92400e', marginBottom: '0.5rem' }}>
-            Información Importante:
-          </p>
-          <p style={{ fontSize: '0.875rem', color: '#78350f' }}>
-            En el nuevo flujo de trabajo, los expedientes son solicitados por el administrador. 
-            Usted podrá iniciar el proceso una vez que reciba la notificación.
-          </p>
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">Observaciones</label>
-          <textarea
-            className="form-input"
-            rows="3"
-            placeholder="Notas adicionales sobre el expediente..."
-          />
-        </div>
-      </Modal>
+        currentUser={currentUser}
+      />
 
       {/* Upload Documents Modal */}
       <Modal
@@ -537,5 +480,92 @@ export default function MisExpedientes() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+// Create Expediente Modal Component
+function CreateExpedienteModal({ isOpen, onClose, currentUser }) {
+  const [formData, setFormData] = useState({
+    nombre_expediente: '',
+    observaciones: ''
+  });
+
+  const departamentos = ['sala situacional', 'gestion humana', 'administracion', 'asesoria legal', 'direccion', 'taquilla unica', 'ecosocialismo', 'division de gestion integral de la basura', 'formacion', 'diversidad biologica', 'patrimonio forestal', 'fiscalizacion', 'area 3', 'guarderia ambiental', 'oficina de la UPA'];
+
+  const handleSubmit = () => {
+    if (!formData.nombre_expediente || !currentUser) {
+      alert('Por favor complete todos los campos');
+      return;
+    }
+    
+    // En el nuevo flujo, el empleado no crea expedientes directamente
+    alert('En el nuevo flujo, los expedientes son solicitados por el administrador. Por favor espere a que un admin solicite un expediente para usted.');
+    onClose();
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Información del Expediente"
+      footer={
+        <>
+          <button className="btn btn-secondary" onClick={onClose}>
+            Cerrar
+          </button>
+        </>
+      }
+    >
+      {currentUser && (
+        <div className="form-group">
+          <label className="form-label">Empleado</label>
+          <input
+            type="text"
+            className="form-input"
+            value={`${currentUser.username} - ${currentUser.email}`}
+            disabled
+            style={{ background: '#f8fafc' }}
+          />
+        </div>
+      )}
+      
+      <div className="form-group">
+        <label className="form-label">Nombre del Expediente</label>
+        <input
+          type="text"
+          className="form-input"
+          value={formData.nombre_expediente}
+          onChange={(e) => setFormData({ ...formData, nombre_expediente: e.target.value })}
+          placeholder="Ej: Solicitud de Vacaciones, Ingreso de Documentos..."
+        />
+      </div>
+      
+      <div style={{ 
+        padding: '1rem', 
+        background: '#fef3c7', 
+        borderRadius: '0.5rem',
+        borderLeft: '4px solid #f59e0b',
+        marginBottom: '1rem'
+      }}>
+        <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#92400e', marginBottom: '0.5rem' }}>
+          Información Importante:
+        </p>
+        <p style={{ fontSize: '0.875rem', color: '#78350f' }}>
+          En el nuevo flujo de trabajo, los expedientes son solicitados por el administrador. 
+          Usted podrá iniciar el proceso una vez que reciba la notificación.
+        </p>
+      </div>
+      
+      <div className="form-group">
+        <label className="form-label">Observaciones</label>
+        <textarea
+          className="form-input"
+          rows="3"
+          value={formData.observaciones}
+          onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
+          placeholder="Notas adicionales sobre el expediente..."
+        />
+      </div>
+    </Modal>
   );
 }

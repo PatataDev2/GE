@@ -8,9 +8,9 @@ from document_types.models import DocumentType
 class Expediente(models.Model):
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
-    usuario = models.ForeignKey(UsersCustom, on_delete=models.SET_NULL, null=True, blank=True, related_name='expedientes')
+    usuario = models.ForeignKey(UsersCustom, on_delete=models.SET_NULL, null=True, blank=True, related_name='expedientes_documentos')
     nombre_referencia = models.CharField(max_length=200, blank=True, null=True, help_text="Nombre de referencia si no hay usuario ligado")
-    departamento = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='expedientes', null=True, blank=True)
+    departamento = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='expedientes_documentos', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     

@@ -38,7 +38,7 @@ class RoleSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     role_name = serializers.CharField(source='role.name', read_only=True)
-    role = RoleSerializer(read_only=True)
+    role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())
     
     class Meta:
         model = UsersCustom

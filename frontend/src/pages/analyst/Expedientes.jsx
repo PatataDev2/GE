@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
+import { getExpedientes, cambiarEstadoExpediente, getDocumentos, cambiarEstadoDocumento } from '../../api/expedientes.api';
 
 const mockExpedientes = [
   { id: 'EXP-2024-0001', empleado: 'Juan García', cedula: '12345678', departamento: 'Recursos Humanos', status: 'activo', fechaCreacion: '2024-01-10', fechaActualizacion: '2024-01-20', documentos: 5 },
@@ -21,12 +22,14 @@ const statusLabels = {
 const departamentos = ['sala situacional', 'gestion humana', 'administracion', 'asesoria legal', 'direccion', 'taquilla unica', 'ecosocialismo', 'division de gestion integral de la basura', 'formacion', 'diversidad biologica', 'patrimonio forestal', 'fiscalizacion', 'area 3', 'guarderia ambiental', 'oficina de la UPA'];
 
 export default function Expedientes() {
-  const [expedientes, setExpedientes] = useState(mockExpedientes);
+  const [expedientes, setExpedientes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterDepartamento, setFilterDepartamento] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
   const [formData, setFormData] = useState({
     empleado: '',
@@ -34,6 +37,22 @@ export default function Expedientes() {
     departamento: '',
     observaciones: ''
   });
+
+  useEffect(() => {
+    fetchExpedientes();
+  }, []);
+
+  const fetchExpedientes = async () => {
+    try {
+      setLoading(true);
+      const response = await getExpedientes();
+      setExpedientes(response.data);
+    } catch (error) {
+      console.error('Error fetching expedientes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredExpedientes = expedientes.filter(exp => {
     const matchesSearch = exp.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -87,12 +106,31 @@ export default function Expedientes() {
     setIsModalOpen(false);
   };
 
-  const handleChangeStatus = (expId, newStatus) => {
-    setExpedientes(expedientes.map(e => 
-      e.id === expId 
-        ? { ...e, status: newStatus, fechaActualizacion: new Date().toISOString().split('T')[0] }
-        : e
-    ));
+  const handleChangeStatus = async (expId, newStatus, observaciones = '') => {
+    try {
+      if (newStatus === 'rechazado' && !observaciones) {
+        setSelectedExpediente(expedientes.find(e => e.id === expId));
+        setIsRejectModalOpen(true);
+        return;
+      }
+      
+      await cambiarEstadoExpediente(expId, newStatus, observaciones);
+      await fetchExpedientes();
+    } catch (error) {
+      console.error('Error changing status:', error);
+      alert('Error al cambiar estado del expediente');
+    }
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!formData.observaciones.trim()) {
+      alert('Por favor ingrese el motivo del rechazo');
+      return;
+    }
+    
+    await handleChangeStatus(selectedExpediente.id, 'rechazado', formData.observaciones);
+    setIsRejectModalOpen(false);
+    setFormData({ ...formData, observaciones: '' });
   };
 
   return (
@@ -198,7 +236,10 @@ export default function Expedientes() {
 
         {/* Table */}
         <div className="table-container">
-          <table>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando expedientes...</div>
+          ) : (
+            <table>
             <thead>
               <tr>
                 <th>ID Expediente</th>
@@ -289,13 +330,14 @@ export default function Expedientes() {
                           </button>
                           <button 
                             className="btn-icon" 
-                            title="Cerrar"
-                            onClick={() => handleChangeStatus(exp.id, 'cerrado')}
+                            title="Rechazar"
+                            onClick={() => handleChangeStatus(exp.id, 'rechazado')}
                             style={{ color: '#ef4444' }}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <line x1="18" y1="6" x2="6" y2="18"/>
-                              <line x1="6" y1="6" x2="18" y2="18"/>
+                              <circle cx="12" cy="12" r="10"/>
+                              <line x1="15" y1="9" x2="9" y2="15"/>
+                              <line x1="9" y1="9" x2="15" y2="15"/>
                             </svg>
                           </button>
                         </>
@@ -306,6 +348,7 @@ export default function Expedientes() {
               ))}
             </tbody>
           </table>
+          )}
         </div>
       </div>
 
@@ -410,6 +453,39 @@ export default function Expedientes() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Reject Modal */}
+      <Modal
+        isOpen={isRejectModalOpen}
+        onClose={() => setIsRejectModalOpen(false)}
+        title="Rechazar Expediente"
+        footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setIsRejectModalOpen(false)}>
+              Cancelar
+            </button>
+            <button className="btn btn-danger" onClick={handleRejectSubmit}>
+              Rechazar Expediente
+            </button>
+          </>
+        }
+      >
+        <div>
+          <p style={{ marginBottom: '1rem' }}>
+            Está a punto de rechazar el expediente <strong>{selectedExpediente?.codigo}</strong> del empleado <strong>{selectedExpediente?.empleado?.username}</strong>.
+          </p>
+          <div className="form-group">
+            <label className="form-label">Motivo del rechazo *</label>
+            <textarea
+              className="form-input"
+              rows="4"
+              value={formData.observaciones}
+              onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
+              placeholder="Ingrese el motivo por el cual se rechaza este expediente..."
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );
