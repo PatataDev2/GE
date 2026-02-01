@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'documentos',
     'users',  # Custom app for user management
+    'departments',
+    'document_types',
 ]
 
 

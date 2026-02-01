@@ -1,24 +1,38 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
+import { getUsers, createUser, updateUser, deleteUser } from '../../api/users.api';
 
-const mockUsers = [
-  { id: 1, username: 'admin1', email: 'admin@empresa.com', cedula: '12345678', phone: '04121234567', role: 'admin', status: 'activo', createdAt: '2024-01-15' },
-  { id: 2, username: 'analista1', email: 'analista@empresa.com', cedula: '23456789', phone: '04141234567', role: 'analyst', status: 'activo', createdAt: '2024-02-20' },
-  { id: 3, username: 'empleado1', email: 'empleado1@empresa.com', cedula: '34567890', phone: '04161234567', role: 'employee', status: 'activo', createdAt: '2024-03-10' },
-  { id: 4, username: 'empleado2', email: 'empleado2@empresa.com', cedula: '45678901', phone: '04241234567', role: 'employee', status: 'inactivo', createdAt: '2024-03-15' },
-];
+
 
 const roleLabels = {
-  admin: 'Administrador',
-  analyst: 'Analista',
-  employee: 'Empleado'
+  1: 'Administrador',
+  2: 'Analista',
+  3: 'Empleado',
+  4: 'Usuario Normal'
 };
 
 export default function UsersManagement() {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await getUsers();
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,7 +44,8 @@ export default function UsersManagement() {
     cedula: '',
     phone: '',
     role: 'employee',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const filteredUsers = users.filter(user => {
@@ -43,13 +58,24 @@ export default function UsersManagement() {
 
   const handleOpenCreate = () => {
     setSelectedUser(null);
-    setFormData({ username: '', email: '', cedula: '', phone: '', role: 'employee', password: '' });
+    setFormData({ username: '', email: '', cedula: '', phone: '', role: 'employee', password: '', confirmPassword: '' });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (user) => {
     setSelectedUser(user);
-    setFormData({ ...user, password: '' });
+    const roleMap = {
+      1: 'admin',
+      2: 'analyst', 
+      3: 'employee',
+      4: 'user'
+    };
+    setFormData({ 
+      ...user, 
+      role: roleMap[user.role] || 'employee', 
+      password: '', 
+      confirmPassword: '' 
+    });
     setIsModalOpen(true);
   };
 
@@ -58,32 +84,78 @@ export default function UsersManagement() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleSaveUser = () => {
-    if (selectedUser) {
-      setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...formData } : u));
-    } else {
-      const newUser = {
-        ...formData,
-        id: Math.max(...users.map(u => u.id)) + 1,
-        status: 'activo',
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setUsers([...users, newUser]);
+  const handleSaveUser = async () => {
+    try {
+      if (selectedUser) {
+        const roleMap = {
+          'admin': 1,
+          'analyst': 2,
+          'employee': 3,
+          'user': 4
+        };
+        
+        await updateUser(selectedUser.id, {
+          username: formData.username,
+          email: formData.email,
+          cedula: formData.cedula,
+          phone: formData.phone,
+          role: roleMap[formData.role]
+        });
+        setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...formData } : u));
+      } else {
+        if (formData.password !== formData.confirmPassword) {
+          alert('Las contraseñas no coinciden');
+          return;
+        }
+        const roleMap = {
+          'admin': 1,
+          'analyst': 2, 
+          'employee': 3,
+          'user': 4
+        };
+        
+        await createUser({
+          username: formData.username,
+          email: formData.email,
+          cedula: formData.cedula,
+          phone: formData.phone,
+          role: roleMap[formData.role],
+          password: formData.password,
+          password2: formData.confirmPassword
+        });
+        await fetchUsers();
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error saving user:', error);
+      alert('Error al guardar usuario');
     }
-    setIsModalOpen(false);
   };
 
-  const handleDeleteUser = () => {
-    setUsers(users.filter(u => u.id !== selectedUser.id));
-    setIsDeleteModalOpen(false);
+  const handleDeleteUser = async () => {
+    try {
+      await deleteUser(selectedUser.id);
+      setUsers(users.filter(u => u.id !== selectedUser.id));
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Error al eliminar usuario');
+    }
   };
 
-  const handleToggleStatus = (userId) => {
-    setUsers(users.map(u => 
-      u.id === userId 
-        ? { ...u, status: u.status === 'activo' ? 'inactivo' : 'activo' }
-        : u
-    ));
+  const handleToggleStatus = async (userId) => {
+    try {
+      const user = users.find(u => u.id === userId);
+      await updateUser(userId, { is_active: !user.is_active });
+      setUsers(users.map(u => 
+        u.id === userId 
+          ? { ...u, is_active: !u.is_active }
+          : u
+      ));
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      alert('Error al cambiar estado del usuario');
+    }
   };
 
   return (
@@ -112,7 +184,7 @@ export default function UsersManagement() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{users.filter(u => u.status === 'activo').length}</div>
+            <div className="stat-value">{users.filter(u => u.is_active).length}</div>
             <div className="stat-label">Usuarios Activos</div>
           </div>
         </div>
@@ -125,7 +197,7 @@ export default function UsersManagement() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{users.filter(u => u.role === 'analyst').length}</div>
+            <div className="stat-value">{users.filter(u => u.role?.id === 2 || u.role === 2).length}</div>
             <div className="stat-label">Analistas</div>
           </div>
         </div>
@@ -139,7 +211,7 @@ export default function UsersManagement() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{users.filter(u => u.role === 'employee').length}</div>
+            <div className="stat-value">{users.filter(u => u.role?.id === 3 || u.role === 3).length}</div>
             <div className="stat-label">Empleados</div>
           </div>
         </div>
@@ -169,6 +241,7 @@ export default function UsersManagement() {
             onChange={(e) => setFilterRole(e.target.value)}
           >
             <option value="">Todos los roles</option>
+            <option value="user">Usuario Normal</option>
             <option value="admin">Administrador</option>
             <option value="analyst">Analista</option>
             <option value="employee">Empleado</option>
@@ -182,23 +255,25 @@ export default function UsersManagement() {
           </button>
         </div>
 
-        {/* Table */}
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Usuario</th>
-                <th>Email</th>
-                <th>Cédula</th>
-                <th>Teléfono</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Fecha Creación</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map(user => (
+         {/* Table */}
+         <div className="table-container">
+           {loading ? (
+             <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando usuarios...</div>
+           ) : (
+             <table>
+               <thead>
+                  <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Cédula</th>
+                    <th>Teléfono</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+               </thead>
+               <tbody>
+                 {filteredUsers.map(user => (
                 <tr key={user.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -222,20 +297,20 @@ export default function UsersManagement() {
                   <td>{user.email}</td>
                   <td>{user.cedula}</td>
                   <td>{user.phone}</td>
-                  <td>
-                    <span className={`badge ${
-                      user.role === 'admin' ? 'badge-danger' : 
-                      user.role === 'analyst' ? 'badge-info' : 'badge-secondary'
-                    }`}>
-                      {roleLabels[user.role]}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${user.status === 'activo' ? 'badge-success' : 'badge-warning'}`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td>{user.createdAt}</td>
+                   <td>
+                     <span className={`badge ${
+                       user.role?.id === 1 || user.role === 1 ? 'badge-danger' : 
+                       user.role?.id === 2 || user.role === 2 ? 'badge-info' : 
+                       user.role?.id === 4 || user.role === 4 ? 'badge-primary' : 'badge-secondary'
+                     }`}>
+                       {roleLabels[user.role?.id || user.role] || 'Empleado'}
+                     </span>
+                   </td>
+                   <td>
+                     <span className={`badge ${user.is_active ? 'badge-success' : 'badge-warning'}`}>
+                       {user.is_active ? 'activo' : 'inactivo'}
+                     </span>
+                   </td>
                   <td>
                     <div className="action-buttons">
                       <button 
@@ -248,12 +323,12 @@ export default function UsersManagement() {
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </button>
-                      <button 
-                        className="btn-icon" 
-                        title={user.status === 'activo' ? 'Desactivar' : 'Activar'}
-                        onClick={() => handleToggleStatus(user.id)}
-                      >
-                        {user.status === 'activo' ? (
+                       <button 
+                         className="btn-icon" 
+                         title={user.is_active ? 'Desactivar' : 'Activar'}
+                         onClick={() => handleToggleStatus(user.id)}
+                       >
+                         {user.is_active ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -281,10 +356,11 @@ export default function UsersManagement() {
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                 ))}
+               </tbody>
+             </table>
+           )}
+         </div>
       </div>
 
       {/* Create/Edit Modal */}
@@ -346,22 +422,35 @@ export default function UsersManagement() {
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
           >
+            <option value="user">Usuario Normal</option>
+            <option value="user">Usuario Normal</option>
             <option value="employee">Empleado</option>
             <option value="analyst">Analista</option>
             <option value="admin">Administrador</option>
           </select>
         </div>
-        {!selectedUser && (
-          <div className="form-group">
-            <label className="form-label">Contraseña</label>
-            <input
-              type="password"
-              className="form-input"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
-          </div>
-        )}
+         {!selectedUser && (
+           <>
+             <div className="form-group">
+               <label className="form-label">Contraseña</label>
+               <input
+                 type="password"
+                 className="form-input"
+                 value={formData.password}
+                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+               />
+             </div>
+             <div className="form-group">
+               <label className="form-label">Confirmar Contraseña</label>
+               <input
+                 type="password"
+                 className="form-input"
+                 value={formData.confirmPassword}
+                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+               />
+             </div>
+           </>
+         )}
       </Modal>
 
       {/* Delete Modal */}

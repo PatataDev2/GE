@@ -41,7 +41,14 @@ export default function Login() {
        
 <div className="h-screen bg-green-300 flex flex-col items-center justify-center">
   <div className="w-full max-w-xs bg-white rounded-lg shadow-md p-6">
-    <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center">Login</h2>
+    <div className="flex flex-col items-center mb-6">
+      <img 
+        src="/photo_5172934641273473906_y(1).jpg" 
+        alt="Expedientes App" 
+        className="w-16 h-16 mb-2 rounded-lg"
+      />
+      <h2 className="text-2xl font-bold text-gray-900">Login</h2>
+    </div>
     <form className="flex flex-col" onSubmit={handleSubmit}>
       <input 
         type="text" 

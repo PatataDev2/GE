@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python: ignore compiled files and caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+

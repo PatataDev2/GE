@@ -95,8 +95,24 @@ export default function Register() {
   return (
     <div className="h-screen bg-green-300 flex flex-col items-center justify-center">
       <div className="w-full max-w-xs bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl w-10 h-10 flex justify-center items-center font-bold text-gray-900 mb-4 rounded-full hover:bg-green-600 hover:cursor-pointer bg-green-300"  onClick={handleBack} ><i class='bxr  bx-chevron-left'  ></i> </h2>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center">Register</h2>
+                <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <button 
+              onClick={handleBack}
+              className="w-10 h-10 flex justify-center items-center font-bold text-gray-900 rounded-full hover:bg-green-600 hover:cursor-pointer bg-green-300"
+            >
+              <i className='bxr bx-chevron-left'></i>
+            </button>
+          </div>
+          <div className="flex flex-col items-center">
+            <img 
+              src="/photo_5172934641273473906_y(1).jpg" 
+              alt="Expedientes App" 
+              className="w-16 h-16 mb-2 rounded-lg"
+            />
+            <h2 className="text-2xl font-bold text-gray-900">Register</h2>
+          </div>
+        </div>
         
         <form className='flex flex-col' onSubmit={handleSubmit}>
           {/* Username */}

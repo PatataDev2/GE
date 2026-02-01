@@ -6,9 +6,11 @@
   import Dashboard from './pages/Dashboard';
   import LayoutWrapper from './components/LayoutWrapper';
   
-  //Admin pages
-  import BackupConfig from './pages/admin/BackupConfig';
-  import UserManagement from './pages/admin/UsersManagement';
+   //Admin pages
+   import BackupConfig from './pages/admin/BackupConfig';
+   import UserManagement from './pages/admin/UsersManagement';
+   import DepartmentsManagement from './pages/admin/DepartmentsManagement';
+   import DocumentTypesManagement from './pages/admin/DocumentTypesManagement';
   import ActivityLogs from './pages/admin/ActivityLogs';
 
   //Analyst pages
@@ -34,6 +36,8 @@
             <Route path="admin/backup" element={<BackupConfig />} />
             <Route path="admin/users" element={<UserManagement />} />
             <Route path="admin/logs" element={<ActivityLogs />} />
+            <Route path="admin/departments" element={<DepartmentsManagement />} />
+            <Route path="admin/document-types" element={<DocumentTypesManagement />} />
             <Route path="analyst/expedientes" element={<Expedientes />} />
             <Route path="analyst/validar" element={<ValidarExpedientes />} />
             <Route path="analyst/reportes" element={<Reportes />} />

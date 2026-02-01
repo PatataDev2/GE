@@ -95,12 +95,14 @@ const getMenuItems = (role) => {
 
   switch (role) {
     case 'admin':
-      return [
-        ...commonItems,
-        { path: '/admin/users', label: 'Gestión de Usuarios', icon: Icons.Users },
-        { path: '/admin/logs', label: 'Registro de Actividad', icon: Icons.Activity },
-        { path: '/admin/backup', label: 'Respaldos', icon: Icons.Database }
-      ];
+       return [
+         ...commonItems,
+         { path: '/admin/users', label: 'Gestión de Usuarios', icon: Icons.Users },
+         { path: '/admin/departments', label: 'Gestión de Departamentos', icon: Icons.Folder },
+         { path: '/admin/document-types', label: 'Gestión de Tipos de Documento', icon: Icons.FileText },
+         { path: '/admin/logs', label: 'Registro de Actividad', icon: Icons.Activity },
+         { path: '/admin/backup', label: 'Respaldos', icon: Icons.Database }
+       ];
     case 'analyst':
       return [
         ...commonItems,
@@ -159,9 +161,15 @@ export default function Layout({ children, user }) {
     <div style={{ display: 'flex' }}>
       {/* Sidebar */}
       <aside className="sidebar">
-        <div className="sidebar-logo">
-          <Icons.Folder />
-          <span style={{ marginLeft: '0.5rem' }}>ExpedientesApp</span>
+        <div className="sidebar-logo flex justify-center">
+          <img 
+            src="/photo_5172934641273473906_y(1).jpg" 
+            alt="Expedientes App" 
+            className="w-16 h-16 rounded-lg mb-2"
+          />
+          <div className="text-center">
+            <span style={{ marginLeft: '0.5rem' }}>ExpedientesApp</span>
+          </div>
         </div>
         
         <nav className="sidebar-nav">
