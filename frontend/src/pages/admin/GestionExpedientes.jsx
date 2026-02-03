@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
-import { getExpedientes, solicitarExpediente, respuestaFinal } from '../../api/expedientes-flujo.api';
+import { getExpedientes, createExpediente, asignarExpediente, aprobacionFinal } from '../../api/expedientes.api';
 import { getUsers } from '../../api/users.api';
 
 const estadoLabels = {
@@ -83,10 +83,21 @@ export default function GestionExpedientes() {
     }
 
     try {
-      await solicitarExpediente(solicitudForm);
+      // 1. Crear expediente
+      const response = await createExpediente({
+        nombre_expediente: solicitudForm.nombre_expediente,
+        departamento: solicitudForm.departamento,
+        observaciones: ''
+      });
+      
+      // 2. Asignar expediente al empleado
+      await asignarExpediente(response.data.id, {
+        empleado_id: solicitudForm.empleado_id
+      });
+      
       await fetchExpedientes();
       setIsModalOpen(false);
-      alert('Solicitud enviada exitosamente');
+      alert('Expediente creado y asignado exitosamente');
     } catch (error) {
       console.error('Error creating solicitud:', error);
       alert('Error al enviar solicitud');
@@ -109,7 +120,11 @@ export default function GestionExpedientes() {
     }
 
     try {
-      await respuestaFinal(selectedExpediente.id, respuestaForm);
+      await aprobacionFinal(selectedExpediente.id, {
+        aprobado: respuestaForm.accion === 'aprobar',
+        observaciones: respuestaForm.respuesta
+      });
+      
       await fetchExpedientes();
       setIsRespuestaModalOpen(false);
       alert('Respuesta final enviada exitosamente');
@@ -183,13 +198,13 @@ export default function GestionExpedientes() {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Gestión de Expedientes</h3>
-          <button className="btn btn-primary" onClick={handleOpenSolicitud}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Solicitar Expediente
-          </button>
+            <button className="btn btn-primary" onClick={handleOpenSolicitud}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Crear Expediente
+            </button>
         </div>
 
         <div className="table-container">
@@ -240,25 +255,29 @@ export default function GestionExpedientes() {
                     </span>
                   </td>
                   <td>{new Date(exp.fecha_creacion).toLocaleDateString()}</td>
-                  <td>
-                    <div className="action-buttons">
-                      {(exp.estado === 'aprobado' || exp.estado === 'rechazado') ? (
-                        <button 
-                          className="btn-icon" 
-                          title="Dar Respuesta Final"
-                          onClick={() => handleOpenRespuesta(exp)}
-                          style={{ color: '#2563eb' }}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                          </svg>
-                        </button>
-                      ) : (
-                        <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>En proceso...</span>
-                      )}
-                    </div>
-                  </td>
+                   <td>
+                     <div className="action-buttons">
+                       {exp.estado === 'revision_analista' ? (
+                         <button 
+                           className="btn-icon" 
+                           title="Dar Respuesta Final"
+                           onClick={() => handleOpenRespuesta(exp)}
+                           style={{ color: '#2563eb' }}
+                         >
+                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                           </svg>
+                         </button>
+                       ) : exp.estado === 'aprobado' || exp.estado === 'rechazado' ? (
+                         <span style={{ color: '#10b981', fontSize: '0.875rem' }}>
+                           {exp.estado === 'aprobado' ? '✓ Aprobado' : '✗ Rechazado'}
+                         </span>
+                       ) : (
+                         <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>En proceso...</span>
+                       )}
+                     </div>
+                   </td>
                 </tr>
               ))}
             </tbody>
@@ -270,14 +289,14 @@ export default function GestionExpedientes() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Solicitar Nuevo Expediente"
+        title="Crear Nuevo Expediente"
         footer={
           <>
             <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
               Cancelar
             </button>
             <button className="btn btn-primary" onClick={handleSolicitar}>
-              Enviar Solicitud
+              Crear y Asignar
             </button>
           </>
         }

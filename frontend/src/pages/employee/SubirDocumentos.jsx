@@ -62,34 +62,50 @@ export default function SubirDocumentos() {
     setArchivos(archivos.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedExpediente || !tipoDocumento || archivos.length === 0) {
-      alert('Por favor complete todos los campos requeridos');
+    if (!selectedExpediente || archivos.length === 0) {
+      alert('Por favor seleccione un expediente y archivos');
       return;
     }
 
     setUploading(true);
     setUploadProgress(0);
 
-    // Simular subida
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setUploading(false);
-          setUploadSuccess(true);
-          setTimeout(() => {
-            setUploadSuccess(false);
-            setArchivos([]);
-            setTipoDocumento('');
-            setDescripcion('');
-          }, 3000);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
+    try {
+      // Importamos la función uploadDocumento solo cuando se necesita
+      const { uploadDocumento } = await import('../../api/expedientes.api');
+      
+      for (let i = 0; i < archivos.length; i++) {
+        const archivo = archivos[i];
+        const formData = new FormData();
+        formData.append('expediente_id', selectedExpediente);
+        formData.append('file', archivo.file);
+        
+        await uploadDocumento(selectedExpediente, formData);
+        
+        // Actualizar progreso
+        const progress = Math.round(((i + 1) / archivos.length) * 100);
+        setUploadProgress(progress);
+      }
+
+      // Éxito
+      setUploadSuccess(true);
+      setArchivos([]);
+      setTipoDocumento('');
+      setDescripcion('');
+      
+      setTimeout(() => {
+        setUploadSuccess(false);
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      alert('Error al subir los documentos. Por favor intente nuevamente.');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   return (

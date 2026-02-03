@@ -41,11 +41,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'documentos',
     'users',  # Custom app for user management
     'departments',
     'document_types',
-    'expedientes',
 ]
 
 
