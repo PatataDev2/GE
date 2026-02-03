@@ -105,7 +105,6 @@ export default function MisExpedientes() {
   };
 
   const handleFileUpload = async () => {
-    console.log('Uploading files:', selectedFiles);
     if (selectedFiles.length === 0) return;
 
     try {
