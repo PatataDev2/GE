@@ -1,0 +1,14 @@
+db.sqlite3
+*/__pycache__/
+__pycache__/
+*.pyc
+/media/
+media
+media/
+media/docs/
+# Carpeta de medios (Archivos subidos)
+/backend/media/
+backend/media/*
+media/
+
+*.pdf
