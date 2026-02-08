@@ -3,8 +3,9 @@ from django.conf import settings
 
 class Expedient(models.Model):
     STATUS = [
+        ("Aprobado", "Aprobado"),
         ("Pendiente", "Pendiente"),
-        ("En Proceso", "En Proceso"),
+        ("Proceso", "Proceso"),
         ("Finalizado", "Finalizado"),
         ("Rechazado", "Rechazado"),
     ]
