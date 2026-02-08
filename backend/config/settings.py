@@ -41,10 +41,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'documentos',
     'users',  # Custom app for user management
     'departments',
     'document_types',
+    'expedients',
 ]
 
 
@@ -100,12 +100,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        # ...
-    
-    
-        "NAME": os.path.join(BASE_DIR, 'db.sqlite3'),
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'yourdb',          # Debe coincidir con POSTGRES_DB en docker-compose
+        'USER': 'youruser',        # Debe coincidir con POSTGRES_USER en docker-compose
+        'PASSWORD': 'yourpassword',# Debe coincidir con POSTGRES_PASSWORD en docker-compose
+        'HOST': 'db',              # El nombre del servicio en docker-compose
+        'PORT': '5432',
     }
 }
 # Password validation

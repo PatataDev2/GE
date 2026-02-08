@@ -3,7 +3,7 @@ from rest_framework import viewsets, generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .serializer import UserSerializer, RegisterSerializer, RoleSerializer, UserUpdateRoleSerializer, AdminUserCreateSerializer
+from .serializers import UserSerializer, RegisterSerializer, RoleSerializer, UserUpdateRoleSerializer, AdminUserCreateSerializer
 from .models import UsersCustom, Role
 from .permissions import IsAdminUser
 
