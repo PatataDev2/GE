@@ -47,7 +47,7 @@ class Document(models.Model):
         on_delete=models.CASCADE
     )
 
-    approval_status = models.BooleanField(default=False)
+    approval_status = models.BooleanField(default=None, null=True, blank=True)
     expiration_date = models.DateField(null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

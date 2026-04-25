@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import Modal from '../../components/Modal';
 import api from '../../api/axios';
 
+const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+
 export default function MisExpedientes() {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -163,25 +165,59 @@ export default function MisExpedientes() {
   }
 
   function DocumentCard({ doc }) {
-    const isAprobado = doc.status === 'aprobado';
-    const isRechazado = doc.status === 'rechazado';
-    const bgColor = isAprobado ? '#d1fae5' : isRechazado ? '#fee2e2' : '#fef3c7';
-    const textColor = isAprobado ? '#10b981' : isRechazado ? '#ef4444' : '#f59e0b';
-    const badgeClass = isAprobado ? 'badge-success' : isRechazado ? 'badge-danger' : 'badge-warning';
-    const badgeText = isAprobado ? 'Aprobado' : isRechazado ? 'Rechazado' : 'Pendiente';
+    // False or None means "pending" until reviewer approves/rejects
+    const hasApproved = doc.approval_status === true;
+    const hasRejected = doc.approval_status === false;
+    const isPending = !hasApproved && !hasRejected;
+    
+    const status = hasApproved ? 'aprobado' : hasRejected ? 'rechazado' : 'pendiente';
+    const bgColor = hasApproved ? '#d1fae5' : hasRejected ? '#fee2e2' : '#fef3c7';
+    const textColor = hasApproved ? '#10b981' : hasRejected ? '#ef4444' : '#f59e0b';
+    const badgeClass = hasApproved ? 'badge-success' : hasRejected ? 'badge-danger' : 'badge-warning';
+    const badgeText = hasApproved ? 'Aprobado' : hasRejected ? 'Rechazado' : 'Pendiente';
+    
+    // Try to build the file URL from doc.file path
+    let fileUrl = null;
+    if (doc.file) {
+      const filePath = doc.file;
+      if (filePath.startsWith('http')) {
+        fileUrl = filePath;
+      } else if (filePath.startsWith('/')) {
+        fileUrl = `${BASE_API_URL}${filePath}`;
+      } else {
+        fileUrl = `${BASE_API_URL}/media/${filePath}`;
+      }
+    }
+    
+    const handleClick = () => {
+      if (fileUrl) {
+        window.open(fileUrl, '_blank');
+      }
+    };
 
     return (
-      <div key={doc.id} className="document-item" style={{ background: bgColor }}>
+      <div className="document-item" style={{ background: bgColor }}>
         <div className="document-icon" style={{ background: bgColor, color: textColor }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
           </svg>
         </div>
-        <div className="document-info">
+        <div className="document-info" style={{ flex: 1 }}>
           <div className="document-name">{doc.title}</div>
           <div className="document-size">{doc.document_type_name || 'Sin tipo'}</div>
         </div>
+        {fileUrl && (
+          <a 
+            href={fileUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-secondary btn-sm"
+            style={{ textDecoration: 'none', marginRight: '0.5rem' }}
+          >
+            Ver
+          </a>
+        )}
         <span className={`badge ${badgeClass}`}>{badgeText}</span>
       </div>
     );

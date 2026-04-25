@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import api from '../../api/axios';
 
+const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+
 export default function ValidarExpedientes() {
   const [pendientes, setPendientes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,7 @@ export default function ValidarExpedientes() {
   const fetchPendientes = async () => {
     setLoading(true);
     try {
-      const res = await api.get('api/expedients/pending/');
+      const res = await api.get('api/expedients/');
       setPendientes(res.data);
     } catch (err) {
       console.error("Error fetching:", err);
@@ -32,9 +34,14 @@ export default function ValidarExpedientes() {
     setDocLoading(true);
     try {
       const res = await api.get(`api/documents/?expedient=${expedientId}`);
-      setDocuments(res.data);
+      let docs = res.data;
+      if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
+        docs = docs.results || [];
+      }
+      setDocuments(Array.isArray(docs) ? docs : []);
     } catch (err) {
       console.error("Error fetching docs:", err);
+      setDocuments([]);
     } finally {
       setDocLoading(false);
     }
@@ -47,10 +54,17 @@ export default function ValidarExpedientes() {
     await fetchDocuments(exp.id);
   };
 
+  const getDocStatus = (doc) => {
+    if (doc.approval_status === true) return 'aprobado';
+    if (doc.approval_status === false) return 'rechazado';
+    return 'pendiente';
+  };
+
   const handleDocumentStatus = async (docId, status) => {
     try {
-      await api.patch(`api/documents/${docId}/`, { status });
-      setDocuments(documents.map(d => d.id === docId ? { ...d, status } : d));
+      const newStatus = status === 'aprobado';
+      await api.patch(`api/documents/${docId}/`, { approval_status: newStatus });
+      setDocuments(documents.map(d => d.id === docId ? { ...d, approval_status: newStatus } : d));
     } catch (err) {
       console.error("Error updating doc:", err);
     }
@@ -88,52 +102,36 @@ export default function ValidarExpedientes() {
     }
   };
 
-  const pendingDocsCount = pendientes.reduce((acc, p) => acc + (p.documents_count || 0), 0);
+  const handleViewDoc = (doc) => {
+    let fileUrl = null;
+    if (doc.file) {
+      const filePath = doc.file;
+      if (filePath.startsWith('http')) {
+        fileUrl = filePath;
+      } else if (filePath.startsWith('/')) {
+        fileUrl = `${BASE_API_URL}${filePath}`;
+      } else {
+        fileUrl = `${BASE_API_URL}/media/${filePath}`;
+      }
+    }
+    if (fileUrl) {
+      window.open(fileUrl, '_blank');
+    } else {
+      alert('No se puede abrir el documento');
+    }
+  };
 
   return (
     <div>
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon yellow">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <div>
-            <div className="stat-value">{pendientes.length}</div>
-            <div className="stat-label">Pendientes de Validación</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon blue">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-            </svg>
-          </div>
-          <div>
-            <div className="stat-value">{pendingDocsCount}</div>
-            <div className="stat-label">Documentos por Revisar</div>
-          </div>
-        </div>
-      </div>
-
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title">Expedientes Pendientes de Validación</h3>
+          <h3 className="card-title">Validar Expedientes</h3>
         </div>
-
         {loading ? (
           <div className="p-8 text-center text-gray-400">Cargando...</div>
         ) : pendientes.length === 0 ? (
           <div className="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
             <h3>No hay expedientes pendientes</h3>
-            <p>Todos los expedientes han sido revisados</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -148,19 +146,15 @@ export default function ValidarExpedientes() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                       <span style={{ fontFamily: 'monospace', fontWeight: '600', color: '#2563eb' }}>#{exp.id}</span>
-                      <span className="badge badge-warning">Pendiente de Validación</span>
+                      <span className="badge badge-warning">Pendiente</span>
                     </div>
-                    <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
+                    <h4 style={{ fontSize: '1.125rem', fontWeight: '600' }}>{exp.title}</h4>
                     <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                      {exp.department_name} · Asignado: {exp.asinged_to_username || 'Sin asignar'}
+                      {exp.department_name} - {exp.asinged_to_username || 'Sin asignar'}
                     </p>
                   </div>
                   <button className="btn btn-primary" onClick={() => handleOpenReview(exp)}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                    Revisar Expediente
+                    Revisar
                   </button>
                 </div>
               </div>
@@ -176,95 +170,72 @@ export default function ValidarExpedientes() {
         footer={
           <>
             <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
-              Cancelar
+              Cerrar
             </button>
             <button className="btn btn-success" onClick={handleAprobar} disabled={submitting}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              Aprobar Expediente
+              Aprobar
             </button>
             <button className="btn btn-danger" onClick={handleRechazar} disabled={submitting}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-              Rechazar Expediente
+              Rechazar
             </button>
           </>
         }
       >
         {selectedExpediente && (
           <div>
-            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <p><strong>Título:</strong> {selectedExpediente.title}</p>
+            <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+              <p><strong>Titulo:</strong> {selectedExpediente.title}</p>
               <p><strong>Departamento:</strong> {selectedExpediente.department_name}</p>
-              <p><strong>Asignado a:</strong> {selectedExpediente.asinged_to_username}</p>
+              <p><strong>Asignado:</strong> {selectedExpediente.asinged_to_username}</p>
             </div>
-
-            <h4 style={{ marginBottom: '1rem', fontWeight: '600' }}>Documentos a Revisar</h4>
-            
+            <h4 style={{ marginBottom: '1rem', fontWeight: '600' }}>Documentos</h4>
             {docLoading ? (
-              <div className="p-4 text-center text-gray-400">Cargando documentos...</div>
-            ) : documents.length === 0 ? (
-              <div className="p-4 text-center text-gray-400">No hay documentos</div>
+              <div className="p-4 text-center">Cargando...</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {documents.map((doc) => (
-                  <div key={doc.id} className="document-item" style={{ 
-                    background: doc.status === 'aprobado' ? '#d1fae5' : doc.status === 'rechazado' ? '#fee2e2' : 'white' 
-                  }}>
-                    <div className="document-icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                      </svg>
-                    </div>
-                    <div className="document-info">
-                      <div className="document-name">{doc.title}</div>
-                      <div className="document-size">{doc.document_type_name || 'Sin tipo'}</div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {doc.status === 'pendiente' ? (
+                {documents.map(doc => {
+                  const status = getDocStatus(doc);
+                  const bgColor = status === 'aprobado' ? '#d1fae5' : status === 'rechazado' ? '#fee2e2' : 'white';
+                  const FileUrl = doc.file ? (doc.file.startsWith('http') ? doc.file : `${BASE_API_URL}${doc.file.startsWith('/') ? '' : '/media/'}${doc.file}`) : null;
+                  return (
+                    <div key={doc.id} className="document-item" style={{ background: bgColor }}>
+                      <div className="document-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                      </div>
+                      <div className="document-info">
+                        <div className="document-name">{doc.title}</div>
+                        <div className="document-size">{doc.document_type_name || 'Sin tipo'}</div>
+                      </div>
+                      {FileUrl && (
+                        <button className="btn btn-secondary btn-sm" onClick={() => handleViewDoc(doc)}>
+                          Ver
+                        </button>
+                      )}
+                      {status === 'pendiente' ? (
                         <>
-                          <button 
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleDocumentStatus(doc.id, 'aprobado')}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="20 6 9 17 4 12"/>
-                            </svg>
+                          <button className="btn btn-success btn-sm" onClick={() => handleDocumentStatus(doc.id, 'aprobado')}>
+                            ✓
                           </button>
-                          <button 
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleDocumentStatus(doc.id, 'rechazado')}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <line x1="18" y1="6" x2="6" y2="18"/>
-                              <line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDocumentStatus(doc.id, 'rechazado')}>
+                            ✗
                           </button>
                         </>
                       ) : (
-                        <span className={`badge ${doc.status === 'aprobado' ? 'badge-success' : 'badge-danger'}`}>
-                          {doc.status === 'aprobado' ? 'Aprobado' : 'Rechazado'}
+                        <span className={`badge ${status === 'aprobado' ? 'badge-success' : 'badge-danger'}`}>
+                          {status}
                         </span>
                       )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
-
-            <div className="form-group" style={{ marginTop: '1.5rem' }}>
-              <label className="form-label">Comentarios / Observaciones</label>
-              <textarea
-                className="form-input"
-                rows="3"
-                placeholder="Agregar comentarios sobre la revisión..."
-                value={comentario}
-                onChange={(e) => setComentario(e.target.value)}
-              />
+            <div className="form-group" style={{ marginTop: '1rem' }}>
+              <label className="form-label">Comentarios</label>
+              <textarea className="form-input" rows="3" value={comentario} onChange={(e) => setComentario(e.target.value)} />
             </div>
           </div>
         )}
