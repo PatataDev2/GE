@@ -114,7 +114,6 @@ const getMenuItems = (role) => {
       return [
         ...commonItems,
         { path: '/employee/mis-expedientes', label: 'Mis Expedientes', icon: Icons.Folder },
-        { path: '/employee/subir-documentos', label: 'Subir Documentos', icon: Icons.Upload },
         { path: '/employee/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
       ];
     case 'user':

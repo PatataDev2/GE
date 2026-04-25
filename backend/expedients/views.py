@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Expedient
 from .serializers import ExpedientSerializer
@@ -6,6 +7,17 @@ from .serializers import ExpedientSerializer
 class ExpedientViewSet(viewsets.ModelViewSet):
     queryset = Expedient.objects.all()
     serializer_class = ExpedientSerializer
+
+    @action(detail=False, methods=['get'])
+    def my(self, request):
+        """Obtiene los expedients asignados al usuario actual"""
+        user = request.user
+        if user.role.name == 'employee':
+            expedients = Expedient.objects.filter(asinged_to=user)
+        else:
+            expedients = Expedient.objects.none()
+        serializer = self.get_serializer(expedients, many=True)
+        return Response(serializer.data)
 
     def get_permissions(self):
         """

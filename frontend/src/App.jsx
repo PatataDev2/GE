@@ -20,7 +20,6 @@
 
   //Employee Pages
   import MisExpedientes from './pages/employee/MisExpedientes';
-  import SubirDocumentos from './pages/employee/SubirDocumentos';
   import Notificaciones from './pages/employee/Notificaciones';
 
 
@@ -42,7 +41,6 @@
             <Route path="analyst/validar" element={<ValidarExpedientes />} />
             <Route path="analyst/reportes" element={<Reportes />} />
             <Route path="employee/mis-expedientes" element={<MisExpedientes />} />
-            <Route path="employee/subir-documentos" element={<SubirDocumentos />} />
             <Route path="employee/notificaciones" element={<Notificaciones />} />
           </Route>
         </Routes>
