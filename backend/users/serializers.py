@@ -25,14 +25,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('password2')
         password = validated_data.pop('password')
         
-        # Ajuste: Buscar o crear el rol 'user' (asegúrate que el slug coincida con tu modelo)
+        # Buscar o crear el rol 'user'
         user_role, _ = Role.objects.get_or_create(name='user')
         
-        user = UsersCustom.objects.create_user(
-            role=user_role,
-            **validated_data
-        )
-        # Nota: create_user ya maneja set_password y save() automáticamente
+        # Extraer los campos válidos del modelo
+        user_data = {
+            'username': validated_data.get('username'),
+            'email': validated_data.get('email'),
+            'cedula': validated_data.get('cedula'),
+            'phone': validated_data.get('phone'),
+            'role': user_role,
+        }
+        
+        user = UsersCustom.objects.create_user(**user_data, password=password)
         return user
 
 class UserSerializer(serializers.ModelSerializer):
