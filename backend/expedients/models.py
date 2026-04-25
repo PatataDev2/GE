@@ -1,5 +1,9 @@
 from django.db import models
 from django.conf import settings
+from departments.models import Department #
+
+
+    
 
 class Expedient(models.Model):
     STATUS = [
@@ -13,7 +17,7 @@ class Expedient(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS, default="Pendiente")
-    
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="expedientes", null=True, blank=True)
     # Relación con el usuario personalizado
     asinged_to = models.ForeignKey(
         settings.AUTH_USER_MODEL,

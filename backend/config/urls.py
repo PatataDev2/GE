@@ -24,9 +24,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/',include('users.urls')),
     path('departments/', include('departments.urls')),
-    path('document-types/', include('document_types.urls')),
+    path('api/document-types/', include('document_types.urls')),
     path('api/expedients/', include('expedients.urls')),
     path('api/documents/', include('documents.urls')),
+    path('api/departments/', include('departments.urls')),
+    path('api/users/', include('users.urls')),
 ]
 
 

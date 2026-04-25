@@ -11,6 +11,7 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access');
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;
+    console.log(`aca esta el pinche token ${token}`) // Agrega este console.log para verificar el token
   }
   return config;
 });
@@ -19,7 +20,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access');
   if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
+    config.headers['Authorization'] = `Bearer ${token}`; 
+    console.log(`Token incluido en la solicitud: ${token}`); // Agrega este console.log para verificar el token
   }
   return config;
 });

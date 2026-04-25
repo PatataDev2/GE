@@ -1,0 +1,1 @@
+Error: {"asinged_to":["Este usuario tiene el rol 'analyst'. Solo se pueden asignar expedientes a 'employee'."]}
