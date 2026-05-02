@@ -536,6 +536,26 @@ tr:hover {
   transition: all 0.2s;
 }
 
+.file-upload-input {
+  border: 2px dashed #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f8fafc;
+}
+
+.file-upload-input:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.file-upload-input:active {
+  border-color: #1d4ed8;
+  background: #dbeafe;
+}
+
 .file-upload:hover {
   border-color: var(--primary);
   background: #f8fafc;

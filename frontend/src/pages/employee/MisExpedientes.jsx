@@ -16,6 +16,7 @@ export default function MisExpedientes() {
   const [uploading, setUploading] = useState(false);
   const [docTypes, setDocTypes] = useState([]);
   const [loadingDocTypes, setLoadingDocTypes] = useState(false);
+  const [showCommentDocId, setShowCommentDocId] = useState(null);
   
   const fileInputRef = useRef(null);
   const titleInputRef = useRef(null);
@@ -175,6 +176,7 @@ export default function MisExpedientes() {
     const textColor = hasApproved ? '#10b981' : hasRejected ? '#ef4444' : '#f59e0b';
     const badgeClass = hasApproved ? 'badge-success' : hasRejected ? 'badge-danger' : 'badge-warning';
     const badgeText = hasApproved ? 'Aprobado' : hasRejected ? 'Rechazado' : 'Pendiente';
+    const showComment = showCommentDocId === doc.id;
     
     // Try to build the file URL from doc.file path
     let fileUrl = null;
@@ -206,6 +208,11 @@ export default function MisExpedientes() {
         <div className="document-info" style={{ flex: 1 }}>
           <div className="document-name">{doc.title}</div>
           <div className="document-size">{doc.document_type_name || 'Sin tipo'}</div>
+          {showComment && doc.description_content && (
+            <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'white', borderRadius: '0.25rem', fontSize: '0.875rem' }}>
+              <strong>Comentario:</strong> {doc.description_content}
+            </div>
+          )}
         </div>
         {fileUrl && (
           <a 
@@ -217,6 +224,15 @@ export default function MisExpedientes() {
           >
             Ver
           </a>
+        )}
+        {!isPending && doc.description_content && (
+          <button 
+            className="btn btn-sm"
+            style={{ marginRight: '0.5rem', background: hasRejected ? '#fecaca' : '#bbf7d0' }}
+            onClick={() => setShowCommentDocId(showComment ? null : doc.id)}
+          >
+            {showComment ? 'Ocultar' : 'Ver'} 💬
+          </button>
         )}
         <span className={`badge ${badgeClass}`}>{badgeText}</span>
       </div>
@@ -348,13 +364,46 @@ export default function MisExpedientes() {
               
               <div className="form-group">
                 <label className="form-label">Archivo *</label>
-                <input 
-                  type="file" 
-                  ref={fileInputRef}
-                  required
-                  className="form-input"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.pptx,.ppt"
-                />
+                <label 
+                  className="file-upload-input"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '2rem',
+                    border: '2px dashed #cbd5e1',
+                    borderRadius: '0.75rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    background: '#f8fafc',
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    required
+                    style={{ display: 'none' }}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.pptx,.ppt"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const nameSpan = document.getElementById('file-name-display');
+                        if (nameSpan) nameSpan.textContent = file.name;
+                      }
+                    }}
+                  />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" style={{ marginBottom: '0.5rem' }}>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                    <span style={{ color: '#2563eb', fontWeight: '500' }}>Haz click</span> o arrastra archivos aquí
+                  </span>
+                  <span id="file-name-display" style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#2563eb', fontWeight: '500' }}></span>
+                </label>
               </div>
 
               <div className="form-group">

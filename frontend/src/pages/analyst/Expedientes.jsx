@@ -15,8 +15,17 @@ export default function Expedientes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
   const [documents, setDocuments] = useState([]);
+  const [currentExpedientId, setCurrentExpedientId] = useState(null);
   const [docLoading, setDocLoading] = useState(false);
   const [showNewExpedienteModal, setShowNewExpedienteModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [reviewMessage, setReviewMessage] = useState('');
+  const [reviewAction, setReviewAction] = useState('approve');
+  const [submitting, setSubmitting] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewDoc, setPreviewDoc] = useState(null);
 
   const fetchExpedientes = async () => {
     setLoading(true);
@@ -34,13 +43,18 @@ export default function Expedientes() {
 
   const fetchDocuments = async (expedientId) => {
     setDocLoading(true);
+    setCurrentExpedientId(expedientId);
+    setDocuments([]);
     try {
+      console.log('Fetching documents for expedient:', expedientId);
       const res = await api.get(`api/documents/?expedient=${expedientId}`);
+      console.log('Documents response:', res.data);
       let docs = res.data;
       if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
         docs = docs.results || [];
       }
-      setDocuments(Array.isArray(docs) ? docs : []);
+      const filteredDocs = (Array.isArray(docs) ? docs : []).filter(d => d.expedient === expedientId);
+      setDocuments(filteredDocs);
     } catch (err) {
       console.error("Error fetching docs:", err);
       setDocuments([]);
@@ -50,7 +64,9 @@ export default function Expedientes() {
   };
 
   const handleViewDocuments = async (exp) => {
+    console.log('Opening documents for expedient:', exp.id);
     setSelectedExpediente(exp);
+    setDocuments([]);
     setIsModalOpen(true);
     await fetchDocuments(exp.id);
   };
@@ -61,7 +77,7 @@ export default function Expedientes() {
     return 'pendiente';
   };
 
-  const handleViewDoc = (doc) => {
+  const handlePreviewDoc = (doc) => {
     let fileUrl = null;
     if (doc.file) {
       const filePath = doc.file;
@@ -74,7 +90,75 @@ export default function Expedientes() {
       }
     }
     if (fileUrl) {
-      window.open(fileUrl, '_blank');
+      if (getFileType(doc) !== 'image') {
+        window.open(fileUrl, '_blank');
+      } else {
+        setPreviewDoc(doc);
+        setPreviewUrl(fileUrl);
+        setShowPreviewModal(true);
+      }
+    }
+  };
+
+  const handleDownloadDoc = (doc) => {
+    let fileUrl = null;
+    if (doc.file) {
+      const filePath = doc.file;
+      if (filePath.startsWith('http')) {
+        fileUrl = filePath;
+      } else if (filePath.startsWith('/')) {
+        fileUrl = `${BASE_API_URL}${filePath}`;
+      } else {
+        fileUrl = `${BASE_API_URL}/media/${filePath}`;
+      }
+    }
+    if (fileUrl) {
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = doc.title || 'documento';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const getFileType = (doc) => {
+    if (doc.file) {
+      const ext = doc.file.split('.').pop().toLowerCase();
+      if (['pdf'].includes(ext)) return 'pdf';
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
+      if (['mp4', 'webm', 'ogg'].includes(ext)) return 'video';
+    }
+    return 'other';
+  };
+
+  const openReviewModal = (doc, action) => {
+    setSelectedDoc(doc);
+    setReviewAction(action);
+    setReviewMessage(doc.description_content || '');
+    setShowReviewModal(true);
+  };
+
+  const handleReviewSubmit = async () => {
+    if (!selectedDoc) return;
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('access');
+      console.log('Token:', token);
+      const res = await api.post(`api/documents/${selectedDoc.id}/review/`, {
+        action: reviewAction,
+        message: reviewMessage
+      });
+      console.log('Review response:', res.data);
+      setShowReviewModal(false);
+      await fetchDocuments(selectedExpediente.id);
+    } catch (err) {
+      console.error("Error:", err);
+      console.error("Response:", err.response);
+      alert('Error al procesar la revisión');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -93,7 +177,11 @@ export default function Expedientes() {
           <p className="text-gray-500">Gestiona y supervisa los expedientes en tiempo real.</p>
         </div>
         <button 
-          onClick={() => setShowNewExpedienteModal(true)}
+          onClick={() => {
+            setSelectedExpediente(null);
+            setDocuments([]);
+            setShowNewExpedienteModal(true);
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl shadow-lg shadow-blue-200 transition-all transform hover:scale-105 flex items-center gap-2 font-bold"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -180,7 +268,11 @@ export default function Expedientes() {
 
       <Modal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setDocuments([]);
+          setCurrentExpedientId(null);
+        }}
         title={`Expediente #${selectedExpediente?.id} - ${selectedExpediente?.title}`}
         footer={
           <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
@@ -220,15 +312,43 @@ export default function Expedientes() {
                         <div className="document-name">{doc.title}</div>
                         <div className="document-size">{doc.document_type_name || 'Sin tipo'}</div>
                       </div>
-                      {fileUrl && (
-                        <button className="btn btn-secondary btn-sm" onClick={() => handleViewDoc(doc)}>
-                          Ver
-                        </button>
-                      )}
-                      <span className={`badge ${status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : 'badge-warning'}`}>
-                        {status}
-                      </span>
-                    </div>
+                        {fileUrl && (
+                          <div className="flex gap-1">
+                            <button className="btn btn-secondary btn-sm" onClick={() => handlePreviewDoc(doc)}>
+                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                 <circle cx="12" cy="12" r="3"/>
+                               </svg>
+                             </button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadDoc(doc)}>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+<span className={`badge ${status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : 'badge-warning'}`}>
+                          {status}
+                        </span>
+                        {status === 'pendiente' && (
+                          <div className="flex gap-1">
+                            <button
+                              className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                              onClick={() => openReviewModal(doc, 'approve')}
+                            >
+                              Aprobar
+                            </button>
+                            <button
+                              className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                              onClick={() => openReviewModal(doc, 'reject')}
+                            >
+                              Rechazar
+                            </button>
+                          </div>
+                        )}
+                      </div>
                   );
                 })}
               </div>
@@ -239,14 +359,158 @@ export default function Expedientes() {
 
       <Modal 
         isOpen={showNewExpedienteModal} 
-        onClose={() => setShowNewExpedienteModal(false)}
+        onClose={() => {
+          setShowNewExpedienteModal(false);
+          setSelectedExpediente(null);
+          setDocuments([]);
+          setCurrentExpedientId(null);
+        }}
         title="Crear Nuevo Expediente"
       >
         <div className="p-2">
-          <ManejoDocumentos onSuccess={() => {
+          <ManejoDocumentos onSuccess={async (newExpediente) => {
             setShowNewExpedienteModal(false);
-            fetchExpedientes();
+            setSelectedExpediente(newExpediente);
+            setDocuments([]);
+            setIsModalOpen(true);
+            if (newExpediente?.id) {
+              await fetchDocuments(newExpediente.id);
+            } else {
+              await fetchExpedientes();
+            }
           }} />
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        title={reviewAction === 'approve' ? 'Aprobar Documento' : 'Rechazar Documento'}
+        footer={
+          <div className="flex gap-2">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowReviewModal(false)}
+              disabled={submitting}
+            >
+              Cancelar
+            </button>
+            <button
+              className={`btn ${reviewAction === 'approve' ? 'btn-success' : 'btn-danger'}`}
+              onClick={handleReviewSubmit}
+              disabled={submitting}
+            >
+              {submitting ? 'Enviando...' : reviewAction === 'approve' ? 'Aprobar' : 'Rechazar'}
+            </button>
+          </div>
+        }
+      >
+        <div className="p-2">
+          <p className="mb-2 font-semibold">{selectedDoc?.title}</p>
+          <label className="block text-sm font-medium mb-1">
+            Mensaje {reviewAction === 'reject' ? '(requerido para rechazo)' : '(opcional)'}
+          </label>
+          <textarea
+            className="w-full p-3 border rounded-lg"
+            rows="4"
+            value={reviewMessage}
+            onChange={(e) => setReviewMessage(e.target.value)}
+            placeholder={reviewAction === 'reject' ? 'Explique el motivo del rechazo...' : 'Agregue un comentario (opcional)...'}
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showPreviewModal}
+        onClose={() => {
+          setShowPreviewModal(false);
+          setPreviewUrl(null);
+          setPreviewDoc(null);
+        }}
+        title={`Vista previa: ${previewDoc?.title || 'Documento'}`}
+        footer={
+          <div className="flex gap-2">
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setShowPreviewModal(false);
+                setPreviewUrl(null);
+                setPreviewDoc(null);
+              }}
+            >
+              Cerrar
+            </button>
+            {previewUrl && (
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = previewUrl;
+                  link.download = previewDoc?.title || 'documento';
+                  link.target = '_blank';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Descargar
+              </button>
+            )}
+          </div>
+        }
+      >
+        <div className="p-2">
+          {previewUrl && getFileType(previewDoc) === 'pdf' && (
+            <iframe
+              src={previewUrl}
+              className="w-full rounded-lg border border-gray-200"
+              style={{ height: '80vh' }}
+              title="Vista previa del documento"
+            />
+          )}
+          {previewUrl && getFileType(previewDoc) === 'image' && (
+            <div className="flex justify-center">
+              <img
+                src={previewUrl}
+                alt={previewDoc?.title || 'Documento'}
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+              />
+            </div>
+          )}
+          {previewUrl && getFileType(previewDoc) === 'video' && (
+            <video controls className="w-full max-h-[80vh] rounded-lg">
+              <source src={previewUrl} />
+              Tu navegador no soporta la reproducción de video.
+            </video>
+          )}
+          {previewUrl && getFileType(previewDoc) === 'other' && (
+            <div className="text-center p-8">
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-4 text-gray-400">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = previewUrl;
+                  link.download = previewDoc?.title || 'documento';
+                  link.target = '_blank';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
+                Descargar documento
+              </button>
+            </div>
+          )}
         </div>
       </Modal>
     </div>

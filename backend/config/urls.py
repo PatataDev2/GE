@@ -30,7 +30,7 @@ urlpatterns = [
     path('api/documents/', include('documents.urls')),
     path('api/departments/', include('departments.urls')),
     path('api/users/', include('users.urls')),
-    path('media/<path>', serve, {'document_root': settings.MEDIA_ROOT}),
+    path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
 
 if settings.DEBUG:

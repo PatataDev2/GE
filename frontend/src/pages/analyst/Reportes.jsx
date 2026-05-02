@@ -1,37 +1,104 @@
 'use client';
-
-import { useState } from 'react';
-
-const mockData = {
-  expedientesPorEstado: [
-    { estado: 'Activos', cantidad: 45, porcentaje: 60 },
-    { estado: 'En Revisión', cantidad: 15, porcentaje: 20 },
-    { estado: 'Cerrados', cantidad: 15, porcentaje: 20 }
-  ],
-  expedientesPorDepartamento: [
-    { departamento: 'Recursos Humanos', cantidad: 18 },
-    { departamento: 'Contabilidad', cantidad: 12 },
-    { departamento: 'Tecnología', cantidad: 15 },
-    { departamento: 'Ventas', cantidad: 10 },
-    { departamento: 'Marketing', cantidad: 8 },
-    { departamento: 'Operaciones', cantidad: 12 }
-  ],
-  actividadReciente: [
-    { mes: 'Enero', creados: 12, aprobados: 10, rechazados: 2 },
-    { mes: 'Febrero', creados: 15, aprobados: 13, rechazados: 1 },
-    { mes: 'Marzo', creados: 18, aprobados: 15, rechazados: 2 },
-    { mes: 'Abril', creados: 10, aprobados: 8, rechazados: 1 },
-    { mes: 'Mayo', creados: 20, aprobados: 18, rechazados: 1 }
-  ]
+import { useState, useEffect } from 'react';
+import api from '../../api/axios';
+const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const STATUS_MAP = {
+  'Aprobado': 'Activos',
+  'Finalizado': 'Activos',
+  'Pendiente': 'En Revisión',
+  'Proceso': 'En Revisión',
+  'Rechazado': 'Cerrados'
 };
-
 export default function Reportes() {
   const [tipoReporte, setTipoReporte] = useState('resumen');
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
-
-  const maxDepartamento = Math.max(...mockData.expedientesPorDepartamento.map(d => d.cantidad));
-
+  const [expedientes, setExpedientes] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [expRes, docRes, deptRes] = await Promise.all([
+          api.get('api/expedients/'),
+          api.get('api/documents/'),
+          api.get('api/departments/')
+        ]);
+        setExpedientes(expRes.data);
+        setDocuments(docRes.data);
+        setDepartments(deptRes.data);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+  const getDeptName = (deptId) => {
+    const dept = departments.find(d => d.id === deptId);
+    return dept?.name || 'Sin departamento';
+  };
+  const filteredExpedientes = expedientes.filter(exp => {
+    const created = new Date(exp.created_at);
+    if (fechaDesde && created < new Date(fechaDesde)) return false;
+    if (fechaHasta && created > new Date(fechaHasta + 'T23:59:59')) return false;
+    return true;
+  });
+  const expedientesPorEstado = (() => {
+    const groups = { 'Activos': 0, 'En Revisión': 0, 'Cerrados': 0 };
+    filteredExpedientes.forEach(exp => {
+      const mapped = STATUS_MAP[exp.status] || 'En Revisión';
+      groups[mapped]++;
+    });
+    const total = filteredExpedientes.length || 1;
+    return [
+      { estado: 'Activos', cantidad: groups['Activos'], porcentaje: Math.round((groups['Activos'] / total) * 100) },
+      { estado: 'En Revisión', cantidad: groups['En Revisión'], porcentaje: Math.round((groups['En Revisión'] / total) * 100) },
+      { estado: 'Cerrados', cantidad: groups['Cerrados'], porcentaje: Math.round((groups['Cerrados'] / total) * 100) }
+    ];
+  })();
+  const expedientesPorDepartamento = (() => {
+    const groups = {};
+    filteredExpedientes.forEach(exp => {
+      const name = getDeptName(exp.department);
+      groups[name] = (groups[name] || 0) + 1;
+    });
+    return Object.entries(groups).map(([departamento, cantidad]) => ({ departamento, cantidad })).sort((a, b) => b.cantidad - a.cantidad);
+  })();
+  const actividadReciente = (() => {
+    const months = {};
+    filteredExpedientes.forEach(exp => {
+      const d = new Date(exp.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!months[key]) months[key] = { mes: MESES[d.getMonth()], creados: 0, aprobados: 0, rechazados: 0 };
+      months[key].creados++;
+      if (exp.status === 'Aprobado' || exp.status === 'Finalizado') months[key].aprobados++;
+      if (exp.status === 'Rechazado') months[key].rechazados++;
+    });
+    return Object.values(months).slice(-6);
+  })();
+  const totalExpedientes = filteredExpedientes.length;
+  const aprobados = filteredExpedientes.filter(e => e.status === 'Aprobado' || e.status === 'Finalizado').length;
+  const rechazados = filteredExpedientes.filter(e => e.status === 'Rechazado').length;
+  const tasaAprobacion = totalExpedientes > 0 ? Math.round((aprobados / totalExpedientes) * 100) : 0;
+  const avgReviewDays = (() => {
+    const withDays = filteredExpedientes.filter(e => e.updated_at && e.created_at).map(e => {
+      const created = new Date(e.created_at);
+      const updated = new Date(e.updated_at);
+      return (updated - created) / (1000 * 60 * 60 * 24);
+    });
+    if (withDays.length === 0) return 0;
+    return (withDays.reduce((a, b) => a + b, 0) / withDays.length).toFixed(1);
+  })();
+  const docsAprobados = documents.filter(d => d.approval_status === true).length;
+  const docsRechazados = documents.filter(d => d.approval_status === false).length;
+  const docsPendientes = documents.filter(d => d.approval_status === null || d.approval_status === undefined).length;
+  const docTasaAprobacion = (docsAprobados + docsRechazados) > 0 ? Math.round((docsAprobados / (docsAprobados + docsRechazados)) * 100) : 0;
+  const maxDepartamento = expedientesPorDepartamento.length > 0 ? Math.max(...expedientesPorDepartamento.map(d => d.cantidad)) : 1;
+  if (loading) return <div className="p-8 text-center text-gray-400">Cargando reportes...</div>;
   return (
     <div>
       {/* Stats */}
@@ -43,21 +110,20 @@ export default function Reportes() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">75</div>
+            <div className="stat-value">{totalExpedientes}</div>
             <div className="stat-label">Total Expedientes</div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon green">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="20" x2="12" y2="10"/>
-              <line x1="18" y1="20" x2="18" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="16"/>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
           </div>
           <div>
-            <div className="stat-value">+12%</div>
-            <div className="stat-label">Crecimiento Mensual</div>
+            <div className="stat-value">{docsAprobados}</div>
+            <div className="stat-label">Documentos Aprobados</div>
           </div>
         </div>
         <div className="stat-card">
@@ -68,7 +134,7 @@ export default function Reportes() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">2.5 días</div>
+            <div className="stat-value">{avgReviewDays} días</div>
             <div className="stat-label">Tiempo Promedio Revisión</div>
           </div>
         </div>
@@ -80,12 +146,11 @@ export default function Reportes() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">94%</div>
+            <div className="stat-value">{tasaAprobacion}%</div>
             <div className="stat-label">Tasa de Aprobación</div>
           </div>
         </div>
       </div>
-
       {/* Filter and Export */}
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <div className="filter-bar">
@@ -138,7 +203,6 @@ export default function Reportes() {
           </button>
         </div>
       </div>
-
       <div className="grid-2">
         {/* Estado de Expedientes */}
         <div className="card">
@@ -147,7 +211,7 @@ export default function Reportes() {
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {mockData.expedientesPorEstado.map((item, idx) => (
+            {expedientesPorEstado.map((item, idx) => (
               <div key={idx}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <span style={{ fontWeight: '500' }}>{item.estado}</span>
@@ -165,9 +229,24 @@ export default function Reportes() {
               </div>
             ))}
           </div>
-
-          {/* Pie chart representation */}
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+          <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+            <h4 style={{ fontWeight: '600', marginBottom: '1rem', fontSize: '0.875rem' }}>Documentos</h4>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: '12px', height: '12px', background: '#10b981', borderRadius: '2px' }}></div>
+                <span style={{ fontSize: '0.875rem' }}>Aprobados: {docsAprobados}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: '12px', height: '12px', background: '#f59e0b', borderRadius: '2px' }}></div>
+                <span style={{ fontSize: '0.875rem' }}>Pendientes: {docsPendientes}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: '12px', height: '12px', background: '#ef4444', borderRadius: '2px' }}></div>
+                <span style={{ fontSize: '0.875rem' }}>Rechazados: {docsRechazados}</span>
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ width: '12px', height: '12px', background: '#10b981', borderRadius: '2px' }}></div>
               <span style={{ fontSize: '0.875rem' }}>Activos</span>
@@ -182,7 +261,6 @@ export default function Reportes() {
             </div>
           </div>
         </div>
-
         {/* Expedientes por Departamento */}
         <div className="card">
           <div className="card-header">
@@ -190,7 +268,7 @@ export default function Reportes() {
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {mockData.expedientesPorDepartamento.map((item, idx) => (
+            {expedientesPorDepartamento.map((item, idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span style={{ width: '140px', fontSize: '0.875rem', flexShrink: 0 }}>{item.departamento}</span>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -210,7 +288,6 @@ export default function Reportes() {
           </div>
         </div>
       </div>
-
       {/* Actividad Mensual */}
       <div className="card" style={{ marginTop: '1.5rem' }}>
         <div className="card-header">
@@ -229,8 +306,8 @@ export default function Reportes() {
               </tr>
             </thead>
             <tbody>
-              {mockData.actividadReciente.map((item, idx) => {
-                const tasaAprobacion = Math.round((item.aprobados / item.creados) * 100);
+              {actividadReciente.map((item, idx) => {
+                const tasaAprobacion = item.creados > 0 ? Math.round((item.aprobados / item.creados) * 100) : 0;
                 return (
                   <tr key={idx}>
                     <td style={{ fontWeight: '500' }}>{item.mes}</td>
@@ -269,7 +346,6 @@ export default function Reportes() {
             </tbody>
           </table>
         </div>
-
         {/* Summary */}
         <div style={{ 
           marginTop: '1.5rem', 
@@ -283,30 +359,27 @@ export default function Reportes() {
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#2563eb' }}>
-              {mockData.actividadReciente.reduce((acc, i) => acc + i.creados, 0)}
+              {actividadReciente.reduce((acc, i) => acc + i.creados, 0)}
             </div>
             <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Total Creados</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#10b981' }}>
-              {mockData.actividadReciente.reduce((acc, i) => acc + i.aprobados, 0)}
+              {actividadReciente.reduce((acc, i) => acc + i.aprobados, 0)}
             </div>
             <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Total Aprobados</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ef4444' }}>
-              {mockData.actividadReciente.reduce((acc, i) => acc + i.rechazados, 0)}
+              {actividadReciente.reduce((acc, i) => acc + i.rechazados, 0)}
             </div>
             <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Total Rechazados</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#f59e0b' }}>
-              {Math.round(
-                (mockData.actividadReciente.reduce((acc, i) => acc + i.aprobados, 0) / 
-                mockData.actividadReciente.reduce((acc, i) => acc + i.creados, 0)) * 100
-              )}%
+              {docTasaAprobacion}%
             </div>
-            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Tasa Promedio</div>
+            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Tasa Documentos</div>
           </div>
         </div>
       </div>

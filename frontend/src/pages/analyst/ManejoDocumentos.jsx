@@ -35,8 +35,8 @@ const ExpedientForm = ({ onSuccess }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('api/expedients/', formData);
-      onSuccess(); 
+      const res = await api.post('api/expedients/', formData);
+      onSuccess(res.data); 
     } catch (err) {
       alert("Error: " + JSON.stringify(err.response?.data));
     } finally {
