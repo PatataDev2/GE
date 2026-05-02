@@ -1,7 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
+import PreviewModal from '../../components/PreviewModal';
 import ManejoDocumentos from './ManejoDocumentos'; 
+import DocxPreview from './DocxPreview';
 import api from '../../api/axios';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 export default function Expedientes() {
@@ -23,6 +25,7 @@ export default function Expedientes() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
+  const [docxBlob, setDocxBlob] = useState(null);
   const [kebabMenuId, setKebabMenuId] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReassignModal, setShowReassignModal] = useState(false);
@@ -55,6 +58,7 @@ export default function Expedientes() {
     fetchExpedientes(); 
     fetchEmployees();
   }, []);
+
   useEffect(() => {
     const handleClickOutside = () => setKebabMenuId(null);
     document.addEventListener('click', handleClickOutside);
@@ -100,7 +104,7 @@ export default function Expedientes() {
   if (s === 'Rechazado') return 'rechazado';
   return 'en_revision';
 };
-  const handlePreviewDoc = (doc) => {
+  const handlePreviewDoc = async (doc) => {
     let fileUrl = null;
     if (doc.file) {
       const filePath = doc.file;
@@ -113,11 +117,22 @@ export default function Expedientes() {
       }
     }
     if (fileUrl) {
-      if (getFileType(doc) !== 'image') {
+      setPreviewDoc(doc);
+      setPreviewUrl(fileUrl);
+      setDocxBlob(null);
+      const ext = doc.file.split('.').pop().toLowerCase();
+      if (ext === 'docx') {
+        try {
+          setShowPreviewModal(true);
+          const response = await fetch(fileUrl);
+          const blob = await response.blob();
+          setDocxBlob(blob);
+        } catch (err) {
+          console.error('Error loading DOCX:', err);
+        }
+      } else if (getFileType(doc) !== 'image') {
         window.open(fileUrl, '_blank');
       } else {
-        setPreviewDoc(doc);
-        setPreviewUrl(fileUrl);
         setShowPreviewModal(true);
       }
     }
@@ -150,6 +165,7 @@ export default function Expedientes() {
       if (['pdf'].includes(ext)) return 'pdf';
       if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
       if (['mp4', 'webm', 'ogg'].includes(ext)) return 'video';
+      if (['docx'].includes(ext)) return 'docx';
     }
     return 'other';
   };
@@ -408,10 +424,19 @@ export default function Expedientes() {
                   return (
                     <div key={doc.id} className="document-item" style={{ background: bgColor }}>
                       <div className="document-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                          <polyline points="14 2 14 8 20 8"/>
-                        </svg>
+                        {doc.file && doc.file.toLowerCase().endsWith('.docx') ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                          </svg>
+                        )}
                       </div>
                       <div className="document-info">
                         <div className="document-name">{doc.title}</div>
@@ -506,12 +531,13 @@ export default function Expedientes() {
           />
         </div>
       </Modal>
-      <Modal
+      <PreviewModal
         isOpen={showPreviewModal}
         onClose={() => {
           setShowPreviewModal(false);
           setPreviewUrl(null);
           setPreviewDoc(null);
+          setDocxBlob(null);
         }}
         title={`Vista previa: ${previewDoc?.title || 'Documento'}`}
         footer={
@@ -522,6 +548,7 @@ export default function Expedientes() {
                 setShowPreviewModal(false);
                 setPreviewUrl(null);
                 setPreviewDoc(null);
+                setDocxBlob(null);
               }}
             >
               Cerrar
@@ -550,7 +577,7 @@ export default function Expedientes() {
           </div>
         }
       >
-        <div className="p-2">
+        <div>
           {previewUrl && getFileType(previewDoc) === 'pdf' && (
             <iframe
               src={previewUrl}
@@ -558,6 +585,9 @@ export default function Expedientes() {
               style={{ height: '80vh' }}
               title="Vista previa del documento"
             />
+          )}
+          {previewUrl && getFileType(previewDoc) === 'docx' && docxBlob && (
+            <DocxPreview key={previewDoc?.id} blob={docxBlob} />
           )}
           {previewUrl && getFileType(previewDoc) === 'image' && (
             <div className="flex justify-center">
@@ -598,7 +628,7 @@ export default function Expedientes() {
             </div>
           )}
         </div>
-      </Modal>
+      </PreviewModal>
       {/* Modal Editar Detalles */}
       <Modal
         isOpen={showEditModal}

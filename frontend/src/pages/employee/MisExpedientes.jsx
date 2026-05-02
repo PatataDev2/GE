@@ -231,7 +231,7 @@ export default function MisExpedientes() {
             style={{ marginRight: '0.5rem', background: hasRejected ? '#fecaca' : '#bbf7d0' }}
             onClick={() => setShowCommentDocId(showComment ? null : doc.id)}
           >
-            {showComment ? 'Ocultar' : 'Ver'} 💬
+            {showComment ? 'Ocultar' : 'Comentario'} 
           </button>
         )}
         <span className={`badge ${badgeClass}`}>{badgeText}</span>

@@ -1,11 +1,18 @@
 'use client';
 
-export default function Modal({ isOpen, onClose, title, children, footer }) {
+export default function Modal({ isOpen, onClose, title, children, footer, size = 'sm' }) {
   if (!isOpen) return null;
+
+  const sizeClasses = {
+    sm: 'max-w-[500px]',
+    md: 'max-w-[700px]',
+    lg: 'max-w-[90vw] w-[1100px]',
+    xl: 'max-w-[95vw] w-[1400px]',
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`modal ${sizeClasses[size] || sizeClasses.sm}`} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3 className="modal-title">{title}</h3>
           <button className="modal-close" onClick={onClose}>
