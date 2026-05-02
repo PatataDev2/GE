@@ -3,11 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Expedient
 from .serializers import ExpedientSerializer
-
 class ExpedientViewSet(viewsets.ModelViewSet):
     queryset = Expedient.objects.all()
     serializer_class = ExpedientSerializer
-
     @action(detail=False, methods=['get'])
     def my(self, request):
         """Obtiene los expedients asignados al usuario actual"""
@@ -18,7 +16,6 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             expedients = Expedient.objects.none()
         serializer = self.get_serializer(expedients, many=True)
         return Response(serializer.data)
-
     def get_permissions(self):
         """
         Asigna permisos dinámicos según la acción:
@@ -26,7 +23,6 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         - Para el resto: Cualquier usuario autenticado (filtrado por get_queryset).
         """
         if self.action == 'destroy':
-            # Creamos una clase de permiso al vuelo que verifique el rol admin
             class IsAdminRole(permissions.BasePermission):
                 def has_permission(self, request, view):
                     return bool(request.user.role and request.user.role.name == 'admin')
@@ -34,27 +30,34 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsAdminRole()]
         
         return [permissions.IsAuthenticated()]
-
     def get_queryset(self):
         user = self.request.user
         
-        # Evitamos errores si el usuario no está autenticado o no tiene rol
         if not user.is_authenticated or not user.role:
             return Expedient.objects.none()
-
-        # Admin y Analyst: Acceso total
         if user.role.name in ['admin', 'analyst']:
             return Expedient.objects.all()
         
-        # Employee: Solo sus asignados
         if user.role.name == 'employee':
             return Expedient.objects.filter(asinged_to=user)
         
         return Expedient.objects.none()
-
     def perform_create(self, serializer):
         serializer.save()
-
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """Aprueba un expediente cambiando su estado a 'Aprobado'"""
+        expedient = self.get_object()
+        expedient.status = 'Aprobado'
+        expedient.save(update_fields=['status'])
+        return Response({'status': 'expediente aprobado', 'id': expedient.id})
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        """Rechaza un expediente cambiando su estado a 'Rechazado'"""
+        expedient = self.get_object()
+        expedient.status = 'Rechazado'
+        expedient.save(update_fields=['status'])
+        return Response({'status': 'expediente rechazado', 'id': expedient.id})
     def destroy(self, request, *args, **kwargs):
         """
         Opcional: Personalizamos la respuesta del borrado

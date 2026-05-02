@@ -25,7 +25,7 @@ config.headers['Authorization'] = `Bearer ${token}`;
 export const getCurrentUser = () => {  return api.get('me/');  };
   export const registerUser = (userData) => api.post('register/',userData);
   export const loginUser = (credentials) => api.post('login/',credentials);
-  export const refreshToken = (refreshToken) => axios.post(`${BASE}/users/api/v1/token/refresh/`, { refresh});
+  export const refreshToken = (refreshToken) => axios.post(`${BASE}/users/api/v1/token/refresh/`, { refresh: refreshToken });
 
   // Admin user management
   export const getUsers = () => api.get('users/');

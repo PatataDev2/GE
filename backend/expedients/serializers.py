@@ -5,7 +5,8 @@ from users.serializers import UserSerializer
 
 class ExpedientSerializer(serializers.ModelSerializer):
     # Esto muestra la info detallada en los GET
-    asinged_to_data = UserSerializer(source='asinged_to', read_only=True)
+    department_name = serializers.CharField(source='department.name', read_only=True, allow_null=True)
+    asinged_to_username = serializers.CharField(source='asinged_to.username', read_only=True, allow_null=True)
 
     # SOLUCIÓN: Sobreescribimos el campo para que busque en TODOS los usuarios
     # y así permita que el flujo llegue a 'validate_asinged_to' para mostrar los logs.
@@ -16,15 +17,16 @@ class ExpedientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expedient
         fields = [
-            'id', 
-            'title', 
-            'description', 
-            'status', 
-            'asinged_to',      # Entrada (ID)
-            'asinged_to_data', # Salida (Objeto)
-            'created_at', 
-            'updated_at'
-        ]
+        'id', 
+        'title', 
+        'description', 
+        'status', 
+        'asinged_to',
+        'department_name',
+        'asinged_to_username',
+        'created_at', 
+        'updated_at'
+            ]
         read_only_fields = ['created_at', 'updated_at']
 
     def validate_asinged_to(self, value):

@@ -49,11 +49,12 @@ export default function ValidarExpedientes() {
     await fetchDocuments(exp.id);
   };
   const getExpedienteStatus = (exp) => {
-    if (!exp) return 'pendiente';
-    if (exp.approval_status === true) return 'aprobado';
-    if (exp.approval_status === false) return 'rechazado';
-    return 'pendiente';
-  };
+  if (!exp) return 'pendiente';
+  const s = exp.status;
+  if (s === 'Aprobado' || s === 'Finalizado') return 'aprobado';
+  if (s === 'Rechazado') return 'rechazado';
+  return 'pendiente';
+};
   const getDocStatus = (doc) => {
     if (doc.approval_status === true) return 'aprobado';
     if (doc.approval_status === false) return 'rechazado';

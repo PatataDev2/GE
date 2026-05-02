@@ -19,7 +19,7 @@ export default function DocumentForm({ expedientId, onSuccess }) {
   useEffect(() => {
     const fetchDocTypes = async () => {
       try {
-        const res = await api.get('api/document-types/');
+        const res = await api.get('api/document-types/document-types/ ');
         const data = Array.isArray(res.data) ? res.data : res.data.results || [];
         setDocTypes(data);
       } catch (err) {
@@ -42,7 +42,7 @@ export default function DocumentForm({ expedientId, onSuccess }) {
     const data = new FormData();
     data.append('title', formData.title);
     data.append('file', formData.file); // El archivo físico
-    data.append('expedient', Number(expedientId)); // Vinculación automática
+    data.append('expedient', expedientId); // Vinculación automática
     data.append('document_type', formData.document_type);
     data.append('description_content', formData.description_content);
 

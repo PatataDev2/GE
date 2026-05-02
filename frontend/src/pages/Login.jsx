@@ -26,10 +26,13 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/login/', data);
-      localStorage.setItem('access', res.data.access);
-      localStorage.setItem('refresh', res.data.refresh);
-      navigate('/dashboard');
+     const res = await api.post('/login/', data);
+localStorage.setItem('access', res.data.access);
+localStorage.setItem('refresh', res.data.refresh);
+// Obtener rol del usuario
+const userRes = await getCurrentUser();
+localStorage.setItem('userRole', userRes.data.role_name);
+navigate('/dashboard');
     } catch (err) {
       alert('Credenciales incorrectas');
     }
@@ -69,7 +72,7 @@ export default function Login() {
           No tienes una cuenta?               <Link to="/register" className="text-sm text-green-600 hover:underline ml-1">Registrate</Link>
         </p>
       </div>
-      <button onClick={handleSubmit} className="bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-2 px-4 rounded-md mt-4 hover:from-green-600 hover:to-green-700 transition ease-in-out duration-150">
+      <button type="submit" className="bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-2 px-4 rounded-md mt-4 hover:from-green-600 hover:to-green-700 transition ease-in-out duration-150">
         Login
       </button>
     </form>

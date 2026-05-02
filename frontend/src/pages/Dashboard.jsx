@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import api from '../api/axios';
 
 // Admin Dashboard imports
 import UsersManagement from './admin/UsersManagement';
@@ -18,18 +19,15 @@ import Reportes from './analyst/Reportes';
 import MisExpedientes from './employee/MisExpedientes';
 import SubirDocumentos from './employee/SubirDocumentos';
 import Notificaciones from './employee/Notificaciones';
-
-// Mock user data - en producción esto vendría del backend
-const getMockUser = () => {
-  const storedRole = localStorage.getItem('userRole');
-  return {
-    id: 1,
-    username: 'usuario_demo',
-    email: 'demo@empresa.com',
-    role: storedRole || 'employee' // admin, analyst, employee
-  };
+// Real user data from API
+const fetchUserRole = async () => {
+  try {
+    const res = await api.get('users/api/v1/me/');
+    return { role: res.data.role_name };
+  } catch {
+    return { role: localStorage.getItem('userRole') || 'employee' };
+  }
 };
-
 const AdminDashboardContent = () => (
   <div>
     <div className="stats-grid">
@@ -137,118 +135,151 @@ const AdminDashboardContent = () => (
     </div>
   </div>
 );
-
-const AnalystDashboardContent = () => (
-  <div>
-    <div className="stats-grid">
-      <div className="stat-card">
-        <div className="stat-icon blue">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-          </svg>
+const AnalystDashboardContent = () => {
+  const [expedientes, setExpedientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get('api/expedients/');
+        setExpedientes(res.data);
+      } catch (err) {
+        console.error('Error fetching expedientes:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+  const getExpedienteStatus = (exp) => {
+    const s = exp?.status;
+    if (s === 'Aprobado' || s === 'Finalizado') return 'activo';
+    if (s === 'Rechazado') return 'rechazado';
+    return 'en_revision';
+  };
+  const esHoy = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const hoy = new Date();
+    return d.toDateString() === hoy.toDateString();
+  };
+  const total = expedientes.length;
+  const pendientes = expedientes.filter(e => e.status === 'Pendiente').length;
+  const aprobadosHoy = expedientes.filter(e => (e.status === 'Aprobado' || e.status === 'Finalizado') && esHoy(e.updated_at)).length;
+  const rechazadosHoy = expedientes.filter(e => e.status === 'Rechazado' && esHoy(e.updated_at)).length;
+  const recientes = [...expedientes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+  if (loading) return <div className="p-8 text-center text-gray-400">Cargando dashboard...</div>;
+  return (
+    <div>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{total}</div>
+            <div className="stat-label">Total Expedientes</div>
+          </div>
         </div>
-        <div>
-          <div className="stat-value">75</div>
-          <div className="stat-label">Total Expedientes</div>
+        <div className="stat-card">
+          <div className="stat-icon yellow">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{pendientes}</div>
+            <div className="stat-label">Pendientes Validación</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{aprobadosHoy}</div>
+            <div className="stat-label">Aprobados Hoy</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon red">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{rechazadosHoy}</div>
+            <div className="stat-label">Rechazados Hoy</div>
+          </div>
         </div>
       </div>
-      <div className="stat-card">
-        <div className="stat-icon yellow">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">8</div>
-          <div className="stat-label">Pendientes Validación</div>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon green">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">12</div>
-          <div className="stat-label">Aprobados Hoy</div>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon red">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="15" y1="9" x2="9" y2="15"/>
-            <line x1="9" y1="9" x2="15" y2="15"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">2</div>
-          <div className="stat-label">Rechazados Hoy</div>
-        </div>
-      </div>
-    </div>
-
-    <div className="grid-2">
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Expedientes Recientes</h3>
-        </div>
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Empleado</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { id: 'EXP-2024-0045', empleado: 'Juan García', status: 'activo' },
-                { id: 'EXP-2024-0044', empleado: 'María López', status: 'en_revision' },
-                { id: 'EXP-2024-0043', empleado: 'Carlos Pérez', status: 'cerrado' },
-              ].map((exp, idx) => (
-                <tr key={idx}>
-                  <td style={{ fontFamily: 'monospace', color: '#2563eb' }}>{exp.id}</td>
-                  <td>{exp.empleado}</td>
-                  <td>
-                    <span className={`badge ${
-                      exp.status === 'activo' ? 'badge-success' : 
-                      exp.status === 'en_revision' ? 'badge-warning' : 'badge-secondary'
-                    }`}>
-                      {exp.status === 'activo' ? 'Activo' : exp.status === 'en_revision' ? 'En Revisión' : 'Cerrado'}
-                    </span>
-                  </td>
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Expedientes Recientes</h3>
+          </div>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Empleado</th>
+                  <th>Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recientes.length === 0 ? (
+                  <tr><td colSpan="3" className="text-center text-gray-400">No hay expedientes</td></tr>
+                ) : (
+                  recientes.map((exp) => (
+                    <tr key={exp.id}>
+                      <td style={{ fontFamily: 'monospace', color: '#2563eb' }}>#{exp.id}</td>
+                      <td>{exp.asinged_to_username || 'Sin asignar'}</td>
+                      <td>
+                        <span className={`badge ${
+                          getExpedienteStatus(exp) === 'activo' ? 'badge-success' : 
+                          getExpedienteStatus(exp) === 'rechazado' ? 'badge-danger' : 'badge-warning'
+                        }`}>
+                          {getExpedienteStatus(exp) === 'activo' ? 'Activo' : 
+                           getExpedienteStatus(exp) === 'rechazado' ? 'Rechazado' : 'En Revisión'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-      
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Acciones Rápidas</h3>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <a href="/analyst/validar" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-            Validar Expedientes Pendientes (8)
-          </a>
-          <a href="/analyst/expedientes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-            Ver Todos los Expedientes
-          </a>
-          <a href="/analyst/reportes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-            Generar Reporte
-          </a>
+        
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Acciones Rápidas</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <a href="/analyst/validar" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+              Validar Expedientes Pendientes ({pendientes})
+            </a>
+            <a href="/analyst/expedientes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+              Ver Todos los Expedientes
+            </a>
+            <a href="/analyst/reportes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+              Generar Reporte
+            </a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
-
+  );
+};
 const EmployeeDashboardContent = () => (
   <div>
     <div className="stats-grid">
@@ -359,9 +390,8 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const userData = getMockUser();
-    setUser(userData);
-  }, []);
+  fetchUserRole().then(setUser);
+}, []);
 
   return (
     <>

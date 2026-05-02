@@ -1,12 +1,9 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import ManejoDocumentos from './ManejoDocumentos'; 
 import api from '../../api/axios';
-
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
-
 export default function Expedientes() {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +23,15 @@ export default function Expedientes() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
-
+  const [kebabMenuId, setKebabMenuId] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showReassignModal, setShowReassignModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [editForm, setEditForm] = useState({ title: '', description: '' });
+  const [employees, setEmployees] = useState([]);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [reassignSubmitting, setReassignSubmitting] = useState(false);
+  const [reassignEmployeeId, setReassignEmployeeId] = useState('');
   const fetchExpedientes = async () => {
     setLoading(true);
     try {
@@ -38,9 +43,23 @@ export default function Expedientes() {
       setLoading(false);
     }
   };
-
-  useEffect(() => { fetchExpedientes(); }, []);
-
+  const fetchEmployees = async () => {
+    try {
+      const res = await api.get('api/users/');
+      setEmployees(res.data.filter(u => u.role_name === 'employee'));
+    } catch (err) {
+      console.error("Error fetching employees:", err);
+    }
+  };
+  useEffect(() => { 
+    fetchExpedientes(); 
+    fetchEmployees();
+  }, []);
+  useEffect(() => {
+    const handleClickOutside = () => setKebabMenuId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
   const fetchDocuments = async (expedientId) => {
     setDocLoading(true);
     setCurrentExpedientId(expedientId);
@@ -62,7 +81,6 @@ export default function Expedientes() {
       setDocLoading(false);
     }
   };
-
   const handleViewDocuments = async (exp) => {
     console.log('Opening documents for expedient:', exp.id);
     setSelectedExpediente(exp);
@@ -70,13 +88,18 @@ export default function Expedientes() {
     setIsModalOpen(true);
     await fetchDocuments(exp.id);
   };
-
   const getDocStatus = (doc) => {
     if (doc.approval_status === true) return 'aprobado';
     if (doc.approval_status === false) return 'rechazado';
     return 'pendiente';
   };
-
+  const getExpedienteStatus = (exp) => {
+  if (!exp) return 'pendiente';
+  const s = exp.status;
+  if (s === 'Aprobado' || s === 'Finalizado') return 'activo';
+  if (s === 'Rechazado') return 'rechazado';
+  return 'en_revision';
+};
   const handlePreviewDoc = (doc) => {
     let fileUrl = null;
     if (doc.file) {
@@ -99,7 +122,6 @@ export default function Expedientes() {
       }
     }
   };
-
   const handleDownloadDoc = (doc) => {
     let fileUrl = null;
     if (doc.file) {
@@ -122,7 +144,6 @@ export default function Expedientes() {
       document.body.removeChild(link);
     }
   };
-
   const getFileType = (doc) => {
     if (doc.file) {
       const ext = doc.file.split('.').pop().toLowerCase();
@@ -132,14 +153,12 @@ export default function Expedientes() {
     }
     return 'other';
   };
-
   const openReviewModal = (doc, action) => {
     setSelectedDoc(doc);
     setReviewAction(action);
     setReviewMessage(doc.description_content || '');
     setShowReviewModal(true);
   };
-
   const handleReviewSubmit = async () => {
     if (!selectedDoc) return;
     setSubmitting(true);
@@ -161,14 +180,68 @@ export default function Expedientes() {
       setSubmitting(false);
     }
   };
-
+  const openKebabMenu = (expId) => {
+    setKebabMenuId(kebabMenuId === expId ? null : expId);
+  };
+  const handleEditClick = (exp) => {
+    setSelectedExpediente(exp);
+    setEditForm({ title: exp.title, description: exp.description || '' });
+    setShowEditModal(true);
+    setKebabMenuId(null);
+  };
+  const handleEditSubmit = async () => {
+    setEditSubmitting(true);
+    try {
+      await api.patch(`api/expedients/${selectedExpediente.id}/`, {
+        title: editForm.title,
+        description: editForm.description
+      });
+      setShowEditModal(false);
+      fetchExpedientes();
+    } catch (err) {
+      console.error("Error updating:", err);
+      alert('Error al actualizar el expediente');
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+  const handleReassignClick = (exp) => {
+  setSelectedExpediente(exp);
+  setReassignEmployeeId('');
+  setShowReassignModal(true);
+  setKebabMenuId(null);
+};
+  const handleReassignSubmit = async (newEmployeeId) => {
+    setReassignSubmitting(true);
+    try {
+      await api.patch(`api/expedients/${selectedExpediente.id}/`, {
+        asinged_to: newEmployeeId
+      });
+      setShowReassignModal(false);
+      fetchExpedientes();
+    } catch (err) {
+      console.error("Error reassigning:", err);
+      alert('Error al reasignar el expediente');
+    } finally {
+      setReassignSubmitting(false);
+    }
+  };
+  const handleHistoryClick = (exp) => {
+    getExpedienteStatus(exp);
+    setShowHistoryModal(true);
+    setKebabMenuId(null);
+  };
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
   const filtered = expedientes.filter(exp => {
     const matchesSearch = exp.title?.toLowerCase().includes(search.toLowerCase()) || exp.id.toString().includes(search);
-    const status = exp.approval_status ? 'activo' : 'en_revision';
+     const status = getExpedienteStatus(exp);
     const matchesStatus = filterStatus === 'todos' || status === filterStatus;
     return matchesSearch && matchesStatus;
   });
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -188,7 +261,6 @@ export default function Expedientes() {
           Nuevo Expediente
         </button>
       </div>
-
       <div className="flex flex-wrap gap-4 mb-8 items-center bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
         <div className="relative flex-1 min-w-[300px]">
           <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
@@ -203,7 +275,7 @@ export default function Expedientes() {
           />
         </div>
         <div className="flex bg-gray-100 p-1 rounded-2xl">
-          {['todos', 'en_revision', 'activo'].map((st) => (
+          {['todos', 'en_revision', 'activo', 'rechazado'].map((st) => (
             <button
               key={st}
               onClick={() => setFilterStatus(st)}
@@ -214,7 +286,6 @@ export default function Expedientes() {
           ))}
         </div>
       </div>
-
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
           {[1,2,3].map(i => <div key={i} className="h-48 bg-gray-200 rounded-3xl"></div>)}
@@ -226,20 +297,24 @@ export default function Expedientes() {
               key={exp.id} 
               className="group bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 relative overflow-hidden"
             >
-              <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 transition-transform group-hover:scale-150 ${exp.approval_status ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-              
+              <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 transition-transform group-hover:scale-150 ${
+  getExpedienteStatus(exp) === 'activo' ? 'bg-green-500' :
+  getExpedienteStatus(exp) === 'rechazado' ? 'bg-red-500' :
+  'bg-yellow-500'
+}`}></div>
               <div className="flex justify-between items-start mb-4">
-                <span className="text-xs font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-widest">
-                  #{exp.id}
-                </span>
-                <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${exp.approval_status ? 'bg-green-50 text-green-600 border-green-100' : 'bg-yellow-50 text-yellow-600 border-yellow-100'}`}>
-                  {exp.approval_status ? '✓ ACTIVO' : '⏳ REVISIÓN'}
-                </span>
-              </div>
-
+               <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${
+  getExpedienteStatus(exp) === 'activo' ? 'bg-green-50 text-green-600 border-green-100' :
+  getExpedienteStatus(exp) === 'rechazado' ? 'bg-red-50 text-red-600 border-red-100' :
+  'bg-yellow-50 text-yellow-600 border-yellow-100'
+}`}>
+  {getExpedienteStatus(exp) === 'activo' ? '✓ ACTIVO' :
+   getExpedienteStatus(exp) === 'rechazado' ? '✗ RECHAZADO' :
+   '⏳ REVISIÓN'}
+</span>
+   </div>     
               <h3 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">{exp.title}</h3>
               <p className="text-sm text-gray-500 mb-6 line-clamp-2">{exp.description || 'Sin descripción asignada.'}</p>
-
               <div className="flex items-center gap-3 mb-6 bg-gray-50 p-3 rounded-2xl">
                 <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
                   {exp.asinged_to_username?.charAt(0) || 'A'}
@@ -249,7 +324,6 @@ export default function Expedientes() {
                   <p className="text-sm font-bold text-gray-700">{exp.asinged_to_username || 'No asignado'}</p>
                 </div>
               </div>
-
               <div className="flex gap-2">
                 <button 
                   onClick={() => handleViewDocuments(exp)}
@@ -257,15 +331,46 @@ export default function Expedientes() {
                 >
                   Ver Documentos
                 </button>
-                <button className="p-3 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); openKebabMenu(exp.id); }}
+                    className="p-3 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                  </button>
+                  {kebabMenuId === exp.id && (
+                    <div className="absolute right-0 bottom-full mb-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden">
+                      <button onClick={() => handleEditClick(exp)} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <div>
+                          <p className="font-semibold">Editar detalles</p>
+                          <p className="text-xs text-gray-400">Modificar información</p>
+                        </div>
+                      </button>
+                      <div className="border-t border-gray-100"></div>
+                      <button onClick={() => handleReassignClick(exp)} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m0 0l-4 4m4 6H4m0 0l4 4m0-4l-4-4"/></svg>
+                        <div>
+                          <p className="font-semibold">Reasignar empleado</p>
+                          <p className="text-xs text-gray-400">Cambiar responsable</p>
+                        </div>
+                      </button>
+                      <div className="border-t border-gray-100"></div>
+                      <button onClick={() => handleHistoryClick(exp)} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                          <p className="font-semibold">Ver historial</p>
+                          <p className="text-xs text-gray-400">Registro de actividad</p>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
-
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => {
@@ -332,22 +437,6 @@ export default function Expedientes() {
 <span className={`badge ${status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : 'badge-warning'}`}>
                           {status}
                         </span>
-                        {status === 'pendiente' && (
-                          <div className="flex gap-1">
-                            <button
-                              className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
-                              onClick={() => openReviewModal(doc, 'approve')}
-                            >
-                              Aprobar
-                            </button>
-                            <button
-                              className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                              onClick={() => openReviewModal(doc, 'reject')}
-                            >
-                              Rechazar
-                            </button>
-                          </div>
-                        )}
                       </div>
                   );
                 })}
@@ -356,7 +445,6 @@ export default function Expedientes() {
           </div>
         )}
       </Modal>
-
       <Modal 
         isOpen={showNewExpedienteModal} 
         onClose={() => {
@@ -381,7 +469,6 @@ export default function Expedientes() {
           }} />
         </div>
       </Modal>
-
       <Modal
         isOpen={showReviewModal}
         onClose={() => setShowReviewModal(false)}
@@ -419,7 +506,6 @@ export default function Expedientes() {
           />
         </div>
       </Modal>
-
       <Modal
         isOpen={showPreviewModal}
         onClose={() => {
@@ -511,6 +597,131 @@ export default function Expedientes() {
               </button>
             </div>
           )}
+        </div>
+      </Modal>
+      {/* Modal Editar Detalles */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Editar Detalles del Expediente"
+        footer={
+          <div className="flex gap-2">
+            <button className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancelar</button>
+            <button className="btn btn-primary" onClick={handleEditSubmit} disabled={editSubmitting}>
+              {editSubmitting ? 'Guardando...' : 'Guardar cambios'}
+            </button>
+          </div>
+        }
+      >
+        <div className="p-2">
+          <div className="form-group">
+            <label className="form-label">Título</label>
+            <input
+              className="form-input"
+              type="text"
+              value={editForm.title}
+              onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+            />
+          </div>
+          <div className="form-group" style={{ marginTop: '1rem' }}>
+            <label className="form-label">Descripción</label>
+            <textarea
+              className="form-input"
+              rows="4"
+              value={editForm.description}
+              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+            />
+          </div>
+        </div>
+      </Modal>
+      {/* Modal Reasignar Empleado */}
+      <Modal
+        isOpen={showReassignModal}
+        onClose={() => setShowReassignModal(false)}
+        title="Reasignar Expediente"
+        footer={
+          <div className="flex gap-2">
+            <button className="btn btn-secondary" onClick={() => setShowReassignModal(false)}>Cancelar</button>
+          </div>
+        }
+      >
+        <div className="p-2">
+          <p className="mb-2 font-semibold">{selectedExpediente?.title}</p>
+          <p className="text-sm text-gray-500 mb-4">Actualmente asignado a: <strong>{selectedExpediente?.asinged_to_username || 'Sin asignar'}</strong></p>
+          <div className="form-group">
+            <label className="form-label">Asignar a:</label>
+           <select 
+  className="form-input"
+  value={reassignEmployeeId}
+  onChange={(e) => setReassignEmployeeId(e.target.value)}
+>
+              <option value="">Seleccionar empleado...</option>
+              {employees.filter(e => e.is_active).map(emp => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.username} ({emp.email})
+                </option>
+              ))}
+            </select>
+          </div>
+         <button
+  className="btn btn-primary w-full mt-4"
+  onClick={() => {
+    if (reassignEmployeeId) {
+      handleReassignSubmit(Number(reassignEmployeeId));
+    } else {
+      alert('Selecciona un empleado');
+    }
+  }}
+  disabled={reassignSubmitting}
+>
+  {reassignSubmitting ? 'Reasignando...' : 'Reasignar'}
+</button>
+        </div>
+      </Modal>
+      {/* Modal Ver Historial */}
+      <Modal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        title={`Historial: Expediente #${selectedExpediente?.id}`}
+        footer={
+          <button className="btn btn-secondary" onClick={() => setShowHistoryModal(false)}>Cerrar</button>
+        }
+      >
+        <div className="p-2">
+          <div className="timeline" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#2563eb', marginTop: '0.35rem', flexShrink: 0 }}></div>
+              <div>
+                <p style={{ fontWeight: '600', fontSize: '0.875rem' }}>Expediente creado</p>
+                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{formatDate(selectedExpediente?.created_at)}</p>
+                <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Estado inicial: Pendiente</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: selectedExpediente?.status === 'Aprobado' ? '#10b981' : '#f59e0b', marginTop: '0.35rem', flexShrink: 0 }}></div>
+              <div>
+                <p style={{ fontWeight: '600', fontSize: '0.875rem' }}>Estado actual: {selectedExpediente?.status || 'Pendiente'}</p>
+                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Última actualización: {formatDate(selectedExpediente?.updated_at)}</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#8b5cf6', marginTop: '0.35rem', flexShrink: 0 }}></div>
+              <div>
+                <p style={{ fontWeight: '600', fontSize: '0.875rem' }}>Asignado a</p>
+                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{selectedExpediente?.asinged_to_username || 'Sin asignar'}</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#64748b', marginTop: '0.35rem', flexShrink: 0 }}></div>
+              <div>
+                <p style={{ fontWeight: '600', fontSize: '0.875rem' }}>Departamento</p>
+                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{selectedExpediente?.department_name || 'Sin departamento'}</p>
+              </div>
+            </div>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '1rem', fontStyle: 'italic' }}>
+            Nota: El registro detallado de cambios estará disponible próximamente.
+          </p>
         </div>
       </Modal>
     </div>
