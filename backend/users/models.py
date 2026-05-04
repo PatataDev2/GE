@@ -7,7 +7,7 @@ class Role(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Administrador'),
         ('analyst', 'Analista'),
-        ('employee', 'Empleado'),
+        ('employee', 'Trabajador'),
         ('user', 'Usuario Normal'),
     ]
     

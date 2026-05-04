@@ -18,7 +18,7 @@ def create_roles_and_admin(apps, schema_editor):
     )
     Role.objects.create(
         name='employee',
-        description='Empleado que puede subir y gestionar sus expedientes'
+        description='Trabajador que puede subir y gestionar sus expedientes'
     )
     Role.objects.create(
         name='user',

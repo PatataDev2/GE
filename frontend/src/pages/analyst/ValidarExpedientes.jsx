@@ -100,7 +100,7 @@ export default function ValidarExpedientes() {
     <div>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Validar Expedientes</h2>
-        <p className="text-gray-500 mt-1">Revisa y valida los expedientes enviados por los empleados</p>
+        <p className="text-gray-500 mt-1">Revisa y valida los expedientes enviados por los trabajadores</p>
       </div>
       <div className="flex items-center gap-4 mb-6">
         <div className="flex bg-gray-100 p-1 rounded-xl">

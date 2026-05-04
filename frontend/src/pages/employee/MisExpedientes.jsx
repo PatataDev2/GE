@@ -64,13 +64,15 @@ export default function MisExpedientes() {
 
   const fetchDocuments = async (expedientId) => {
     setDocLoading(true);
+    setDocuments([]);
     try {
       const res = await api.get(`api/documents/?expedient=${expedientId}`);
       let docs = res.data;
       if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
         docs = docs.results || [];
       }
-      setDocuments(Array.isArray(docs) ? docs : []);
+      const filteredDocs = (Array.isArray(docs) ? docs : []).filter(d => d.expedient === expedientId);
+      setDocuments(filteredDocs);
     } catch (err) {
       console.error("Error fetching documents:", err);
       setDocuments([]);
@@ -80,9 +82,16 @@ export default function MisExpedientes() {
   };
 
   const handleViewExpediente = async (exp) => {
+    setDocuments([]);
     setSelectedExpediente(exp);
     setIsModalOpen(true);
     await fetchDocuments(exp.id);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setDocuments([]);
+    setSelectedExpediente(null);
   };
 
   const handleUploadDocument = async (e) => {
@@ -150,7 +159,8 @@ export default function MisExpedientes() {
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
               <span style={{ fontFamily: 'monospace', fontWeight: '600', color: '#2563eb' }}>#{exp.id}</span>
-              <span className={`badge ${statusClass}`}>{statusText}</span>
+              {exp.is_draft && <span className="badge" style={{ background: '#fde68a', color: '#92400e' }}>Borrador</span>}
+              {!exp.is_draft && <span className={`badge ${statusClass}`}>{statusText}</span>}
             </div>
             <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
             <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
@@ -295,6 +305,9 @@ export default function MisExpedientes() {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Mis expedientes</h3>
+          <a href="/employee/gestion-correcciones" style={{ fontSize: '0.875rem', color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
+            Ver Gestion de Correcciones →
+          </a>
         </div>
 
         {loading ? (
@@ -318,10 +331,10 @@ export default function MisExpedientes() {
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         title={`Expediente #${selectedExpediente?.id} - ${selectedExpediente?.title}`}
         footer={
-          <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
+          <button className="btn btn-secondary" onClick={handleCloseModal}>
             Cerrar
           </button>
         }

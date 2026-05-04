@@ -114,6 +114,7 @@ const getMenuItems = (role) => {
       return [
         ...commonItems,
         { path: '/employee/mis-expedientes', label: 'Mis Expedientes', icon: Icons.Folder },
+        { path: '/employee/gestion-correcciones', label: 'Gestion de Correcciones', icon: Icons.Activity },
         { path: '/employee/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
       ];
     case 'user':
@@ -131,7 +132,7 @@ const getRoleName = (role) => {
   switch (role) {
     case 'admin': return 'Administrador';
     case 'analyst': return 'Analista';
-    case 'employee': return 'Empleado';
+    case 'employee': return 'Trabajador';
     case 'user': return 'Usuario Normal';
     default: return 'Usuario';
   }

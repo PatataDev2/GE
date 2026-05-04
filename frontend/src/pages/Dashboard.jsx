@@ -92,8 +92,8 @@ const AdminDashboardContent = () => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {[
             { user: 'analista1', action: 'Aprobó expediente EXP-2024-0045', time: 'Hace 5 min' },
-            { user: 'admin', action: 'Creó usuario empleado3', time: 'Hace 15 min' },
-            { user: 'empleado1', action: 'Subió documento cedula.pdf', time: 'Hace 30 min' },
+            { user: 'admin', action: 'Creó usuario trabajador3', time: 'Hace 15 min' },
+            { user: 'trabajador1', action: 'Subió documento cedula.pdf', time: 'Hace 30 min' },
             { user: 'analista2', action: 'Rechazó expediente EXP-2024-0043', time: 'Hace 1 hora' },
           ].map((item, idx) => (
             <div key={idx} className="activity-item">
@@ -231,7 +231,7 @@ const AnalystDashboardContent = () => {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Empleado</th>
+                  <th>Trabajador</th>
                   <th>Estado</th>
                 </tr>
               </thead>

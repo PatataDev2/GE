@@ -5,14 +5,15 @@ import api from '../../api/axios';
 
 const ExpedientForm = ({ onSuccess }) => {
   const [departments, setDepartments] = useState([]);
-  const [employees, setEmployees] = useState([]);
+  const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     department: '',  
-    asinged_to: ''   
+    asinged_to: '',
+    is_draft: false   
   });
 
   useEffect(() => {
@@ -23,7 +24,7 @@ const ExpedientForm = ({ onSuccess }) => {
           api.get('api/users/')        
         ]);
         setDepartments(resDep.data);
-        setEmployees(resUsers.data.filter(u => u.role_name === 'employee'));
+        setWorkers(resUsers.data.filter(u => u.role_name === 'employee'));
       } catch (err) {
         console.error("Error cargando datos:", err);
       }
@@ -78,7 +79,7 @@ const ExpedientForm = ({ onSuccess }) => {
 
         {/* Select Analista */}
         <div>
-          <label className="text-sm font-bold text-indigo-900 mb-2 block">Asignar Empleado</label>
+          <label className="text-sm font-bold text-indigo-900 mb-2 block">Asignar Trabajador</label>
           <select 
             required
             className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-emerald-500 rounded-2xl outline-none cursor-pointer text-gray-700"
@@ -86,7 +87,7 @@ const ExpedientForm = ({ onSuccess }) => {
             onChange={(e) => setFormData({...formData, asinged_to: e.target.value})}
           >
             <option value="">Seleccionar...</option>
-            {employees.map(user => (
+            {workers.map(user => (
               <option key={user.id} value={user.id}>{user.username}</option>
             ))}
           </select>

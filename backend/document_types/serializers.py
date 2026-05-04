@@ -5,5 +5,5 @@ from .models import DocumentType
 class DocumentTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentType
-        fields = ['id', 'name', 'description', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'is_active', 'is_required', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']

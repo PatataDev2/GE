@@ -31,7 +31,7 @@ export default function Expedientes() {
   const [showReassignModal, setShowReassignModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editForm, setEditForm] = useState({ title: '', description: '' });
-  const [employees, setEmployees] = useState([]);
+  const [workers, setWorkers] = useState([]);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [reassignSubmitting, setReassignSubmitting] = useState(false);
   const [reassignEmployeeId, setReassignEmployeeId] = useState('');
@@ -46,17 +46,17 @@ export default function Expedientes() {
       setLoading(false);
     }
   };
-  const fetchEmployees = async () => {
+  const fetchWorkers = async () => {
     try {
       const res = await api.get('api/users/');
-      setEmployees(res.data.filter(u => u.role_name === 'employee'));
+      setWorkers(res.data.filter(u => u.role_name === 'employee'));
     } catch (err) {
-      console.error("Error fetching employees:", err);
+      console.error("Error fetching workers:", err);
     }
   };
   useEffect(() => { 
     fetchExpedientes(); 
-    fetchEmployees();
+    fetchWorkers();
   }, []);
 
   useEffect(() => {
@@ -183,7 +183,8 @@ export default function Expedientes() {
       console.log('Token:', token);
       const res = await api.post(`api/documents/${selectedDoc.id}/review/`, {
         action: reviewAction,
-        message: reviewMessage
+        message: reviewMessage,
+        corrections: reviewAction === 'reject' ? reviewMessage : ''
       });
       console.log('Review response:', res.data);
       setShowReviewModal(false);
@@ -367,7 +368,7 @@ export default function Expedientes() {
                       <button onClick={() => handleReassignClick(exp)} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m0 0l-4 4m4 6H4m0 0l4 4m0-4l-4-4"/></svg>
                         <div>
-                          <p className="font-semibold">Reasignar empleado</p>
+                          <p className="font-semibold">Reasignar trabajador</p>
                           <p className="text-xs text-gray-400">Cambiar responsable</p>
                         </div>
                       </button>
@@ -520,14 +521,14 @@ export default function Expedientes() {
         <div className="p-2">
           <p className="mb-2 font-semibold">{selectedDoc?.title}</p>
           <label className="block text-sm font-medium mb-1">
-            Mensaje {reviewAction === 'reject' ? '(requerido para rechazo)' : '(opcional)'}
+            {reviewAction === 'reject' ? 'Correcciones requeridas *' : 'Comentario (opcional)'}
           </label>
           <textarea
             className="w-full p-3 border rounded-lg"
             rows="4"
             value={reviewMessage}
             onChange={(e) => setReviewMessage(e.target.value)}
-            placeholder={reviewAction === 'reject' ? 'Explique el motivo del rechazo...' : 'Agregue un comentario (opcional)...'}
+            placeholder={reviewAction === 'reject' ? 'Describe las correcciones que debe hacer el trabajador...' : 'Agregue un comentario (opcional)...'}
           />
         </div>
       </Modal>
@@ -664,7 +665,7 @@ export default function Expedientes() {
           </div>
         </div>
       </Modal>
-      {/* Modal Reasignar Empleado */}
+      {/* Modal Reasignar Trabajador */}
       <Modal
         isOpen={showReassignModal}
         onClose={() => setShowReassignModal(false)}
@@ -685,8 +686,8 @@ export default function Expedientes() {
   value={reassignEmployeeId}
   onChange={(e) => setReassignEmployeeId(e.target.value)}
 >
-              <option value="">Seleccionar empleado...</option>
-              {employees.filter(e => e.is_active).map(emp => (
+              <option value="">Seleccionar trabajador...</option>
+              {workers.filter(e => e.is_active).map(emp => (
                 <option key={emp.id} value={emp.id}>
                   {emp.username} ({emp.email})
                 </option>
@@ -699,7 +700,7 @@ export default function Expedientes() {
     if (reassignEmployeeId) {
       handleReassignSubmit(Number(reassignEmployeeId));
     } else {
-      alert('Selecciona un empleado');
+      alert('Selecciona un trabajador');
     }
   }}
   disabled={reassignSubmitting}

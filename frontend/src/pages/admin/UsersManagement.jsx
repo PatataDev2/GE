@@ -10,7 +10,7 @@ import { getUsers, createUser, updateUser, deleteUser } from '../../api/users.ap
 const roleLabels = {
   1: 'Administrador',
   2: 'Analista',
-  3: 'Empleado',
+  3: 'Trabajador',
   4: 'Usuario Normal'
 };
 
@@ -212,7 +212,7 @@ export default function UsersManagement() {
           </div>
           <div>
             <div className="stat-value">{users.filter(u => u.role?.id === 3 || u.role === 3).length}</div>
-            <div className="stat-label">Empleados</div>
+            <div className="stat-label">Trabajadores</div>
           </div>
         </div>
       </div>
@@ -244,7 +244,7 @@ export default function UsersManagement() {
             <option value="user">Usuario Normal</option>
             <option value="admin">Administrador</option>
             <option value="analyst">Analista</option>
-            <option value="employee">Empleado</option>
+            <option value="employee">Trabajador</option>
           </select>
           <button className="btn btn-primary" onClick={handleOpenCreate}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -303,7 +303,7 @@ export default function UsersManagement() {
                        user.role?.id === 2 || user.role === 2 ? 'badge-info' : 
                        user.role?.id === 4 || user.role === 4 ? 'badge-primary' : 'badge-secondary'
                      }`}>
-                       {roleLabels[user.role?.id || user.role] || 'Empleado'}
+                       {roleLabels[user.role?.id || user.role] || 'Trabajador'}
                      </span>
                    </td>
                    <td>
@@ -424,7 +424,7 @@ export default function UsersManagement() {
           >
             <option value="user">Usuario Normal</option>
             <option value="user">Usuario Normal</option>
-            <option value="employee">Empleado</option>
+            <option value="employee">Trabajador</option>
             <option value="analyst">Analista</option>
             <option value="admin">Administrador</option>
           </select>

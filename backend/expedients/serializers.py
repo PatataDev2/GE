@@ -21,6 +21,7 @@ class ExpedientSerializer(serializers.ModelSerializer):
         'title', 
         'description', 
         'status', 
+        'is_draft',
         'asinged_to',
         'department_name',
         'asinged_to_username',
@@ -43,7 +44,7 @@ class ExpedientSerializer(serializers.ModelSerializer):
         if role_name != 'employee':
             print(f"RESULTADO: Rechazado. '{role_name}' no es igual a 'employee'")
             raise serializers.ValidationError(
-                f"Este usuario tiene el rol '{role_name}'. Solo se pueden asignar expedientes a 'employee'."
+                f"Este usuario tiene el rol '{role_name}'. Solo se pueden asignar expedientes a 'trabajador'."
             )
         
         print("RESULTADO: Validación exitosa.")

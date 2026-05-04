@@ -23,6 +23,14 @@ class DocumentSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and request.user:
             data['uploaded_by'] = request.user
+            user = request.user
+            
+            if user.role and user.role.name == 'employee':
+                expedient_obj = data.get('expedient')
+                if expedient_obj and expedient_obj.asinged_to_id != user.id:
+                    raise serializers.ValidationError(
+                        "No tienes permiso para subir documentos a este expediente."
+                    )
 
         file_obj = data.get('file')
         expedient_obj = data.get('expedient')
