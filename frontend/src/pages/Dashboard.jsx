@@ -280,111 +280,150 @@ const AnalystDashboardContent = () => {
     </div>
   );
 };
-const EmployeeDashboardContent = () => (
-  <div>
-    <div className="stats-grid">
-      <div className="stat-card">
-        <div className="stat-icon blue">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">3</div>
-          <div className="stat-label">Mis Expedientes</div>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon green">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">1</div>
-          <div className="stat-label">Aprobados</div>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon yellow">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">1</div>
-          <div className="stat-label">En Revisión</div>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon red">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">2</div>
-          <div className="stat-label">Notificaciones</div>
-        </div>
-      </div>
-    </div>
+const EmployeeDashboardContent = () => {
+  const [expedientes, setExpedientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notificacionesCount, setNotificacionesCount] = useState(0);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const expRes = await api.get('api/expedients/my/');
+        let expData = expRes.data;
+        if (expData && typeof expData === 'object' && !Array.isArray(expData)) {
+          expData = expData.results || [];
+        }
+        setExpedientes(Array.isArray(expData) ? expData : []);
+      } catch (err) {
+        console.error('Error fetching expedients:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-    <div className="grid-2">
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Mis Expedientes Recientes</h3>
+  const totalExpedientes = expedientes.length;
+  const aprobados = expedientes.filter(e => e.approval_status).length;
+  const enRevision = expedientes.filter(e => !e.approval_status && !e.rejection_status).length;
+  const rechazados = expedientes.filter(e => e.rejection_status).length;
+  
+  const recientes = [...expedientes]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 3);
+
+  if (loading) return <div className="p-8 text-center text-gray-400">Cargando dashboard...</div>;
+
+  return (
+    <div>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{totalExpedientes}</div>
+            <div className="stat-label">Mis Expedientes</div>
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {[
-            { id: 'EXP-2024-0001', tipo: 'Ingreso', status: 'activo' },
-            { id: 'EXP-2024-0010', tipo: 'Actualización de Datos', status: 'en_revision' },
-            { id: 'EXP-2024-0015', tipo: 'Solicitud de Vacaciones', status: 'rechazado' }
-          ].map((exp, idx) => (
-            <div key={idx} style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              padding: '0.75rem',
-              background: '#f8fafc',
-              borderRadius: '0.5rem'
-            }}>
-              <div>
-                <span style={{ fontFamily: 'monospace', color: '#2563eb', fontWeight: '500' }}>{exp.id}</span>
-                <span style={{ marginLeft: '0.5rem', color: '#64748b' }}>{exp.tipo}</span>
-              </div>
-              <span className={`badge ${
-                exp.status === 'activo' ? 'badge-success' : 
-                exp.status === 'en_revision' ? 'badge-warning' : 'badge-danger'
-              }`}>
-                {exp.status === 'activo' ? 'Aprobado' : exp.status === 'en_revision' ? 'En Revisión' : 'Rechazado'}
-              </span>
-            </div>
-          ))}
+        <div className="stat-card">
+          <div className="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{aprobados}</div>
+            <div className="stat-label">Aprobados</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon yellow">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{enRevision}</div>
+            <div className="stat-label">En Revisión</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon red">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{rechazados}</div>
+            <div className="stat-label">Rechazados</div>
+          </div>
         </div>
       </div>
-      
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Acciones Rápidas</h3>
+
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Mis Expedientes Recientes</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {recientes.length === 0 ? (
+              <div className="text-center text-gray-400 p-4">No hay expedientes</div>
+            ) : (
+              recientes.map((exp, idx) => (
+                <div key={idx} style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  padding: '0.75rem',
+                  background: '#f8fafc',
+                  borderRadius: '0.5rem'
+                }}>
+                  <div>
+                    <span style={{ fontFamily: 'monospace', color: '#2563eb', fontWeight: '500' }}>#{exp.id}</span>
+                    <span style={{ marginLeft: '0.5rem', color: '#64748b' }}>{exp.title}</span>
+                  </div>
+                  <span className={`badge ${
+                    exp.approval_status ? 'badge-success' : 
+                    exp.rejection_status ? 'badge-danger' : 'badge-warning'
+                  }`}>
+                    {exp.approval_status ? 'Aprobado' : exp.rejection_status ? 'Rechazado' : 'En Revisión'}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <a href="/employee/subir-documentos" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-            Subir Nuevos Documentos
-          </a>
-          <a href="/employee/mis-expedientes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-            Ver Mis Expedientes
-          </a>
-          <a href="/employee/notificaciones" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
-            Ver Notificaciones (2)
-          </a>
+       
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Acciones Rápidas</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <a href="/employee/subir-documentos" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+              Subir Nuevos Documentos
+            </a>
+            <a href="/employee/mis-expedientes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+              Ver Mis Expedientes
+            </a>
+            <a href="/employee/notificaciones" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+              Ver Notificaciones
+            </a>
+            <a href="/employee/gestion-correcciones" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+              Gestión de Correcciones
+            </a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
