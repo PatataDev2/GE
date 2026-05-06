@@ -13,13 +13,15 @@ export default function GestionCorrecciones() {
   const [loading, setLoading] = useState(true);
   const [selectedCorrection, setSelectedCorrection] = useState(null);
   const [selectedDraft, setSelectedDraft] = useState(null);
-  const [showReplaceModal, setShowReplaceModal] = useState(false);
-  const [showDraftModal, setShowDraftModal] = useState(false);
-  const [showChecklistModal, setShowChecklistModal] = useState(false);
-  const [replacingFile, setReplacingFile] = useState(null);
+const [showReplaceModal, setShowReplaceModal] = useState(false);
+const [showDraftModal, setShowDraftModal] = useState(false);
+const [replacingFile, setReplacingFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [sendingToReview, setSendingToReview] = useState(false);
-  const [checklistStatus, setChecklistStatus] = useState({ complete: false, missing: [] });
+  const [draftUploading, setDraftUploading] = useState(false);
+const [draftUploadFile, setDraftUploadFile] = useState(null);
+const [replacingDraftDocId, setReplacingDraftDocId] = useState(null);
+const [draftDocuments, setDraftDocuments] = useState([]);
   
   const fileInputRef = useRef(null);
 
@@ -55,40 +57,23 @@ export default function GestionCorrecciones() {
     setShowReplaceModal(true);
   };
 
-  const handleOpenDraftModal = (draft) => {
-    setSelectedDraft(draft);
-    setShowDraftModal(true);
-  };
-
-  const handleOpenChecklist = async (draft) => {
-    setSelectedDraft(draft);
-    try {
-      const [docsRes] = await Promise.all([
-        api.get(`api/documents/?expedient=${draft.id}`)
-      ]);
-      let docs = docsRes.data;
-      if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
-        docs = docs.results || [];
-      }
-      const uploadedTypeIds = new Set(
-        (Array.isArray(docs) ? docs : [])
-          .filter(d => d.document_type)
-          .map(d => d.document_type)
-      );
-      const requiredTypes = (Array.isArray(docTypes) ? docTypes : []).filter(t => t.is_required);
-      const missing = requiredTypes.filter(t => !uploadedTypeIds.has(t.id));
-      setChecklistStatus({
-        complete: missing.length === 0,
-        missing,
-        uploaded: docs || []
-      });
-      setShowChecklistModal(true);
-    } catch (err) {
-      console.error('Error checking documents:', err);
+const handleOpenDraftModal = async (draft) => {
+  setSelectedDraft(draft);
+  try {
+    const docsRes = await api.get(`api/documents/?expedient=${draft.id}`);
+    let docs = docsRes.data;
+    if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
+      docs = docs.results || [];
     }
-  };
+    setDraftDocuments(Array.isArray(docs) ? docs : []);
+  } catch (err) {
+    console.error('Error fetching draft documents:', err);
+    setDraftDocuments([]);
+  }
+  setShowDraftModal(true);
+};
 
-  const handleReplaceFile = async () => {
+const handleReplaceFile = async () => {
     const file = fileInputRef.current?.files[0];
     if (!file) {
       alert('Selecciona un archivo para reemplazar');
@@ -114,29 +99,57 @@ export default function GestionCorrecciones() {
     }
   };
 
-  const handleSendToReview = async () => {
-    if (!selectedDraft) return;
+const handleReplaceDraftDocument = async (docId) => {
+  if (!draftUploadFile || !selectedDraft) return;
 
-    setSendingToReview(true);
-    try {
-      await api.post(`api/expedients/${selectedDraft.id}/send_to_review/`);
-      alert('Expediente enviado a revision exitosamente!');
-      setShowChecklistModal(false);
-      setShowDraftModal(false);
-      fetchData();
-    } catch (err) {
-      console.error('Error sending to review:', err);
-      if (err.response?.data?.missing_documents) {
-        alert('No se puede enviar: faltan documentos obligatorios');
-      } else {
-        alert('Error al enviar a revision');
-      }
-    } finally {
-      setSendingToReview(false);
+  setDraftUploading(true);
+  const formData = new FormData();
+  formData.append('file', draftUploadFile);
+
+  try {
+    await api.post(`api/documents/${docId}/replace_file/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    alert('Documento reemplazado exitosamente');
+    setDraftUploadFile(null);
+    setReplacingDraftDocId(null);
+    
+    const docsRes = await api.get(`api/documents/?expedient=${selectedDraft.id}`);
+    let docs = docsRes.data;
+    if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
+      docs = docs.results || [];
     }
-  };
+    setDraftDocuments(Array.isArray(docs) ? docs : []);
+  } catch (err) {
+    console.error('Error replacing document:', err);
+    alert('Error al reemplazar documento: ' + (err.response?.data?.error || err.message));
+  } finally {
+    setDraftUploading(false);
+  }
+};
 
-  const formatDate = (dateStr) => {
+const handleSendToReview = async () => {
+  if (!selectedDraft) return;
+
+  setSendingToReview(true);
+  try {
+    await api.post(`api/expedients/${selectedDraft.id}/send_to_review/`);
+    alert('Expediente enviado a revision exitosamente!');
+    setShowDraftModal(false);
+    fetchData();
+  } catch (err) {
+    console.error('Error sending to review:', err);
+    if (err.response?.data?.missing_documents) {
+      alert('No se puede enviar: faltan documentos obligatorios');
+    } else {
+      alert('Error al enviar a revision');
+    }
+  } finally {
+    setSendingToReview(false);
+  }
+};
+
+const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleDateString('es-ES', {
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -277,11 +290,25 @@ export default function GestionCorrecciones() {
                           <p style={{ color: '#9ca3af', fontSize: '0.8rem', marginTop: '0.25rem' }}>{draft.description}</p>
                         )}
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-secondary" onClick={() => handleOpenChecklist(draft)}>
-                          Checklist
-                        </button>
-                        <button className="btn btn-primary" onClick={() => handleOpenDraftModal(draft)}>
+                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', paddingTop: '0.5rem' }}>
+                        <button 
+                          className="btn btn-primary" 
+                          onClick={() => handleOpenDraftModal(draft)}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.5rem',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '0.5rem',
+                            fontWeight: '500',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                          }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
                           Ver Detalles
                         </button>
                       </div>
@@ -346,130 +373,162 @@ export default function GestionCorrecciones() {
         )}
       </Modal>
 
-      <Modal
-        isOpen={showDraftModal}
-        onClose={() => setShowDraftModal(false)}
-        title={`Borrador #${selectedDraft?.id} - ${selectedDraft?.title}`}
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={() => setShowDraftModal(false)}>Cerrar</button>
-            <button className="btn btn-primary" onClick={() => { setShowDraftModal(false); handleOpenChecklist(selectedDraft); }}>
-              Ver Checklist y Enviar
-            </button>
-          </>
-        }
+<Modal
+  isOpen={showDraftModal}
+  onClose={() => setShowDraftModal(false)}
+  title={`Borrador #${selectedDraft?.id} - ${selectedDraft?.title}`}
+  footer={
+    <>
+      <button 
+        className="btn btn-secondary" 
+        onClick={() => setShowDraftModal(false)}
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.5rem',
+          padding: '0.5rem 1rem',
+          borderRadius: '0.5rem',
+          fontWeight: '500'
+        }}
       >
-        {selectedDraft && (
-          <div>
-            <div style={{ marginBottom: '1rem' }}>
-              <span className="badge badge-warning">Borrador</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-                <strong>Departamento:</strong> {selectedDraft.department_name || 'No especificado'}
-              </div>
-              <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-                <strong>Descripcion:</strong> {selectedDraft.description || 'Sin descripcion'}
-              </div>
-              <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-                <strong>Creado:</strong> {formatDate(selectedDraft.created_at)}
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      <Modal
-        isOpen={showChecklistModal}
-        onClose={() => setShowChecklistModal(false)}
-        title={`Checklist: Expediente #${selectedDraft?.id}`}
-        footer={
-          <>
-            <button className="btn btn-secondary" onClick={() => setShowChecklistModal(false)}>Cerrar</button>
-            <button
-              className="btn btn-success"
-              onClick={handleSendToReview}
-              disabled={sendingToReview || !checklistStatus.complete}
-              style={{ opacity: checklistStatus.complete ? 1 : 0.5 }}
-            >
-              {sendingToReview ? 'Enviando...' : 'Enviar a Revision'}
-            </button>
-          </>
-        }
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Cerrar
+      </button>
+      <button
+        className="btn btn-success"
+        onClick={handleSendToReview}
+        disabled={sendingToReview}
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.5rem',
+          padding: '0.5rem 1rem',
+          borderRadius: '0.5rem',
+          fontWeight: '500'
+        }}
       >
-        {selectedDraft && (
-          <div>
-            <p style={{ marginBottom: '1rem', color: '#64748b' }}>
-              Verifica que hayas subido todos los documentos obligatorios antes de enviar a revision.
-            </p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M22 2L11 13"/>
+          <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+        </svg>
+        {sendingToReview ? 'Enviando...' : 'Enviar a Revision'}
+      </button>
+    </>
+  }
+>
+  {selectedDraft && (
+    <div>
+      <div style={{ marginBottom: '1rem' }}>
+        <span className="badge badge-warning">Borrador</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+        <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+          <strong>Departamento:</strong> {selectedDraft.department_name || 'No especificado'}
+        </div>
+        <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+          <strong>Descripcion:</strong> {selectedDraft.description || 'Sin descripcion'}
+        </div>
+        <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+          <strong>Creado:</strong> {formatDate(selectedDraft.created_at)}
+        </div>
+      </div>
 
-            {checklistStatus.missing.length > 0 && (
-              <div style={{ padding: '1rem', background: '#fef2f2', borderRadius: '0.5rem', marginBottom: '1rem' }}>
-                <strong style={{ color: '#ef4444' }}>Documentos faltantes:</strong>
-                <ul style={{ marginTop: '0.5rem', paddingLeft: '1.25rem', margin: 0 }}>
-                  {checklistStatus.missing.map(doc => (
-                    <li key={doc.id} style={{ color: '#374151', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                      {doc.name} {doc.description && <span style={{ color: '#64748b' }}>({doc.description})</span>}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {docTypes.filter(t => t.is_required).map(type => {
-                const isUploaded = checklistStatus.uploaded?.some(d => d.document_type === type.id);
-                return (
-                  <div key={type.id} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem',
-                    background: isUploaded ? '#d1fae5' : '#fef2f2',
-                    borderRadius: '0.5rem',
-                    border: `1px solid ${isUploaded ? '#6ee7b7' : '#fecaca'}`
-                  }}>
-                    <div style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      background: isUploaded ? '#10b981' : '#ef4444',
+      <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>Documentos Subidos</h4>
+      {draftDocuments.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {draftDocuments.map(doc => (
+            <div key={doc.id} style={{
+              padding: '0.75rem',
+              background: '#f8fafc',
+              borderRadius: '0.5rem',
+              border: '1px solid #e2e8f0',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ fontSize: '0.875rem' }}>{doc.document_type_name || 'Documento'}</strong>
+                  {doc.file && (
+                    <a href={doc.file} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: '#2563eb', marginLeft: '0.5rem' }}>
+                      Ver archivo
+                    </a>
+                  )}
+                </div>
+                {replacingDraftDocId !== doc.id && (
+                  <button
+                    className="btn btn-secondary"
+                    style={{ 
+                      padding: '0.375rem 0.75rem', 
+                      fontSize: '0.75rem',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
-                    }}>
-                      {isUploaded ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                          <line x1="18" y1="6" x2="6" y2="18"/>
-                          <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <strong style={{ fontSize: '0.875rem' }}>{type.name}</strong>
-                      {type.description && <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>{type.description}</p>}
-                    </div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: isUploaded ? '#10b981' : '#ef4444' }}>
-                      {isUploaded ? 'Subido' : 'Faltante'}
-                    </span>
-                  </div>
-                );
-              })}
+                      gap: '0.375rem',
+                      borderRadius: '0.375rem'
+                    }}
+                    onClick={() => setReplacingDraftDocId(doc.id)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Reemplazar
+                  </button>
+                )}
+              </div>
+              {replacingDraftDocId === doc.id && (
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', padding: '0.75rem', background: '#f1f5f9', borderRadius: '0.5rem', marginTop: '0.75rem' }}>
+                  <input
+                    type="file"
+                    onChange={(e) => setDraftUploadFile(e.target.files[0])}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    style={{ fontSize: '0.75rem', flex: 1 }}
+                  />
+                  <button
+                    className="btn btn-primary"
+                    style={{ 
+                      padding: '0.375rem 0.75rem', 
+                      fontSize: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.375rem',
+                      borderRadius: '0.375rem',
+                      whiteSpace: 'nowrap'
+                    }}
+                    onClick={() => handleReplaceDraftDocument(doc.id)}
+                    disabled={!draftUploadFile || draftUploading}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    {draftUploading ? 'Subiendo...' : 'Confirmar'}
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ 
+                      padding: '0.375rem 0.75rem', 
+                      fontSize: '0.75rem',
+                      borderRadius: '0.375rem',
+                      whiteSpace: 'nowrap'
+                    }}
+                    onClick={() => { setReplacingDraftDocId(null); setDraftUploadFile(null); }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
             </div>
-
-            {checklistStatus.complete && (
-              <p style={{ marginTop: '1rem', textAlign: 'center', color: '#10b981', fontWeight: '600' }}>
-                Todos los documentos obligatorios estan completos. Puedes enviar a revision.
-              </p>
-            )}
-          </div>
-        )}
-      </Modal>
+          ))}
+        </div>
+      ) : (
+        <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No hay documentos subidos aún.</p>
+      )}
+    </div>
+  )}
+</Modal>
     </div>
   );
 }

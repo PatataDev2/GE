@@ -304,9 +304,9 @@ const EmployeeDashboardContent = () => {
   }, []);
 
   const totalExpedientes = expedientes.length;
-  const aprobados = expedientes.filter(e => e.approval_status).length;
-  const enRevision = expedientes.filter(e => !e.approval_status && !e.rejection_status).length;
-  const rechazados = expedientes.filter(e => e.rejection_status).length;
+  const aprobados = expedientes.filter(e => e.status === 'Aprobado').length;
+  const enRevision = expedientes.filter(e => e.status === 'Pendiente' || e.status === 'Proceso').length;
+  const rechazados = expedientes.filter(e => e.status === 'Rechazado').length;
   
   const recientes = [...expedientes]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -390,10 +390,10 @@ const EmployeeDashboardContent = () => {
                     <span style={{ marginLeft: '0.5rem', color: '#64748b' }}>{exp.title}</span>
                   </div>
                   <span className={`badge ${
-                    exp.approval_status ? 'badge-success' : 
-                    exp.rejection_status ? 'badge-danger' : 'badge-warning'
+                    exp.status === 'Aprobado' ? 'badge-success' : 
+                    exp.status === 'Rechazado' ? 'badge-danger' : 'badge-warning'
                   }`}>
-                    {exp.approval_status ? 'Aprobado' : exp.rejection_status ? 'Rechazado' : 'En Revisión'}
+                    {exp.status === 'Aprobado' ? 'Aprobado' : exp.status === 'Rechazado' ? 'Rechazado' : 'En Revisión'}
                   </span>
                 </div>
               ))

@@ -17,6 +17,7 @@ export default function MisExpedientes() {
   const [docTypes, setDocTypes] = useState([]);
   const [loadingDocTypes, setLoadingDocTypes] = useState(false);
   const [showCommentDocId, setShowCommentDocId] = useState(null);
+  const [savingAsDraft, setSavingAsDraft] = useState(false);
   
   const fileInputRef = useRef(null);
   const titleInputRef = useRef(null);
@@ -101,12 +102,12 @@ export default function MisExpedientes() {
     const title = titleInputRef.current?.value;
     const documentType = typeSelectRef.current?.value;
     const description = descInputRef.current?.value;
-
+    
     if (!file || !documentType) {
-      alert("Selecciona un archivo y tipo de documento");
+      alert("Seleccione un archivo y tipo de documento");
       return;
     }
-
+    
     setUploading(true);
     const formData = new FormData();
     formData.append('title', title || file.name);
@@ -114,7 +115,7 @@ export default function MisExpedientes() {
     formData.append('expedient', selectedExpediente.id);
     formData.append('document_type', documentType);
     formData.append('description_content', description || '');
-
+    
     try {
       await api.post('api/documents/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -136,16 +137,33 @@ export default function MisExpedientes() {
     }
   };
 
+  const handleSaveAsDraft = async () => {
+    if (!selectedExpediente) return;
+    
+    setSavingAsDraft(true);
+    try {
+      await api.post(`api/expedients/${selectedExpediente.id}/save_draft/`);
+      alert('Expediente guardado como borrador exitosamente');
+      handleCloseModal();
+      fetchExpedientes();
+    } catch (err) {
+      console.error('Error saving as draft:', err);
+      alert('Error al guardar como borrador: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setSavingAsDraft(false);
+    }
+  };
+  
   // Calculate stats safely
   const totalExpedientes = Array.isArray(expedientes) ? expedientes.length : 0;
-  const activosExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => e.approval_status).length : 0;
-  const enRevisionExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => !e.approval_status && !e.rejection_status).length : 0;
-  const rechazadosExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => e.rejection_status).length : 0;
+  const activosExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => e.status === 'Aprobado').length : 0;
+  const enRevisionExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => e.status === 'Pendiente' || e.status === 'Proceso').length : 0;
+  const rechazadosExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => e.status === 'Rechazado').length : 0;
 
   function ExpedienteCard({ exp }) {
-    const statusClass = exp.approval_status ? 'badge-success' : exp.rejection_status ? 'badge-danger' : 'badge-warning';
-    const statusText = exp.approval_status ? 'Aprobado' : exp.rejection_status ? 'Rechazado' : 'En Revision';
-    const bgColor = exp.rejection_status ? '#fef2f2' : !exp.approval_status ? '#fefce8' : 'white';
+    const statusClass = exp.status === 'Aprobado' ? 'badge-success' : exp.status === 'Rechazado' ? 'badge-danger' : 'badge-warning';
+    const statusText = exp.status === 'Aprobado' ? 'Aprobado' : exp.status === 'Rechazado' ? 'Rechazado' : 'En Revision';
+    const bgColor = exp.status === 'Rechazado' ? '#fef2f2' : (exp.status === 'Pendiente' || exp.status === 'Proceso') ? '#fefce8' : 'white';
 
     return (
       <div style={{ 
@@ -334,16 +352,27 @@ export default function MisExpedientes() {
         onClose={handleCloseModal}
         title={`Expediente #${selectedExpediente?.id} - ${selectedExpediente?.title}`}
         footer={
-          <button className="btn btn-secondary" onClick={handleCloseModal}>
-            Cerrar
-          </button>
+          <>
+            <button className="btn btn-secondary" onClick={handleCloseModal}>
+              Cerrar
+            </button>
+            {selectedExpediente && !selectedExpediente.is_draft && (
+              <button 
+                className="btn btn-warning" 
+                onClick={handleSaveAsDraft}
+                disabled={savingAsDraft}
+              >
+                {savingAsDraft ? 'Guardando...' : 'Guardar como Borrador'}
+              </button>
+            )}
+          </>
         }
       >
         {selectedExpediente && (
           <div>
             <div style={{ marginBottom: '1rem' }}>
-              <span className={`badge ${selectedExpediente.approval_status ? 'badge-success' : selectedExpediente.rejection_status ? 'badge-danger' : 'badge-warning'}`}>
-                {selectedExpediente.approval_status ? 'Aprobado' : selectedExpediente.rejection_status ? 'Rechazado' : 'En Revision'}
+              <span className={`badge ${selectedExpediente.status === 'Aprobado' ? 'badge-success' : selectedExpediente.status === 'Rechazado' ? 'badge-danger' : 'badge-warning'}`}>
+                {selectedExpediente.status === 'Aprobado' ? 'Aprobado' : selectedExpediente.status === 'Rechazado' ? 'Rechazado' : 'En Revision'}
               </span>
             </div>
             

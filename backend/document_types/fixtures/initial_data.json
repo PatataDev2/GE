@@ -1,0 +1,14 @@
+[
+  {"model": "document_types.documenttype", "pk": 1, "fields": {"name": "Ofertas de servicio", "description": "Ofertas de servicio", "is_active": true, "is_required": true}},
+  {"model": "document_types.documenttype", "pk": 2, "fields": {"name": "Síntesis Curricular", "description": "Síntesis curricular", "is_active": true, "is_required": true}},
+  {"model": "document_types.documenttype", "pk": 3, "fields": {"name": "Copia de cédula (titular, cónyuge, hijos, padres)", "description": "Copia de cédula", "is_active": true, "is_required": true}},
+  {"model": "document_types.documenttype", "pk": 4, "fields": {"name": "Partida de nacimiento", "description": "Partida de nacimiento", "is_active": true, "is_required": true}},
+  {"model": "document_types.documenttype", "pk": 5, "fields": {"name": "Partida de nacimiento (titular e hijos)", "description": "Partida de nacimiento titular e hijos", "is_active": true, "is_required": false}},
+  {"model": "document_types.documenttype", "pk": 6, "fields": {"name": "Acta de matrimonio o constancia de concubinato", "description": "Acta de matrimonio", "is_active": true, "is_required": false}},
+  {"model": "document_types.documenttype", "pk": 7, "fields": {"name": "Títulos académicos (primaria, secundaria, universitaria)", "description": "Títulos académicos", "is_active": true, "is_required": true}},
+  {"model": "document_types.documenttype", "pk": 8, "fields": {"name": "Constancias de estudio", "description": "Constancias de estudio", "is_active": true, "is_required": false}},
+  {"model": "document_types.documenttype", "pk": 9, "fields": {"name": "Constancia de trabajo", "description": "Constancia de trabajo", "is_active": true, "is_required": true}},
+  {"model": "document_types.documenttype", "pk": 10, "fields": {"name": "Declaraciones de la contraloría", "description": "Declaraciones de la contraloría", "is_active": true, "is_required": false}},
+  {"model": "document_types.documenttype", "pk": 11, "fields": {"name": "Autorización de vacaciones", "description": "Autorización de vacaciones", "is_active": true, "is_required": false}},
+  {"model": "document_types.documenttype", "pk": 12, "fields": {"name": "Permisos/reposos", "description": "Permisos o reposos", "is_active": true, "is_required": false}}
+]

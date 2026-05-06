@@ -101,16 +101,28 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'yourdb',          # Debe coincidir con POSTGRES_DB en docker-compose
-        'USER': 'youruser',        # Debe coincidir con POSTGRES_USER en docker-compose
-        'PASSWORD': 'yourpassword',# Debe coincidir con POSTGRES_PASSWORD en docker-compose
-        'HOST': 'db',              # El nombre del servicio en docker-compose
-        'PORT': '5432',
+import os
+
+# Use SQLite for local development if no PostgreSQL env vars are set
+if os.environ.get('POSTGRES_DB'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DB', 'yourdb'),
+            'USER': os.environ.get('POSTGRES_USER', 'youruser'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'yourpassword'),
+            'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        }
     }
-}
+else:
+    # SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
