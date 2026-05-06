@@ -11,8 +11,10 @@ export default function ValidarExpedientes() {
   const [documents, setDocuments] = useState([]);
   const [docLoading, setDocLoading] = useState(false);
   const [comentario, setComentario] = useState('');
+  const [correcciones, setCorrecciones] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [filterStatus, setFilterStatus] = useState('todos');
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const fetchExpedientes = async () => {
     setLoading(true);
     try {
@@ -60,6 +62,33 @@ export default function ValidarExpedientes() {
     if (doc.approval_status === false) return 'rechazado';
     return 'pendiente';
   };
+  const handleOpenReject = (exp) => {
+    setSelectedExpediente(exp);
+    setCorrecciones('');
+    setShowRejectModal(true);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!correcciones.trim()) {
+      alert('Debes ingresar las correcciones requeridas.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.post(`api/expedients/${selectedExpediente.id}/reject/`, {
+        correcciones: correcciones.trim(),
+      });
+      setShowRejectModal(false);
+      setIsModalOpen(false);
+      fetchExpedientes();
+    } catch (err) {
+      console.error('Error rejecting:', err);
+      alert('Error al rechazar el expediente');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleExpedienteAction = async (expId, action) => {
     try {
       const endpoint = action === 'approve' ? 'approve' : 'reject';
@@ -174,7 +203,7 @@ export default function ValidarExpedientes() {
                 <button className="btn btn-success flex-1" onClick={() => handleExpedienteAction(selectedExpediente.id, 'approve')} disabled={submitting}>
                   Aprobar Expediente
                 </button>
-                <button className="btn btn-danger flex-1" onClick={() => handleExpedienteAction(selectedExpediente.id, 'reject')} disabled={submitting}>
+                <button className="btn btn-danger flex-1" onClick={() => handleOpenReject(selectedExpediente)} disabled={submitting}>
                   Rechazar Expediente
                 </button>
               </div>
@@ -248,6 +277,43 @@ export default function ValidarExpedientes() {
             )}
           </div>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+        title={`Rechazar Expediente #${selectedExpediente?.id}`}
+        footer={
+          <>
+            <button className="btn btn-secondary flex-1" onClick={() => setShowRejectModal(false)} disabled={submitting}>
+              Cancelar
+            </button>
+            <button className="btn btn-danger flex-1" onClick={handleConfirmReject} disabled={submitting || !correcciones.trim()}>
+              {submitting ? 'Enviando...' : 'Rechazar y Devolver'}
+            </button>
+          </>
+        }
+      >
+        <div>
+          <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#64748b' }}>
+            Expediente: <strong>{selectedExpediente?.title}</strong>
+          </p>
+          <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#64748b' }}>
+            Trabajador: <strong>{selectedExpediente?.asinged_to_username}</strong>
+          </p>
+          <div className="form-group">
+            <label className="form-label" style={{ color: '#ef4444', fontWeight: '600' }}>
+              Correcciones requeridas *
+            </label>
+            <textarea
+              className="form-input"
+              rows="5"
+              value={correcciones}
+              onChange={(e) => setCorrecciones(e.target.value)}
+              placeholder="Describe las correcciones que el trabajador debe realizar..."
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );

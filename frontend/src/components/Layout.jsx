@@ -1,7 +1,8 @@
 'use client';
 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { getNotifications, getUnreadCount, markAllAsRead } from '../api/notifications.api';
 
 // Icon components
 const Icons = {
@@ -85,6 +86,33 @@ const Icons = {
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
       <polyline points="22 4 12 14.01 9 11.01"/>
     </svg>
+  ),
+  X: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="15" y1="9" x2="9" y2="15"/>
+      <line x1="9" y1="9" x2="15" y2="15"/>
+    </svg>
+  ),
+  AlertCircle: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+  ),
+  ClipboardList: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+      <path d="M9 14l2 2 4-4"/>
+    </svg>
+  ),
+  Edit: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
   )
 };
 
@@ -94,14 +122,23 @@ const getMenuItems = (role) => {
   ];
 
   switch (role) {
-    case 'admin':
+     case 'admin':
        return [
          ...commonItems,
-         { path: '/admin/users', label: 'Gestión de Usuarios', icon: Icons.Users },
-         { path: '/admin/departments', label: 'Gestión de Departamentos', icon: Icons.Folder },
-         { path: '/admin/document-types', label: 'Gestión de Tipos de Documento', icon: Icons.FileText },
+         { path: '/admin/users', label: 'Gestion de Usuarios', icon: Icons.Users },
+         { path: '/admin/departments', label: 'Gestion de Departamentos', icon: Icons.Folder },
+         { path: '/admin/document-types', label: 'Gestion de Tipos de Documento', icon: Icons.FileText },
          { path: '/admin/logs', label: 'Registro de Actividad', icon: Icons.Activity },
-         { path: '/admin/backup', label: 'Respaldos', icon: Icons.Database }
+         { path: '/admin/backup', label: 'Respaldos', icon: Icons.Database },
+         { path: '/admin/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
+       ];
+     case 'analyst':
+       return [
+         ...commonItems,
+         { path: '/analyst/expedientes', label: 'Expedientes', icon: Icons.Folder },
+         { path: '/analyst/validar', label: 'Validar Expedientes', icon: Icons.CheckCircle },
+         { path: '/analyst/reportes', label: 'Reportes', icon: Icons.BarChart },
+         { path: '/analyst/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
        ];
     case 'analyst':
       return [
@@ -142,7 +179,12 @@ export default function Layout({ children, user }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const notifRef = useRef(null);
   
+  const notifRoute = user?.role === 'admin' ? '/admin/notificaciones' : user?.role === 'analyst' ? '/analyst/notificaciones' : '/employee/notificaciones';
   const menuItems = getMenuItems(user?.role);
   
   const handleLogout = () => {
@@ -151,11 +193,86 @@ export default function Layout({ children, user }) {
     navigate('/login');
   };
 
-  const notifications = [
-    { id: 1, title: 'Expediente aprobado', text: 'El expediente #1234 ha sido aprobado', time: 'Hace 5 min', unread: true },
-    { id: 2, title: 'Nuevo documento', text: 'Se ha subido un nuevo documento', time: 'Hace 1 hora', unread: true },
-    { id: 3, title: 'Revisión pendiente', text: 'Tienes 3 expedientes por revisar', time: 'Hace 2 horas', unread: false }
-  ];
+  useEffect(() => {
+    if (!user?.role) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await getUnreadCount();
+        setUnreadCount(res.data.count);
+      } catch (err) {
+        console.error('Error fetching unread count:', err);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  useEffect(() => {
+    if (!showNotifications) return;
+
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotifications]);
+
+  useEffect(() => {
+    if (!showNotifications) return;
+
+    const fetchNotifications = async () => {
+      setNotifLoading(true);
+      try {
+        const res = await getNotifications();
+        setNotifications(res.data.slice(0, 10));
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+      } finally {
+        setNotifLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, [showNotifications]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllAsRead();
+      setUnreadCount(0);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (err) {
+      console.error('Error marking all read:', err);
+    }
+  };
+
+  function formatTime(dateStr) {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffMin < 1) return 'Ahora mismo';
+    if (diffMin < 60) return `Hace ${diffMin} min`;
+    if (diffHr < 24) return `Hace ${diffHr} hora${diffHr > 1 ? 's' : ''}`;
+    if (diffDay < 7) return `Hace ${diffDay} dia${diffDay > 1 ? 's' : ''}`;
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+  }
+
+  const tipoConfig = {
+    asignado: { color: '#2563eb', icon: Icons.Users },
+    aprobado: { color: '#10b981', icon: Icons.CheckCircle },
+    rechazado: { color: '#ef4444', icon: Icons.X },
+    revision: { color: '#f59e0b', icon: Icons.ClipboardList },
+    correccion: { color: '#f97316', icon: Icons.Edit },
+    info: { color: '#64748b', icon: Icons.AlertCircle },
+  };
 
   return (
     <div style={{ display: 'flex' }}>
@@ -213,34 +330,81 @@ export default function Layout({ children, user }) {
             {menuItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
           </h1>
           <div className="header-actions">
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }} ref={notifRef}>
               <button 
                 className="notification-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
               >
                 <Icons.Bell />
-                {notifications.filter(n => n.unread).length > 0 && (
+                {unreadCount > 0 && (
                   <span className="notification-badge">
-                    {notifications.filter(n => n.unread).length}
+                    {unreadCount}
                   </span>
                 )}
               </button>
               
               {showNotifications && (
                 <div className="dropdown-panel">
-                  <div className="dropdown-header">Notificaciones</div>
-                  {notifications.map(notif => (
-                    <div key={notif.id} className={`notification-item ${notif.unread ? 'unread' : ''}`}>
-                      <div className="notification-icon stat-icon blue">
-                        <Icons.Bell />
-                      </div>
-                      <div className="notification-content">
-                        <div className="notification-title">{notif.title}</div>
-                        <div className="notification-text">{notif.text}</div>
-                        <div className="notification-time">{notif.time}</div>
-                      </div>
+                  <div className="dropdown-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Notificaciones</span>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        style={{ fontSize: '0.75rem', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        Marcar todas como leidas
+                      </button>
+                    )}
+                  </div>
+                  {notifLoading ? (
+                    <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>Cargando...</div>
+                  ) : notifications.length === 0 ? (
+                    <div style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8' }}>
+                      No hay notificaciones
                     </div>
-                  ))}
+                  ) : (
+                    notifications.map(notif => {
+                      const config = tipoConfig[notif.notification_type] || tipoConfig.info;
+                      const NotifIcon = config.icon;
+                      return (
+                        <Link
+                          key={notif.id}
+                          to={notifRoute}
+                          className={`notification-item ${!notif.read ? 'unread' : ''}`}
+                          onClick={() => setShowNotifications(false)}
+                          style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', borderBottom: '1px solid #f1f5f9', background: !notif.read ? '#eff6ff' : 'white' }}
+                        >
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            background: config.color + '20',
+                            color: config.color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            <NotifIcon />
+                          </div>
+                          <div className="notification-content" style={{ flex: 1, minWidth: 0 }}>
+                            <div className="notification-title" style={{ fontWeight: !notif.read ? '700' : '600', fontSize: '0.8rem', color: '#1e293b' }}>{notif.title}</div>
+                            <div className="notification-text" style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{notif.message}</div>
+                            <div className="notification-time" style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.25rem' }}>{formatTime(notif.created_at)}</div>
+                          </div>
+                        </Link>
+                      );
+                    })
+                  )}
+                  <div style={{ padding: '0.5rem', textAlign: 'center', borderTop: '1px solid #e2e8f0' }}>
+                    <Link
+                      to={notifRoute}
+                      style={{ fontSize: '0.8rem', color: '#2563eb', textDecoration: 'none' }}
+                      onClick={() => setShowNotifications(false)}
+                    >
+                      Ver todas las notificaciones
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>

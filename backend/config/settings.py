@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'document_types',
     'expedients',
     'documents',
+    'notifications',
 ]
 
 

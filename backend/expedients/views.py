@@ -5,6 +5,7 @@ from .models import Expedient
 from .serializers import ExpedientSerializer
 from documents.models import Document
 from document_types.models import DocumentType
+from notifications.utils import create_notification
 
 class ExpedientViewSet(viewsets.ModelViewSet):
     queryset = Expedient.objects.all()
@@ -98,6 +99,18 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         expedient.status = 'Pendiente'
         expedient.save(update_fields=['is_draft', 'status', 'updated_at'])
         
+        from users.models import UsersCustom
+        analysts = UsersCustom.objects.filter(role__name='analyst')
+        for analyst in analysts:
+            create_notification(
+                recipient=analyst,
+                actor=user,
+                notification_type='revision',
+                title='Expediente en Revision',
+                message=f'El trabajador {user.username} ha enviado el expediente "{expedient.title}" para revision.',
+                expedient_id=expedient.id,
+            )
+        
         return Response({
             'success': True,
             'message': 'Expediente enviado a revision exitosamente',
@@ -144,13 +157,30 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         return Expedient.objects.none()
 
     def perform_create(self, serializer):
-        serializer.save()
+        expedient = serializer.save()
+        employee = expedient.asinged_to
+        create_notification(
+            recipient=employee,
+            actor=self.request.user,
+            notification_type='asignado',
+            title='Expediente Asignado',
+            message=f'Se te ha asignado el expediente "{expedient.title}" para su gestion.',
+            expedient_id=expedient.id,
+        )
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         expedient = self.get_object()
         expedient.status = 'Aprobado'
         expedient.save(update_fields=['status'])
+        create_notification(
+            recipient=expedient.asinged_to,
+            actor=request.user,
+            notification_type='aprobado',
+            title='Expediente Aprobado',
+            message=f'Tu expediente "{expedient.title}" ha sido aprobado exitosamente.',
+            expedient_id=expedient.id,
+        )
         return Response({'status': 'expediente aprobado', 'id': expedient.id})
 
     @action(detail=True, methods=['post'])
@@ -158,6 +188,20 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         expedient = self.get_object()
         expedient.status = 'Rechazado'
         expedient.save(update_fields=['status'])
+        correcciones = request.data.get('correcciones', request.data.get('observation', ''))
+        mensaje = f'Tu expediente "{expedient.title}" ha sido rechazado.'
+        if correcciones:
+            mensaje += f' Correcciones requeridas: {correcciones}'
+        else:
+            mensaje += ' Revisa las observaciones.'
+        create_notification(
+            recipient=expedient.asinged_to,
+            actor=request.user,
+            notification_type='rechazado',
+            title='Expediente Rechazado',
+            message=mensaje,
+            expedient_id=expedient.id,
+        )
         return Response({'status': 'expediente rechazado', 'id': expedient.id})
 
     def destroy(self, request, *args, **kwargs):

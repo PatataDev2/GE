@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/expedients/', include('expedients.urls')),
     path('api/documents/', include('documents.urls')),
     path('api/departments/', include('departments.urls')),
+    path('api/notifications/', include('notifications.urls')),
     path('api/users/', include('users.urls')),
     path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
 ]

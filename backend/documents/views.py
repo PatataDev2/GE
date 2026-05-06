@@ -4,6 +4,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from .models import Document
 from .serializers import DocumentSerializer
+from notifications.utils import create_notification
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
@@ -77,6 +78,19 @@ class DocumentViewSet(viewsets.ModelViewSet):
             if os.path.exists(old_file_path):
                 os.remove(old_file_path)
         
+        from users.models import UsersCustom
+        analysts = UsersCustom.objects.filter(role__name='analyst')
+        for analyst in analysts:
+            create_notification(
+                recipient=analyst,
+                actor=user,
+                notification_type='revision',
+                title='Documento Corregido',
+                message=f'El trabajador {user.username} ha corregido el documento "{document.title}" del expediente "{document.expedient.title}".',
+                expedient_id=document.expedient.id,
+                document_id=document.id,
+            )
+        
         from .serializers import DocumentSerializer
         return Response({
             'message': 'Archivo reemplazado exitosamente',
@@ -98,7 +112,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         
         if action_type not in ['approve', 'reject']:
             return Response(
-                {"error": "Acción inválida. Use 'approve' o 'reject'."},
+                {"error": "Accion invalida. Use 'approve' o 'reject'."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -106,12 +120,30 @@ class DocumentViewSet(viewsets.ModelViewSet):
             document.approval_status = True
             document.description_state = 'aprobado'
             document.description_content = message
+            create_notification(
+                recipient=document.uploaded_by,
+                actor=request.user,
+                notification_type='aprobado',
+                title='Documento Aprobado',
+                message=f'Tu documento "{document.title}" del expediente "{document.expedient.title}" ha sido aprobado.',
+                expedient_id=document.expedient.id,
+                document_id=document.id,
+            )
         else:
             document.approval_status = False
             document.description_state = 'rechazado'
             document.description_content = message
             if request.data.get('corrections'):
                 document.description_corrections = request.data['corrections']
+            create_notification(
+                recipient=document.uploaded_by,
+                actor=request.user,
+                notification_type='correccion',
+                title='Documento Rechazado',
+                message=f'Tu documento "{document.title}" del expediente "{document.expedient.title}" fue rechazado. Motivo: {message}',
+                expedient_id=document.expedient.id,
+                document_id=document.id,
+            )
         
         document.save()
         

@@ -157,16 +157,10 @@ const AnalystDashboardContent = () => {
     if (s === 'Rechazado') return 'rechazado';
     return 'en_revision';
   };
-  const esHoy = (dateStr) => {
-    if (!dateStr) return false;
-    const d = new Date(dateStr);
-    const hoy = new Date();
-    return d.toDateString() === hoy.toDateString();
-  };
   const total = expedientes.length;
   const pendientes = expedientes.filter(e => e.status === 'Pendiente').length;
-  const aprobadosHoy = expedientes.filter(e => (e.status === 'Aprobado' || e.status === 'Finalizado') && esHoy(e.updated_at)).length;
-  const rechazadosHoy = expedientes.filter(e => e.status === 'Rechazado' && esHoy(e.updated_at)).length;
+  const aprobados = expedientes.filter(e => e.status === 'Aprobado' || e.status === 'Finalizado').length;
+  const rechazados = expedientes.filter(e => e.status === 'Rechazado').length;
   const recientes = [...expedientes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
   if (loading) return <div className="p-8 text-center text-gray-400">Cargando dashboard...</div>;
   return (
@@ -203,8 +197,8 @@ const AnalystDashboardContent = () => {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{aprobadosHoy}</div>
-            <div className="stat-label">Aprobados Hoy</div>
+            <div className="stat-value">{aprobados}</div>
+            <div className="stat-label">Aprobados</div>
           </div>
         </div>
         <div className="stat-card">
@@ -216,8 +210,8 @@ const AnalystDashboardContent = () => {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{rechazadosHoy}</div>
-            <div className="stat-label">Rechazados Hoy</div>
+            <div className="stat-value">{rechazados}</div>
+            <div className="stat-label">Rechazados</div>
           </div>
         </div>
       </div>

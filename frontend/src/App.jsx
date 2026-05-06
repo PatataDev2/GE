@@ -38,9 +38,11 @@
             <Route path="admin/logs" element={<ActivityLogs />} />
             <Route path="admin/departments" element={<DepartmentsManagement />} />
             <Route path="admin/document-types" element={<DocumentTypesManagement />} />
+            <Route path="admin/notificaciones" element={<Notificaciones />} />
             <Route path="analyst/expedientes" element={<Expedientes />} />
             <Route path="analyst/validar" element={<ValidarExpedientes />} />
             <Route path="analyst/reportes" element={<Reportes />} />
+            <Route path="analyst/notificaciones" element={<Notificaciones />} />
             <Route path="employee/mis-expedientes" element={<MisExpedientes />} />
             <Route path="employee/gestion-correcciones" element={<GestionCorrecciones />} />
             <Route path="employee/notificaciones" element={<Notificaciones />} />
