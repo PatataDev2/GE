@@ -30,7 +30,20 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user)
+        document = serializer.save(uploaded_by=self.request.user)
+        
+        from users.models import UsersCustom
+        analysts = UsersCustom.objects.filter(role__name='analyst')
+        for analyst in analysts:
+            create_notification(
+                recipient=analyst,
+                actor=self.request.user,
+                notification_type='revision',
+                title='Nuevo Documento Subido',
+                message=f'El trabajador {self.request.user.username} ha subido el documento "{document.title}" del expediente "{document.expedient.title}".',
+                expedient_id=document.expedient.id,
+                document_id=document.id,
+            )
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
