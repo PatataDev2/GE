@@ -12,6 +12,7 @@ class Expedient(models.Model):
         ("Proceso", "Proceso"),
         ("Finalizado", "Finalizado"),
         ("Rechazado", "Rechazado"),
+        ("Pre_Aprobado", "Pre-Aprobado"),
     ]
 
     title = models.CharField(max_length=100)
@@ -27,6 +28,22 @@ class Expedient(models.Model):
         # NOTA: Filtramos por el campo 'name' del modelo 'Role' relacionado
         limit_choices_to={'role__name': 'employee'}, 
         verbose_name="Asignado a"
+    )
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expedientes_aprobados",
+        verbose_name="Aprobado por"
+    )
+    rejected_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expedientes_rechazados",
+        verbose_name="Rechazado por"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

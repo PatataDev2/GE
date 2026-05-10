@@ -11,6 +11,8 @@ export default function Expedientes() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
+  const [departments, setDepartments] = useState([]);
+  const [filterDepartment, setFilterDepartment] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
   const [documents, setDocuments] = useState([]);
@@ -54,9 +56,18 @@ export default function Expedientes() {
       console.error("Error fetching workers:", err);
     }
   };
+  const fetchDepartments = async () => {
+    try {
+      const res = await api.get('api/departments/');
+      setDepartments(res.data);
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+    }
+  };
   useEffect(() => { 
     fetchExpedientes(); 
     fetchWorkers();
+    fetchDepartments();
   }, []);
 
   useEffect(() => {
@@ -257,7 +268,8 @@ export default function Expedientes() {
     const matchesSearch = exp.title?.toLowerCase().includes(search.toLowerCase()) || exp.id.toString().includes(search);
      const status = getExpedienteStatus(exp);
     const matchesStatus = filterStatus === 'todos' || status === filterStatus;
-    return matchesSearch && matchesStatus;
+    const matchesDepartment = !filterDepartment || exp.department == filterDepartment;
+    return matchesSearch && matchesStatus && matchesDepartment;
   });
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -302,6 +314,16 @@ export default function Expedientes() {
             </button>
           ))}
         </div>
+        <select
+          value={filterDepartment}
+          onChange={(e) => setFilterDepartment(e.target.value)}
+          className="px-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-gray-700"
+        >
+          <option value="">Todos los departamentos</option>
+          {departments.filter(d => d.is_active !== false).map(dep => (
+            <option key={dep.id} value={dep.id}>{dep.name}</option>
+          ))}
+        </select>
       </div>
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
@@ -458,11 +480,35 @@ export default function Expedientes() {
                                 <line x1="12" y1="15" x2="12" y2="3"/>
                               </svg>
                             </button>
+                           </div>
+                         )}
+                        {status === 'pendiente' ? (
+                          <div className="flex gap-1">
+                            <button
+                              className="btn btn-success btn-sm"
+                              onClick={() => openReviewModal(doc, 'approve')}
+                              title="Aprobar"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => openReviewModal(doc, 'reject')}
+                              title="Rechazar"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                              </svg>
+                            </button>
                           </div>
+                        ) : (
+                          <span className={`badge ${status === 'aprobado' ? 'badge-success' : 'badge-danger'}`}>
+                            {status}
+                          </span>
                         )}
-<span className={`badge ${status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : 'badge-warning'}`}>
-                          {status}
-                        </span>
                       </div>
                   );
                 })}

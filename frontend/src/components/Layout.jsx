@@ -123,15 +123,16 @@ const getMenuItems = (role) => {
 
   switch (role) {
      case 'admin':
-       return [
-         ...commonItems,
-         { path: '/admin/users', label: 'Gestion de Usuarios', icon: Icons.Users },
-         { path: '/admin/departments', label: 'Gestion de Departamentos', icon: Icons.Folder },
-         { path: '/admin/document-types', label: 'Gestion de Tipos de Documento', icon: Icons.FileText },
-         { path: '/admin/logs', label: 'Registro de Actividad', icon: Icons.Activity },
-         { path: '/admin/backup', label: 'Respaldos', icon: Icons.Database },
-         { path: '/admin/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
-       ];
+        return [
+          ...commonItems,
+          { path: '/admin/aprobar-expedientes', label: 'Aprobar Expedientes', icon: Icons.CheckCircle },
+          { path: '/admin/users', label: 'Gestion de Usuarios', icon: Icons.Users },
+          { path: '/admin/departments', label: 'Gestion de Departamentos', icon: Icons.Folder },
+          { path: '/admin/document-types', label: 'Gestion de Tipos de Documento', icon: Icons.FileText },
+          { path: '/admin/logs', label: 'Registro de Actividad', icon: Icons.Activity },
+          { path: '/admin/backup', label: 'Respaldos', icon: Icons.Database },
+          { path: '/admin/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
+        ];
      case 'analyst':
        return [
          ...commonItems,

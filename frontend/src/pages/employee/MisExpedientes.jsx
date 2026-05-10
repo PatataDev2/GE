@@ -18,6 +18,7 @@ export default function MisExpedientes() {
   const [loadingDocTypes, setLoadingDocTypes] = useState(false);
   const [showCommentDocId, setShowCommentDocId] = useState(null);
   const [savingAsDraft, setSavingAsDraft] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all');
   
   const fileInputRef = useRef(null);
   const titleInputRef = useRef(null);
@@ -323,27 +324,61 @@ export default function MisExpedientes() {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Mis expedientes</h3>
-          <a href="/employee/gestion-correcciones" style={{ fontSize: '0.875rem', color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
-            Ver Gestion de Correcciones →
-          </a>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <div className="filter-tabs" style={{ display: 'flex', gap: '0.25rem' }}>
+              {['all', 'Aprobado', 'Pendiente', 'Proceso', 'Rechazado'].map(status => {
+                const labels = { all: 'Todos', Aprobado: 'Aprobados', Pendiente: 'Pendientes', Proceso: 'En Proceso', Rechazado: 'Rechazados' };
+                const isActive = filterStatus === status;
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setFilterStatus(status)}
+                    style={{
+                      padding: '0.375rem 0.75rem',
+                      fontSize: '0.8125rem',
+                      border: `1px solid ${isActive ? '#2563eb' : '#e2e8f0'}`,
+                      borderRadius: '0.375rem',
+                      background: isActive ? '#2563eb' : 'white',
+                      color: isActive ? 'white' : '#475569',
+                      cursor: 'pointer',
+                      fontWeight: isActive ? '600' : '400',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {labels[status]}
+                  </button>
+                );
+              })}
+            </div>
+            <a href="/employee/gestion-correcciones" style={{ fontSize: '0.875rem', color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
+              Ver Gestion de Correcciones →
+            </a>
+          </div>
         </div>
 
         {loading ? (
           <div className="p-8 text-center text-gray-400">Cargando...</div>
-        ) : !expedientes || !Array.isArray(expedientes) || expedientes.length === 0 ? (
-          <div className="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-            </svg>
-            <h3>Sin expedientes</h3>
-            <p>No tienes expedientes asignados actualmente.</p>
-          </div>
         ) : (
-          <div>
-            {expedientes.map(exp => (
-              <ExpedienteCard key={exp.id} exp={exp} />
-            ))}
-          </div>
+          (() => {
+            const filtered = filterStatus === 'all'
+              ? expedientes
+              : (Array.isArray(expedientes) ? expedientes.filter(e => e.status === filterStatus) : []);
+            return !filtered || filtered.length === 0 ? (
+              <div className="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+                <h3>{filterStatus === 'all' ? 'Sin expedientes' : `Sin expedientes ${filterStatus === 'Aprobado' ? 'aprobados' : filterStatus === 'Rechazado' ? 'rechazados' : 'en este estado'}`}</h3>
+                <p>No tienes expedientes asignados actualmente.</p>
+              </div>
+            ) : (
+              <div>
+                {filtered.map(exp => (
+                  <ExpedienteCard key={exp.id} exp={exp} />
+                ))}
+              </div>
+            );
+          })()
         )}
       </div>
 

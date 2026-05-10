@@ -11,7 +11,8 @@
    import UserManagement from './pages/admin/UsersManagement';
    import DepartmentsManagement from './pages/admin/DepartmentsManagement';
    import DocumentTypesManagement from './pages/admin/DocumentTypesManagement';
-  import ActivityLogs from './pages/admin/ActivityLogs';
+   import ActivityLogs from './pages/admin/ActivityLogs';
+   import AprobarExpedientes from './pages/admin/AprobarExpedientes';
 
   //Analyst pages
   import Expedientes from './pages/analyst/Expedientes';
@@ -39,6 +40,7 @@
             <Route path="admin/departments" element={<DepartmentsManagement />} />
             <Route path="admin/document-types" element={<DocumentTypesManagement />} />
             <Route path="admin/notificaciones" element={<Notificaciones />} />
+            <Route path="admin/aprobar-expedientes" element={<AprobarExpedientes />} />
             <Route path="analyst/expedientes" element={<Expedientes />} />
             <Route path="analyst/validar" element={<ValidarExpedientes />} />
             <Route path="analyst/reportes" element={<Reportes />} />

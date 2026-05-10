@@ -170,18 +170,51 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
+        """Analista pre-aprueba el expediente, lo envia a admin para aprobacion final"""
         expedient = self.get_object()
+        expedient.status = 'Pre_Aprobado'
+        expedient.approved_by = request.user
+        expedient.save(update_fields=['status', 'approved_by', 'updated_at'])
+        from users.models import UsersCustom
+        admins = UsersCustom.objects.filter(role__name='admin')
+        for admin in admins:
+            create_notification(
+                recipient=admin,
+                actor=request.user,
+                notification_type='revision',
+                title='Expediente Pre-Aprobado',
+                message=f'El analista {request.user.username} ha pre-aprobado el expediente "{expedient.title}" y espera tu aprobacion final.',
+                expedient_id=expedient.id,
+            )
+        return Response({'status': 'expediente pre-aprobado, pendiente de aprobacion del admin', 'id': expedient.id})
+
+    @action(detail=True, methods=['post'])
+    def admin_approve(self, request, pk=None):
+        """Admin da la aprobacion final al expediente"""
+        expedient = self.get_object()
+        if request.user.role.name != 'admin':
+            return Response({'error': 'Solo administradores pueden dar la aprobacion final'}, status=status.HTTP_403_FORBIDDEN)
         expedient.status = 'Aprobado'
-        expedient.save(update_fields=['status'])
+        expedient.approved_by = request.user
+        expedient.save(update_fields=['status', 'approved_by', 'updated_at'])
         create_notification(
             recipient=expedient.asinged_to,
             actor=request.user,
             notification_type='aprobado',
             title='Expediente Aprobado',
-            message=f'Tu expediente "{expedient.title}" ha sido aprobado exitosamente.',
+            message=f'Tu expediente "{expedient.title}" ha sido aprobado definitivamente por el administrador.',
             expedient_id=expedient.id,
         )
-        return Response({'status': 'expediente aprobado', 'id': expedient.id})
+        return Response({'status': 'expediente aprobado definitivamente', 'id': expedient.id})
+
+    @action(detail=False, methods=['get'])
+    def pending_admin(self, request):
+        """Lista expedientes pre-aprobados pendientes de aprobacion del admin"""
+        if request.user.role.name != 'admin':
+            return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
+        expedients = Expedient.objects.filter(status='Pre_Aprobado', is_draft=False)
+        serializer = self.get_serializer(expedients, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):

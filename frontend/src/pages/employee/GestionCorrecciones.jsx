@@ -22,6 +22,9 @@ const [replacingFile, setReplacingFile] = useState(null);
 const [draftUploadFile, setDraftUploadFile] = useState(null);
 const [replacingDraftDocId, setReplacingDraftDocId] = useState(null);
 const [draftDocuments, setDraftDocuments] = useState([]);
+const [newDocType, setNewDocType] = useState('');
+const [newDocFile, setNewDocFile] = useState(null);
+const [newDocUploading, setNewDocUploading] = useState(false);
   
   const fileInputRef = useRef(null);
 
@@ -59,6 +62,8 @@ const [draftDocuments, setDraftDocuments] = useState([]);
 
 const handleOpenDraftModal = async (draft) => {
   setSelectedDraft(draft);
+  setNewDocFile(null);
+  setNewDocType('');
   try {
     const docsRes = await api.get(`api/documents/?expedient=${draft.id}`);
     let docs = docsRes.data;
@@ -71,6 +76,45 @@ const handleOpenDraftModal = async (draft) => {
     setDraftDocuments([]);
   }
   setShowDraftModal(true);
+};
+
+const handleUploadNewDocument = async () => {
+  if (!newDocFile || !newDocType || !selectedDraft) {
+    alert('Selecciona un tipo de documento y un archivo');
+    return;
+  }
+
+  setNewDocUploading(true);
+
+  const selectedType = docTypes.find(t => t.id == newDocType);
+  const title = selectedType ? selectedType.name : newDocFile.name;
+
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('file', newDocFile);
+  formData.append('document_type', newDocType);
+  formData.append('expedient', selectedDraft.id);
+
+  try {
+    await api.post('api/documents/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    alert('Documento subido exitosamente');
+    setNewDocFile(null);
+    setNewDocType('');
+
+    const docsRes = await api.get(`api/documents/?expedient=${selectedDraft.id}`);
+    let docs = docsRes.data;
+    if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
+      docs = docs.results || [];
+    }
+    setDraftDocuments(Array.isArray(docs) ? docs : []);
+  } catch (err) {
+    console.error('Error uploading document:', err);
+    alert('Error al subir documento: ' + (err.response?.data?.error || err.message));
+  } finally {
+    setNewDocUploading(false);
+  }
 };
 
 const handleReplaceFile = async () => {
@@ -526,6 +570,64 @@ const formatDate = (dateStr) => {
       ) : (
         <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No hay documentos subidos aún.</p>
       )}
+
+      <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '2px dashed #e2e8f0' }}>
+        <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '1rem', color: '#f59e0b' }}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: 'inline', marginRight: '0.375rem', verticalAlign: 'middle' }}>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Subir Nuevo Documento
+        </h4>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div className="form-group" style={{ flex: '1 1 200px', marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.75rem' }}>Tipo de documento *</label>
+            <select
+              className="form-input"
+              value={newDocType}
+              onChange={(e) => setNewDocType(e.target.value)}
+              style={{ fontSize: '0.8rem', padding: '0.5rem' }}
+            >
+              <option value="">Seleccionar tipo...</option>
+              {docTypes.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group" style={{ flex: '1 1 250px', marginBottom: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.75rem' }}>Archivo *</label>
+            <input
+              type="file"
+              className="form-input"
+              onChange={(e) => setNewDocFile(e.target.files[0])}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              style={{ fontSize: '0.8rem', padding: '0.375rem' }}
+            />
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={handleUploadNewDocument}
+            disabled={!newDocFile || !newDocType || newDocUploading}
+            style={{
+              padding: '0.5rem 1rem',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+              borderRadius: '0.5rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            {newDocUploading ? 'Subiendo...' : 'Subir'}
+          </button>
+        </div>
+      </div>
     </div>
   )}
 </Modal>

@@ -3,22 +3,20 @@ import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import api from '../../api/axios';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
-export default function ValidarExpedientes() {
+export default function AprobarExpedientes() {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [docLoading, setDocLoading] = useState(false);
-  const [comentario, setComentario] = useState('');
-  const [correcciones, setCorrecciones] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('todos');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [correcciones, setCorrecciones] = useState('');
   const fetchExpedientes = async () => {
     setLoading(true);
     try {
-      const res = await api.get('api/expedients/');
+      const res = await api.get('api/expedients/pending_admin/');
       setExpedientes(res.data);
     } catch (err) {
       console.error("Error fetching:", err);
@@ -46,29 +44,32 @@ export default function ValidarExpedientes() {
   };
   const handleOpenReview = async (exp) => {
     setSelectedExpediente(exp);
-    setComentario('');
     setIsModalOpen(true);
     await fetchDocuments(exp.id);
   };
-  const getExpedienteStatus = (exp) => {
-  if (!exp) return 'pendiente';
-  const s = exp.status;
-  if (s === 'Aprobado' || s === 'Finalizado') return 'aprobado';
-  if (s === 'Rechazado') return 'rechazado';
-  if (s === 'Pre_Aprobado') return 'pre_aprobado';
-  return 'pendiente';
-};
   const getDocStatus = (doc) => {
     if (doc.approval_status === true) return 'aprobado';
     if (doc.approval_status === false) return 'rechazado';
     return 'pendiente';
+  };
+  const handleFinalApprove = async () => {
+    setSubmitting(true);
+    try {
+      await api.post(`api/expedients/${selectedExpediente.id}/admin_approve/`);
+      setIsModalOpen(false);
+      fetchExpedientes();
+    } catch (err) {
+      console.error('Error approving:', err);
+      alert('Error al aprobar el expediente');
+    } finally {
+      setSubmitting(false);
+    }
   };
   const handleOpenReject = (exp) => {
     setSelectedExpediente(exp);
     setCorrecciones('');
     setShowRejectModal(true);
   };
-
   const handleConfirmReject = async () => {
     if (!correcciones.trim()) {
       alert('Debes ingresar las correcciones requeridas.');
@@ -89,20 +90,6 @@ export default function ValidarExpedientes() {
       setSubmitting(false);
     }
   };
-
-  const handleExpedienteAction = async (expId, action) => {
-    try {
-      const endpoint = action === 'approve' ? 'approve' : 'reject';
-      await api.post(`api/expedients/${expId}/${endpoint}/`, {
-        observation: comentario || ''
-      });
-      setIsModalOpen(false);
-      fetchExpedientes();
-    } catch (err) {
-      console.error(`Error ${action}ing:`, err);
-      alert(`Error al ${action === 'approve' ? 'aprobar' : 'rechazar'}`);
-    }
-  };
   const handleViewDoc = (doc) => {
     let fileUrl = null;
     if (doc.file) {
@@ -121,85 +108,52 @@ export default function ValidarExpedientes() {
       alert('No se puede abrir el documento');
     }
   };
-  const filtered = expedientes.filter(exp => {
-    if (filterStatus === 'todos') return true;
-    return getExpedienteStatus(exp) === filterStatus;
-  });
-  const statusLabels = {
-    pendiente: 'Pendiente',
-    aprobado: 'Aprobado',
-    rechazado: 'Rechazado',
-    pre_aprobado: 'Pre-Aprobado'
-  };
-  const pendingCount = expedientes.filter(exp => getExpedienteStatus(exp) === 'pendiente').length;
-  const preApprovedCount = expedientes.filter(exp => getExpedienteStatus(exp) === 'pre_aprobado').length;
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Validar Expedientes</h2>
-        <p className="text-gray-500 mt-1">Revisa y valida los expedientes enviados por los trabajadores</p>
-      </div>
-      <div className="flex items-center gap-4 mb-6">
-        <div className="flex bg-gray-100 p-1 rounded-xl">
-          {[
-            { key: 'todos', label: 'Todos' },
-            { key: 'pendiente', label: `Pendientes (${pendingCount})` },
-            { key: 'pre_aprobado', label: `Pre-Aprobados (${preApprovedCount})` },
-            { key: 'aprobado', label: 'Aprobados' },
-            { key: 'rechazado', label: 'Rechazados' }
-          ].map(f => (
-            <button
-              key={f.key}
-              onClick={() => setFilterStatus(f.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filterStatus === f.key ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <h2 className="text-2xl font-bold text-gray-900">Aprobar Expedientes</h2>
+        <p className="text-gray-500 mt-1">Expedientes pre-aprobados por analistas pendientes de tu aprobacion final</p>
       </div>
       {loading ? (
         <div className="p-8 text-center text-gray-400">Cargando...</div>
-      ) : filtered.length === 0 ? (
+      ) : expedientes.length === 0 ? (
         <div className="card">
           <div className="empty-state">
-            <h3>No hay expedientes</h3>
+            <h3>No hay expedientes pendientes de aprobacion</h3>
+            <p>Todos los expedientes pre-aprobados han sido procesados.</p>
           </div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {filtered.map(exp => {
-            const status = getExpedienteStatus(exp);
-            const badgeClass = status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : status === 'pre_aprobado' ? 'badge-info' : 'badge-warning';
-            const borderColor = status === 'aprobado' ? '#22c55e' : status === 'rechazado' ? '#ef4444' : status === 'pre_aprobado' ? '#8b5cf6' : '#f59e0b';
-            return (
-              <div key={exp.id} className="card" style={{ borderLeft: `4px solid ${borderColor}` }}>
-                <div className="card-body">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                        <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '1rem', color: '#2563eb' }}>#{exp.id}</span>
-                        <span className={`badge ${badgeClass}`}>{statusLabels[status] || status}</span>
-                      </div>
-                      <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
-                      <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                        {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
-                      </p>
-                      {exp.description && (
-                        <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '0.25rem' }}>{exp.description}</p>
-                      )}
+          {expedientes.map(exp => (
+            <div key={exp.id} className="card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+              <div className="card-body">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '1rem', color: '#2563eb' }}>#{exp.id}</span>
+                      <span className="badge badge-warning">Pre-Aprobado</span>
                     </div>
-                    <button
-                      className={`btn ${status === 'pendiente' ? 'btn-primary' : 'btn-secondary'}`}
-                      onClick={() => handleOpenReview(exp)}
-                    >
-                      {status === 'pendiente' ? 'Revisar' : 'Ver documentos'}
-                    </button>
+                    <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
+                    <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                      {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
+                    </p>
+                    {exp.approved_by_username && (
+                      <p style={{ color: '#8b5cf6', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                        Pre-aprobado por: {exp.approved_by_username}
+                      </p>
+                    )}
+                    {exp.description && (
+                      <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '0.25rem' }}>{exp.description}</p>
+                    )}
                   </div>
+                  <button className="btn btn-primary" onClick={() => handleOpenReview(exp)}>
+                    Revisar y Aprobar
+                  </button>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
       <Modal
@@ -208,20 +162,13 @@ export default function ValidarExpedientes() {
         title={`Expediente #${selectedExpediente?.id}`}
         footer={
           <>
-            {selectedExpediente && getExpedienteStatus(selectedExpediente) === 'pendiente' && (
+            {selectedExpediente && (
               <div className="flex gap-2 w-full">
-                <button className="btn btn-success flex-1" onClick={() => handleExpedienteAction(selectedExpediente.id, 'approve')} disabled={submitting}>
-                  Pre-Aprobar (Enviar a Admin)
+                <button className="btn btn-success flex-1" onClick={handleFinalApprove} disabled={submitting}>
+                  Aprobar Definitivamente
                 </button>
                 <button className="btn btn-danger flex-1" onClick={() => handleOpenReject(selectedExpediente)} disabled={submitting}>
                   Rechazar Expediente
-                </button>
-              </div>
-            )}
-            {selectedExpediente && getExpedienteStatus(selectedExpediente) === 'pre_aprobado' && (
-              <div className="flex gap-2 w-full">
-                <button className="btn btn-secondary flex-1" disabled>
-                  Enviado a Administrador para aprobacion final
                 </button>
               </div>
             )}
@@ -231,15 +178,16 @@ export default function ValidarExpedientes() {
         {selectedExpediente && (
           <div>
             <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <p><strong>Título:</strong> {selectedExpediente.title}</p>
+              <p><strong>Titulo:</strong> {selectedExpediente.title}</p>
               <p><strong>Departamento:</strong> {selectedExpediente.department_name}</p>
               <p><strong>Asignado a:</strong> {selectedExpediente.asinged_to_username || 'Sin asignar'}</p>
-              {selectedExpediente.description && <p><strong>Descripción:</strong> {selectedExpediente.description}</p>}
+              {selectedExpediente.approved_by_username && (
+                <p><strong>Pre-aprobado por:</strong> {selectedExpediente.approved_by_username}</p>
+              )}
+              {selectedExpediente.description && <p><strong>Descripcion:</strong> {selectedExpediente.description}</p>}
               <p style={{ marginTop: '0.5rem' }}>
                 <strong>Estado:</strong>{' '}
-                <span className={`badge ${getExpedienteStatus(selectedExpediente) === 'aprobado' ? 'badge-success' : getExpedienteStatus(selectedExpediente) === 'rechazado' ? 'badge-danger' : getExpedienteStatus(selectedExpediente) === 'pre_aprobado' ? 'badge-info' : 'badge-warning'}`}>
-                  {statusLabels[getExpedienteStatus(selectedExpediente)] || getExpedienteStatus(selectedExpediente)}
-                </span>
+                <span className="badge badge-warning">Pre-Aprobado</span>
               </p>
             </div>
             <h4 style={{ marginBottom: '1rem', fontWeight: '600', fontSize: '1rem' }}>
@@ -278,18 +226,6 @@ export default function ValidarExpedientes() {
                     </div>
                   );
                 })}
-              </div>
-            )}
-            {getExpedienteStatus(selectedExpediente) === 'pendiente' && (
-              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label className="form-label">Comentario (opcional)</label>
-                <textarea
-                  className="form-input"
-                  rows="3"
-                  value={comentario}
-                  onChange={(e) => setComentario(e.target.value)}
-                  placeholder="Agrega un comentario para la revisión..."
-                />
               </div>
             )}
           </div>
