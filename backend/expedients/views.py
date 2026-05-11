@@ -5,7 +5,7 @@ from .models import Expedient
 from .serializers import ExpedientSerializer
 from documents.models import Document
 from document_types.models import DocumentType
-from notifications.utils import create_notification
+from notifications.utils import create_notification, create_activity_log
 
 class ExpedientViewSet(viewsets.ModelViewSet):
     queryset = Expedient.objects.all()
@@ -111,6 +111,14 @@ class ExpedientViewSet(viewsets.ModelViewSet):
                 expedient_id=expedient.id,
             )
         
+        create_activity_log(
+            user=user,
+            action='Envió expediente a revisión',
+            action_type='edit',
+            target=f'#{expedient.id} - {expedient.title}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
+        
         return Response({
             'success': True,
             'message': 'Expediente enviado a revision exitosamente',
@@ -167,6 +175,13 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             message=f'Se te ha asignado el expediente "{expedient.title}" para su gestion.',
             expedient_id=expedient.id,
         )
+        create_activity_log(
+            user=self.request.user,
+            action='Creó expediente',
+            action_type='create',
+            target=f'#{expedient.id} - {expedient.title}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
@@ -186,6 +201,13 @@ class ExpedientViewSet(viewsets.ModelViewSet):
                 message=f'El analista {request.user.username} ha pre-aprobado el expediente "{expedient.title}" y espera tu aprobacion final.',
                 expedient_id=expedient.id,
             )
+        create_activity_log(
+            user=request.user,
+            action='Pre-aprobó expediente',
+            action_type='approve',
+            target=f'#{expedient.id} - {expedient.title}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
         return Response({'status': 'expediente pre-aprobado, pendiente de aprobacion del admin', 'id': expedient.id})
 
     @action(detail=True, methods=['post'])
@@ -205,6 +227,13 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             message=f'Tu expediente "{expedient.title}" ha sido aprobado definitivamente por el administrador.',
             expedient_id=expedient.id,
         )
+        create_activity_log(
+            user=request.user,
+            action='Aprobó expediente',
+            action_type='approve',
+            target=f'#{expedient.id} - {expedient.title}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
         return Response({'status': 'expediente aprobado definitivamente', 'id': expedient.id})
 
     @action(detail=False, methods=['get'])
@@ -213,6 +242,15 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         if request.user.role.name != 'admin':
             return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
         expedients = Expedient.objects.filter(status='Pre_Aprobado', is_draft=False)
+        serializer = self.get_serializer(expedients, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def approved(self, request):
+        """Lista expedientes aprobados definitivamente"""
+        if request.user.role.name not in ['admin', 'analyst']:
+            return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
+        expedients = Expedient.objects.filter(status='Aprobado', is_draft=False).order_by('-updated_at')
         serializer = self.get_serializer(expedients, many=True)
         return Response(serializer.data)
 
@@ -235,10 +273,24 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             message=mensaje,
             expedient_id=expedient.id,
         )
+        create_activity_log(
+            user=request.user,
+            action='Rechazó expediente',
+            action_type='reject',
+            target=f'#{expedient.id} - {expedient.title}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
         return Response({'status': 'expediente rechazado', 'id': expedient.id})
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
+        create_activity_log(
+            user=request.user,
+            action='Eliminó expediente',
+            action_type='delete',
+            target=f'#{instance.id} - {instance.title}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
         self.perform_destroy(instance)
         return Response(
             {"message": "Expediente eliminado correctamente"}, 

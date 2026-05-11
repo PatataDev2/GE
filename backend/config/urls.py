@@ -19,7 +19,13 @@ from django.urls import path , include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
+from users.views import AdminDashboardView
+from notifications.views import ActivityLogViewSet
+from rest_framework.routers import DefaultRouter
 
+
+router = DefaultRouter()
+router.register(r'activity-logs', ActivityLogViewSet, basename='activity-log')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +37,8 @@ urlpatterns = [
     path('api/departments/', include('departments.urls')),
     path('api/notifications/', include('notifications.urls')),
     path('api/users/', include('users.urls')),
+    path('api/admin/dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
+    path('api/', include(router.urls)),
     path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
 

@@ -4,7 +4,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from .models import Document
 from .serializers import DocumentSerializer
-from notifications.utils import create_notification
+from notifications.utils import create_notification, create_activity_log
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
@@ -44,6 +44,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 expedient_id=document.expedient.id,
                 document_id=document.id,
             )
+
+        create_activity_log(
+            user=self.request.user,
+            action='Subió documento',
+            action_type='upload',
+            target=document.file.name if document.file else document.title,
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -142,6 +150,13 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 expedient_id=document.expedient.id,
                 document_id=document.id,
             )
+            create_activity_log(
+                user=request.user,
+                action='Aprobó documento',
+                action_type='approve',
+                target=document.title,
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
         else:
             document.approval_status = False
             document.description_state = 'rechazado'
@@ -156,6 +171,13 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 message=f'Tu documento "{document.title}" del expediente "{document.expedient.title}" fue rechazado. Motivo: {message}',
                 expedient_id=document.expedient.id,
                 document_id=document.id,
+            )
+            create_activity_log(
+                user=request.user,
+                action='Rechazó documento',
+                action_type='reject',
+                target=document.title,
+                ip_address=request.META.get('REMOTE_ADDR'),
             )
         
         document.save()

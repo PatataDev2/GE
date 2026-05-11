@@ -1,5 +1,21 @@
 from rest_framework import serializers
-from .models import Notification
+from .models import Notification, ActivityLog
+
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    user = serializers.CharField(source='user.username', read_only=True, allow_null=True)
+
+    class Meta:
+        model = ActivityLog
+        fields = [
+            'id',
+            'user',
+            'action',
+            'target',
+            'action_type',
+            'ip_address',
+            'created_at',
+        ]
 
 
 class NotificationSerializer(serializers.ModelSerializer):

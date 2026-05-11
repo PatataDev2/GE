@@ -4,27 +4,36 @@ import Modal from '../../components/Modal';
 import api from '../../api/axios';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 export default function AprobarExpedientes() {
-  const [expedientes, setExpedientes] = useState([]);
+  const [tab, setTab] = useState('pendientes');
+  const [pendientes, setPendientes] = useState([]);
+  const [aprobados, setAprobados] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedExpediente, setSelectedExpediente] = useState(null);
+  const [selectedExp, setSelectedExp] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [docLoading, setDocLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [correcciones, setCorrecciones] = useState('');
-  const fetchExpedientes = async () => {
+
+  const fetchAll = async () => {
     setLoading(true);
     try {
-      const res = await api.get('api/expedients/pending_admin/');
-      setExpedientes(res.data);
+      const [pendRes, aprobRes] = await Promise.all([
+        api.get('api/expedients/pending_admin/'),
+        api.get('api/expedients/approved/'),
+      ]);
+      setPendientes(pendRes.data);
+      setAprobados(aprobRes.data);
     } catch (err) {
       console.error("Error fetching:", err);
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => { fetchExpedientes(); }, []);
+
+  useEffect(() => { fetchAll(); }, []);
+
   const fetchDocuments = async (expedientId) => {
     setDocLoading(true);
     try {
@@ -33,8 +42,7 @@ export default function AprobarExpedientes() {
       if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
         docs = docs.results || [];
       }
-      const filteredDocs = (Array.isArray(docs) ? docs : []).filter(d => d.expedient === expedientId);
-      setDocuments(filteredDocs);
+      setDocuments((Array.isArray(docs) ? docs : []).filter(d => d.expedient === expedientId));
     } catch (err) {
       console.error("Error fetching docs:", err);
       setDocuments([]);
@@ -42,22 +50,31 @@ export default function AprobarExpedientes() {
       setDocLoading(false);
     }
   };
+
   const handleOpenReview = async (exp) => {
-    setSelectedExpediente(exp);
+    setSelectedExp(exp);
     setIsModalOpen(true);
     await fetchDocuments(exp.id);
   };
+
+  const handleOpenDetails = async (exp) => {
+    setSelectedExp(exp);
+    setIsModalOpen(true);
+    await fetchDocuments(exp.id);
+  };
+
   const getDocStatus = (doc) => {
     if (doc.approval_status === true) return 'aprobado';
     if (doc.approval_status === false) return 'rechazado';
     return 'pendiente';
   };
+
   const handleFinalApprove = async () => {
     setSubmitting(true);
     try {
-      await api.post(`api/expedients/${selectedExpediente.id}/admin_approve/`);
+      await api.post(`api/expedients/${selectedExp.id}/admin_approve/`);
       setIsModalOpen(false);
-      fetchExpedientes();
+      fetchAll();
     } catch (err) {
       console.error('Error approving:', err);
       alert('Error al aprobar el expediente');
@@ -65,11 +82,12 @@ export default function AprobarExpedientes() {
       setSubmitting(false);
     }
   };
-  const handleOpenReject = (exp) => {
-    setSelectedExpediente(exp);
+
+  const handleOpenReject = () => {
     setCorrecciones('');
     setShowRejectModal(true);
   };
+
   const handleConfirmReject = async () => {
     if (!correcciones.trim()) {
       alert('Debes ingresar las correcciones requeridas.');
@@ -77,12 +95,12 @@ export default function AprobarExpedientes() {
     }
     setSubmitting(true);
     try {
-      await api.post(`api/expedients/${selectedExpediente.id}/reject/`, {
+      await api.post(`api/expedients/${selectedExp.id}/reject/`, {
         correcciones: correcciones.trim(),
       });
       setShowRejectModal(false);
       setIsModalOpen(false);
-      fetchExpedientes();
+      fetchAll();
     } catch (err) {
       console.error('Error rejecting:', err);
       alert('Error al rechazar el expediente');
@@ -90,6 +108,7 @@ export default function AprobarExpedientes() {
       setSubmitting(false);
     }
   };
+
   const handleViewDoc = (doc) => {
     let fileUrl = null;
     if (doc.file) {
@@ -108,86 +127,156 @@ export default function AprobarExpedientes() {
       alert('No se puede abrir el documento');
     }
   };
+
   return (
     <div>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Aprobar Expedientes</h2>
-        <p className="text-gray-500 mt-1">Expedientes pre-aprobados por analistas pendientes de tu aprobacion final</p>
+        <p className="text-gray-500 mt-1">Revisa y aprueba expedientes, o consulta los ya aprobados</p>
       </div>
+
+      <div className="flex gap-2 mb-6">
+        <button
+          className={`btn ${tab === 'pendientes' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setTab('pendientes')}
+        >
+          Pendientes ({pendientes.length})
+        </button>
+        <button
+          className={`btn ${tab === 'aprobados' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setTab('aprobados')}
+        >
+          Aprobados ({aprobados.length})
+        </button>
+      </div>
+
       {loading ? (
         <div className="p-8 text-center text-gray-400">Cargando...</div>
-      ) : expedientes.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <h3>No hay expedientes pendientes de aprobacion</h3>
-            <p>Todos los expedientes pre-aprobados han sido procesados.</p>
+      ) : tab === 'pendientes' ? (
+        pendientes.length === 0 ? (
+          <div className="card">
+            <div className="empty-state">
+              <h3>No hay expedientes pendientes de aprobacion</h3>
+              <p>Todos los expedientes pre-aprobados han sido procesados.</p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {expedientes.map(exp => (
-            <div key={exp.id} className="card" style={{ borderLeft: '4px solid #8b5cf6' }}>
-              <div className="card-body">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '1rem', color: '#2563eb' }}>#{exp.id}</span>
-                      <span className="badge badge-warning">Pre-Aprobado</span>
-                    </div>
-                    <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
-                    <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                      {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
-                    </p>
-                    {exp.approved_by_username && (
-                      <p style={{ color: '#8b5cf6', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-                        Pre-aprobado por: {exp.approved_by_username}
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {pendientes.map(exp => (
+              <div key={exp.id} className="card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+                <div className="card-body">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                        <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '1rem', color: '#2563eb' }}>#{exp.id}</span>
+                        <span className="badge badge-warning">Pre-Aprobado</span>
+                      </div>
+                      <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
+                      <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                        {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
                       </p>
-                    )}
-                    {exp.description && (
-                      <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '0.25rem' }}>{exp.description}</p>
-                    )}
+                      {exp.approved_by_username && (
+                        <p style={{ color: '#8b5cf6', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                          Pre-aprobado por: {exp.approved_by_username}
+                        </p>
+                      )}
+                      {exp.description && (
+                        <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '0.25rem' }}>{exp.description}</p>
+                      )}
+                    </div>
+                    <button className="btn btn-primary" onClick={() => handleOpenReview(exp)}>
+                      Revisar y Aprobar
+                    </button>
                   </div>
-                  <button className="btn btn-primary" onClick={() => handleOpenReview(exp)}>
-                    Revisar y Aprobar
-                  </button>
                 </div>
               </div>
+            ))}
+          </div>
+        )
+      ) : (
+        aprobados.length === 0 ? (
+          <div className="card">
+            <div className="empty-state">
+              <h3>No hay expedientes aprobados</h3>
+              <p>Aun no se han aprobado expedientes.</p>
             </div>
-          ))}
-        </div>
-      )}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={`Expediente #${selectedExpediente?.id}`}
-        footer={
-          <>
-            {selectedExpediente && (
-              <div className="flex gap-2 w-full">
-                <button className="btn btn-success flex-1" onClick={handleFinalApprove} disabled={submitting}>
-                  Aprobar Definitivamente
-                </button>
-                <button className="btn btn-danger flex-1" onClick={() => handleOpenReject(selectedExpediente)} disabled={submitting}>
-                  Rechazar Expediente
-                </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {aprobados.map(exp => (
+              <div key={exp.id} className="card" style={{ borderLeft: '4px solid #22c55e', cursor: 'pointer' }} onClick={() => handleOpenDetails(exp)}>
+                <div className="card-body">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                        <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '1rem', color: '#2563eb' }}>#{exp.id}</span>
+                        <span className="badge badge-success">Aprobado</span>
+                      </div>
+                      <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
+                      <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                        {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
+                      </p>
+                      {exp.approved_by_username && (
+                        <p style={{ color: '#22c55e', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                          Aprobado por: {exp.approved_by_username}
+                        </p>
+                      )}
+                      {exp.description && (
+                        <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '0.25rem' }}>{exp.description}</p>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', textAlign: 'right' }}>
+                      {new Date(exp.updated_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-          </>
+            ))}
+          </div>
+        )
+      )}
+
+      <Modal
+        isOpen={isModalOpen && !!selectedExp}
+        onClose={() => setIsModalOpen(false)}
+        title={`Expediente #${selectedExp?.id}`}
+        size="md"
+        footer={
+          selectedExp?.status === 'Pre_Aprobado' ? (
+            <div className="flex gap-2 w-full">
+              <button className="btn btn-success flex-1" onClick={handleFinalApprove} disabled={submitting}>
+                {submitting ? 'Aprobando...' : 'Aprobar Definitivamente'}
+              </button>
+              <button className="btn btn-danger flex-1" onClick={handleOpenReject} disabled={submitting}>
+                Rechazar Expediente
+              </button>
+            </div>
+          ) : null
         }
       >
-        {selectedExpediente && (
+        {selectedExp && (
           <div>
-            <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <p><strong>Titulo:</strong> {selectedExpediente.title}</p>
-              <p><strong>Departamento:</strong> {selectedExpediente.department_name}</p>
-              <p><strong>Asignado a:</strong> {selectedExpediente.asinged_to_username || 'Sin asignar'}</p>
-              {selectedExpediente.approved_by_username && (
-                <p><strong>Pre-aprobado por:</strong> {selectedExpediente.approved_by_username}</p>
+            <div style={{
+              marginBottom: '1rem', padding: '1rem',
+              background: selectedExp.status === 'Aprobado' ? '#f0fdf4' : '#f8fafc',
+              borderRadius: '0.5rem',
+              border: selectedExp.status === 'Aprobado' ? '1px solid #bbf7d0' : '1px solid #e2e8f0'
+            }}>
+              <p><strong>Titulo:</strong> {selectedExp.title}</p>
+              <p><strong>Departamento:</strong> {selectedExp.department_name}</p>
+              <p><strong>Asignado a:</strong> {selectedExp.asinged_to_username || 'Sin asignar'}</p>
+              {selectedExp.approved_by_username && (
+                <p><strong>{selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Pre-aprobado'} por:</strong> {selectedExp.approved_by_username}</p>
               )}
-              {selectedExpediente.description && <p><strong>Descripcion:</strong> {selectedExpediente.description}</p>}
+              {selectedExp.description && <p><strong>Descripcion:</strong> {selectedExp.description}</p>}
               <p style={{ marginTop: '0.5rem' }}>
                 <strong>Estado:</strong>{' '}
-                <span className="badge badge-warning">Pre-Aprobado</span>
+                <span className={`badge ${selectedExp.status === 'Aprobado' ? 'badge-success' : 'badge-warning'}`}>
+                  {selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Pre-Aprobado'}
+                </span>
+              </p>
+              <p style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: '#64748b' }}>
+                {selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Creado'} el: {new Date(selectedExp.updated_at).toLocaleString()}
               </p>
             </div>
             <h4 style={{ marginBottom: '1rem', fontWeight: '600', fontSize: '1rem' }}>
@@ -233,9 +322,9 @@ export default function AprobarExpedientes() {
       </Modal>
 
       <Modal
-        isOpen={showRejectModal}
+        isOpen={showRejectModal && !!selectedExp}
         onClose={() => setShowRejectModal(false)}
-        title={`Rechazar Expediente #${selectedExpediente?.id}`}
+        title={`Rechazar Expediente #${selectedExp?.id}`}
         footer={
           <>
             <button className="btn btn-secondary flex-1" onClick={() => setShowRejectModal(false)} disabled={submitting}>
@@ -249,10 +338,10 @@ export default function AprobarExpedientes() {
       >
         <div>
           <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#64748b' }}>
-            Expediente: <strong>{selectedExpediente?.title}</strong>
+            Expediente: <strong>{selectedExp?.title}</strong>
           </p>
           <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#64748b' }}>
-            Trabajador: <strong>{selectedExpediente?.asinged_to_username}</strong>
+            Trabajador: <strong>{selectedExp?.asinged_to_username}</strong>
           </p>
           <div className="form-group">
             <label className="form-label" style={{ color: '#ef4444', fontWeight: '600' }}>

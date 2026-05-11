@@ -1,17 +1,5 @@
-    import { useState } from 'react';
-
-const mockLogs = [
-  { id: 1, user: 'admin1', action: 'Creó usuario', target: 'trabajador3', timestamp: '2024-01-25 14:30:22', ip: '192.168.1.100', type: 'create' },
-  { id: 2, user: 'analista1', action: 'Aprobó expediente', target: '#EXP-2024-0045', timestamp: '2024-01-25 14:15:10', ip: '192.168.1.105', type: 'approve' },
-  { id: 3, user: 'trabajador1', action: 'Subió documento', target: 'cedula.pdf', timestamp: '2024-01-25 13:45:00', ip: '192.168.1.110', type: 'upload' },
-  { id: 4, user: 'admin1', action: 'Eliminó usuario', target: 'trabajador_temp', timestamp: '2024-01-25 12:30:00', ip: '192.168.1.100', type: 'delete' },
-  { id: 5, user: 'analista1', action: 'Editó expediente', target: '#EXP-2024-0044', timestamp: '2024-01-25 11:20:15', ip: '192.168.1.105', type: 'edit' },
-  { id: 6, user: 'trabajador2', action: 'Inició sesión', target: '-', timestamp: '2024-01-25 10:00:00', ip: '192.168.1.115', type: 'login' },
-  { id: 7, user: 'admin1', action: 'Cambió rol', target: 'analista2 → admin', timestamp: '2024-01-25 09:30:00', ip: '192.168.1.100', type: 'edit' },
-  { id: 8, user: 'analista1', action: 'Rechazó expediente', target: '#EXP-2024-0043', timestamp: '2024-01-24 16:45:00', ip: '192.168.1.105', type: 'reject' },
-  { id: 9, user: 'trabajador1', action: 'Cerró sesión', target: '-', timestamp: '2024-01-24 18:00:00', ip: '192.168.1.110', type: 'logout' },
-  { id: 10, user: 'admin1', action: 'Ejecutó respaldo', target: 'backup_20240124.sql', timestamp: '2024-01-24 23:00:00', ip: '192.168.1.100', type: 'backup' },
-];
+import { useState, useEffect } from 'react';
+import api from '../../api/axios';
 
 const actionTypes = {
   create: { label: 'Creación', color: 'badge-success' },
@@ -26,18 +14,41 @@ const actionTypes = {
 };
 
 export default function ActivityLogs() {
-  const [logs] = useState(mockLogs);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
+  useEffect(() => {
+    const params = {};
+    if (filterType) params.action_type = filterType;
+    if (dateFrom) params.date_from = dateFrom;
+    if (dateTo) params.date_to = dateTo;
+
+    api.get('api/activity-logs/', { params })
+      .then(res => {
+        const data = Array.isArray(res.data) ? res.data : res.data.results || [];
+        setLogs(data.map(log => ({
+          id: log.id,
+          user: log.user,
+          action: log.action,
+          target: log.target,
+          timestamp: log.created_at,
+          ip: log.ip_address,
+          type: log.action_type,
+        })));
+      })
+      .catch(() => setLogs([]))
+      .finally(() => setLoading(false));
+  }, [filterType, dateFrom, dateTo]);
+
   const filteredLogs = logs.filter(log => {
-    const matchesSearch = log.user.toLowerCase().includes(search.toLowerCase()) ||
-                          log.action.toLowerCase().includes(search.toLowerCase()) ||
-                          log.target.toLowerCase().includes(search.toLowerCase());
-    const matchesType = !filterType || log.type === filterType;
-    return matchesSearch && matchesType;
+    const matchesSearch = !search || log.user?.toLowerCase().includes(search.toLowerCase()) ||
+                          log.action?.toLowerCase().includes(search.toLowerCase()) ||
+                          log.target?.toLowerCase().includes(search.toLowerCase());
+    return matchesSearch;
   });
 
   const getActionIcon = (type) => {
@@ -233,7 +244,13 @@ export default function ActivityLogs() {
             <tbody>
               {filteredLogs.map(log => (
                 <tr key={log.id}>
-                  <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{log.timestamp}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                    {log.timestamp ? new Date(log.timestamp).toLocaleString('es-ES', { 
+                      year: 'numeric', month: '2-digit', day: '2-digit',
+                      hour: '2-digit', minute: '2-digit', second: '2-digit',
+                      hour12: false 
+                    }).replace(',', '') : '-'}
+                  </td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <div style={{ 
@@ -247,9 +264,9 @@ export default function ActivityLogs() {
                         fontSize: '0.75rem',
                         fontWeight: '600'
                       }}>
-                        {log.user.charAt(0).toUpperCase()}
+                        {log.user ? log.user.charAt(0).toUpperCase() : '?'}
                       </div>
-                      {log.user}
+                      {log.user || 'Sistema'}
                     </div>
                   </td>
                   <td>

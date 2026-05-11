@@ -1,8 +1,49 @@
+from django.db import models
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Notification
-from .serializers import NotificationSerializer
+from .models import Notification, ActivityLog
+from .serializers import NotificationSerializer, ActivityLogSerializer
+
+
+class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ActivityLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.role or user.role.name != 'admin':
+            return ActivityLog.objects.none()
+        return ActivityLog.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        search = request.query_params.get('search', '')
+        action_type = request.query_params.get('action_type', '')
+        date_from = request.query_params.get('date_from', '')
+        date_to = request.query_params.get('date_to', '')
+
+        if search:
+            queryset = queryset.filter(
+                models.Q(user__username__icontains=search) |
+                models.Q(action__icontains=search) |
+                models.Q(target__icontains=search)
+            )
+        if action_type:
+            queryset = queryset.filter(action_type=action_type)
+        if date_from:
+            queryset = queryset.filter(created_at__date__gte=date_from)
+        if date_to:
+            queryset = queryset.filter(created_at__date__lte=date_to)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class NotificationViewSet(viewsets.ModelViewSet):

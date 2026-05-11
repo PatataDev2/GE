@@ -28,113 +28,163 @@ const fetchUserRole = async () => {
     return { role: localStorage.getItem('userRole') || 'employee' };
   }
 };
-const AdminDashboardContent = () => (
-  <div>
-    <div className="stats-grid">
-      <div className="stat-card">
-        <div className="stat-icon blue">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">24</div>
-          <div className="stat-label">Usuarios Activos</div>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon green">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">156</div>
-          <div className="stat-label">Acciones Hoy</div>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon yellow">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <ellipse cx="12" cy="5" rx="9" ry="3"/>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">5</div>
-          <div className="stat-label">Respaldos Este Mes</div>
-        </div>
-      </div>
-      <div className="stat-card">
-        <div className="stat-icon red">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-        </div>
-        <div>
-          <div className="stat-value">2</div>
-          <div className="stat-label">Alertas Pendientes</div>
-        </div>
-      </div>
-    </div>
+const timeAgo = (isoString) => {
+  const now = new Date();
+  const date = new Date(isoString);
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'Ahora';
+  if (diffMins < 60) return `Hace ${diffMins} min`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
+  return date.toLocaleDateString();
+};
 
-    <div className="grid-2">
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Actividad Reciente</h3>
+const typeLabels = {
+  asignado: 'asignó expediente',
+  aprobado: 'aprobó expediente',
+  rechazado: 'rechazó expediente',
+  revision: 'envió a revisión',
+  correccion: 'solicitó corrección',
+  info: 'informó',
+};
+
+const AdminDashboardContent = () => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await api.get('api/admin/dashboard/');
+        setStats(res.data);
+      } catch (err) {
+        setError('Error al cargar estadísticas');
+        console.error('Error fetching dashboard stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) return <div className="p-8 text-center text-gray-400">Cargando dashboard...</div>;
+  if (error) return <div className="p-8 text-center text-red-400">{error}</div>;
+
+  return (
+    <div>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{stats.active_users}</div>
+            <div className="stat-label">Usuarios Activos</div>
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {[
-            { user: 'analista1', action: 'Aprobó expediente EXP-2024-0045', time: 'Hace 5 min' },
-            { user: 'admin', action: 'Creó usuario trabajador3', time: 'Hace 15 min' },
-            { user: 'trabajador1', action: 'Subió documento cedula.pdf', time: 'Hace 30 min' },
-            { user: 'analista2', action: 'Rechazó expediente EXP-2024-0043', time: 'Hace 1 hora' },
-          ].map((item, idx) => (
-            <div key={idx} className="activity-item">
-              <div className="activity-icon">
-                <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>{item.user.charAt(0).toUpperCase()}</span>
-              </div>
-              <div className="activity-content">
-                <div className="activity-text"><strong>{item.user}</strong> {item.action}</div>
-                <div className="activity-time">{item.time}</div>
-              </div>
-            </div>
-          ))}
+        <div className="stat-card">
+          <div className="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{stats.today_actions}</div>
+            <div className="stat-label">Acciones Hoy</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon yellow">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{stats.expedients_summary.total}</div>
+            <div className="stat-label">Total Expedientes</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon red">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{stats.expedients_summary.pending}</div>
+            <div className="stat-label">Pendientes</div>
+          </div>
         </div>
       </div>
-      
-      <div className="card">
-        <div className="card-header">
-          <h3 className="card-title">Estado del Sistema</h3>
+
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Actividad Reciente</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {stats.recent_activity.length === 0 ? (
+              <div className="text-center text-gray-400 p-4">Sin actividad reciente</div>
+            ) : (
+              stats.recent_activity.map((item) => (
+                <div key={item.id} className="activity-item">
+                  <div className="activity-icon">
+                    <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>{item.actor_username.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div className="activity-content">
+                    <div className="activity-text">
+                      <strong>{item.actor_username}</strong>{' '}
+                      {typeLabels[item.notification_type] || item.notification_type}{' '}
+                      {item.expedient_id && <span style={{ fontFamily: 'monospace', color: '#2563eb' }}>#{item.expedient_id}</span>}
+                      {item.message && !item.expedient_id && item.message}
+                    </div>
+                    <div className="activity-time">{timeAgo(item.created_at)}</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Base de Datos</span>
-            <span className="badge badge-success">Operativo</span>
+        
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Estado del Sistema</h3>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Almacenamiento</span>
-            <span className="badge badge-success">85% disponible</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Último Respaldo</span>
-            <span className="badge badge-info">Hace 12 horas</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>API</span>
-            <span className="badge badge-success">Funcionando</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Base de Datos</span>
+              <span className="badge badge-success">Operativo</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Total Usuarios</span>
+              <span className="badge badge-info">{stats.total_users}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Aprobados</span>
+              <span className="badge badge-success">{stats.expedients_summary.approved}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Rechazados</span>
+              <span className="badge badge-danger">{stats.expedients_summary.rejected}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 const AnalystDashboardContent = () => {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
