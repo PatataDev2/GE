@@ -21,6 +21,7 @@ class ExpedientSerializer(serializers.ModelSerializer):
         'id', 
         'title', 
         'description', 
+        'department',
         'status', 
         'is_draft',
         'asinged_to',

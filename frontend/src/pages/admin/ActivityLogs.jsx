@@ -21,7 +21,7 @@ export default function ActivityLogs() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  useEffect(() => {
+  const fetchLogs = () => {
     const params = {};
     if (filterType) params.action_type = filterType;
     if (dateFrom) params.date_from = dateFrom;
@@ -42,6 +42,12 @@ export default function ActivityLogs() {
       })
       .catch(() => setLogs([]))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 10000);
+    return () => clearInterval(interval);
   }, [filterType, dateFrom, dateTo]);
 
   const filteredLogs = logs.filter(log => {

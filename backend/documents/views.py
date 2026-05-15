@@ -1,3 +1,4 @@
+import os
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -66,6 +67,15 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+
+        create_activity_log(
+            user=self.request.user,
+            action='Editó documento',
+            action_type='edit',
+            target=instance.title,
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
+
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -112,11 +122,72 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 document_id=document.id,
             )
         
+        create_activity_log(
+            user=user,
+            action='Reemplazó archivo de documento',
+            action_type='upload',
+            target=document.file.name if document.file else document.title,
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
+
         from .serializers import DocumentSerializer
         return Response({
             'message': 'Archivo reemplazado exitosamente',
             'document': DocumentSerializer(document).data
         })
+
+    @action(detail=True, methods=['get'])
+    def view_pdf(self, request, pk=None):
+        """Convierte DOCX a PDF y lo devuelve para visualizacion en el navegador"""
+        import tempfile
+        import subprocess
+        from django.http import FileResponse
+
+        document = self.get_object()
+        if not document.file:
+            return Response({'error': 'El documento no tiene archivo'}, status=status.HTTP_400_BAD_REQUEST)
+
+        file_path = document.file.path
+        ext = os.path.splitext(file_path)[1].lower() if file_path else ''
+
+        if ext == '.pdf':
+            response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="{document.docname}"'
+            return response
+
+        if ext == '.docx':
+            with tempfile.TemporaryDirectory() as tmpdir:
+                try:
+                    home_dir = os.path.join(tmpdir, 'lo_home')
+                    os.makedirs(home_dir, exist_ok=True)
+                    result = subprocess.run(
+                        ['libreoffice', '--headless', '--convert-to', 'pdf',
+                         '--outdir', tmpdir, file_path],
+                        capture_output=True, timeout=60,
+                        env={**os.environ, 'HOME': home_dir}
+                    )
+                    # cleanup LibreOffice user profile
+                    import shutil
+                    lo_config = os.path.join(home_dir, '.config', 'libreoffice')
+                    if os.path.exists(lo_config):
+                        shutil.rmtree(lo_config, ignore_errors=True)
+                    if result.returncode != 0:
+                        return Response(
+                            {'error': f'Error al convertir el documento: {result.stderr.decode()}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                        )
+                except Exception as e:
+                    return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+                pdf_name = os.path.splitext(os.path.basename(file_path))[0] + '.pdf'
+                pdf_path = os.path.join(tmpdir, pdf_name)
+
+                if os.path.exists(pdf_path):
+                    response = FileResponse(open(pdf_path, 'rb'), content_type='application/pdf')
+                    response['Content-Disposition'] = f'inline; filename="{os.path.splitext(document.docname)[0]}.pdf"'
+                    return response
+
+        return Response({'error': 'Tipo de archivo no soportado'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
     def review(self, request, pk=None):

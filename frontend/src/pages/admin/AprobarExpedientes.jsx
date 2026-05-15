@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
+import PreviewModal from '../../components/PreviewModal';
+import DocxPreview from '../analyst/DocxPreview';
 import api from '../../api/axios';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 export default function AprobarExpedientes() {
@@ -15,7 +17,10 @@ export default function AprobarExpedientes() {
   const [submitting, setSubmitting] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [correcciones, setCorrecciones] = useState('');
-
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [docxBlob, setDocxBlob] = useState(null);
   const fetchAll = async () => {
     setLoading(true);
     try {
@@ -69,6 +74,75 @@ export default function AprobarExpedientes() {
     return 'pendiente';
   };
 
+  const getFileType = (doc) => {
+    if (doc.file) {
+      const ext = doc.file.split('.').pop().toLowerCase();
+      if (['pdf'].includes(ext)) return 'pdf';
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
+      if (['mp4', 'webm', 'ogg'].includes(ext)) return 'video';
+      if (['docx'].includes(ext)) return 'docx';
+    }
+    return 'other';
+  };
+
+  const handlePreviewDoc = async (doc) => {
+    let fileUrl = null;
+    if (doc.file) {
+      const filePath = doc.file;
+      if (filePath.startsWith('http')) {
+        fileUrl = filePath;
+      } else if (filePath.startsWith('/')) {
+        fileUrl = `${BASE_API_URL}${filePath}`;
+      } else {
+        fileUrl = `${BASE_API_URL}/media/${filePath}`;
+      }
+    }
+    if (fileUrl) {
+      setPreviewDoc(doc);
+      setPreviewUrl(fileUrl);
+      setDocxBlob(null);
+      const ext = doc.file.split('.').pop().toLowerCase();
+      if (ext === 'docx') {
+        try {
+          setShowPreviewModal(true);
+          const response = await fetch(fileUrl);
+          const blob = await response.blob();
+          setDocxBlob(blob);
+        } catch (err) {
+          console.error('Error loading DOCX:', err);
+          alert('Error al cargar el documento');
+        }
+      } else if (ext === 'pdf' || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+        setShowPreviewModal(true);
+      } else {
+        window.open(fileUrl, '_blank');
+      }
+    }
+  };
+
+  const handleDownloadDoc = (doc) => {
+    let fileUrl = null;
+    if (doc.file) {
+      const filePath = doc.file;
+      if (filePath.startsWith('http')) {
+        fileUrl = filePath;
+      } else if (filePath.startsWith('/')) {
+        fileUrl = `${BASE_API_URL}${filePath}`;
+      } else {
+        fileUrl = `${BASE_API_URL}/media/${filePath}`;
+      }
+    }
+    if (fileUrl) {
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = doc.title || 'documento';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   const handleFinalApprove = async () => {
     setSubmitting(true);
     try {
@@ -106,25 +180,6 @@ export default function AprobarExpedientes() {
       alert('Error al rechazar el expediente');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleViewDoc = (doc) => {
-    let fileUrl = null;
-    if (doc.file) {
-      const filePath = doc.file;
-      if (filePath.startsWith('http')) {
-        fileUrl = filePath;
-      } else if (filePath.startsWith('/')) {
-        fileUrl = `${BASE_API_URL}${filePath}`;
-      } else {
-        fileUrl = `${BASE_API_URL}/media/${filePath}`;
-      }
-    }
-    if (fileUrl) {
-      window.open(fileUrl, '_blank');
-    } else {
-      alert('No se puede abrir el documento');
     }
   };
 
@@ -269,15 +324,15 @@ export default function AprobarExpedientes() {
                 <p><strong>{selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Pre-aprobado'} por:</strong> {selectedExp.approved_by_username}</p>
               )}
               {selectedExp.description && <p><strong>Descripcion:</strong> {selectedExp.description}</p>}
-              <p style={{ marginTop: '0.5rem' }}>
-                <strong>Estado:</strong>{' '}
-                <span className={`badge ${selectedExp.status === 'Aprobado' ? 'badge-success' : 'badge-warning'}`}>
-                  {selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Pre-Aprobado'}
-                </span>
-              </p>
-              <p style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: '#64748b' }}>
-                {selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Creado'} el: {new Date(selectedExp.updated_at).toLocaleString()}
-              </p>
+                <p style={{ marginTop: '0.5rem' }}>
+                  <strong>Estado:</strong>{' '}
+                  <span className={`badge ${selectedExp.status === 'Aprobado' ? 'badge-success' : selectedExp.status === 'Rechazado' ? 'badge-danger' : 'badge-warning'}`}>
+                    {selectedExp.status === 'Aprobado' ? 'Aprobado' : selectedExp.status === 'Rechazado' ? 'Rechazado' : 'Pre-Aprobado'}
+                  </span>
+                </p>
+                <p style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: '#64748b' }}>
+                  {selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Creado'} el: {new Date(selectedExp.updated_at).toLocaleString()}
+                </p>
             </div>
             <h4 style={{ marginBottom: '1rem', fontWeight: '600', fontSize: '1rem' }}>
               Documentos ({documents.length})
@@ -308,9 +363,21 @@ export default function AprobarExpedientes() {
                         {status}
                       </span>
                       {FileUrl && (
-                        <button className="btn btn-secondary btn-sm" onClick={() => handleViewDoc(doc)}>
-                          Ver
-                        </button>
+                        <div className="flex gap-1">
+                          <button className="btn btn-secondary btn-sm" onClick={() => handlePreviewDoc(doc)} title="Vista previa">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                              <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                          </button>
+                          <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadDoc(doc)} title="Descargar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                              <polyline points="7 10 12 15 17 10"/>
+                              <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
@@ -357,6 +424,107 @@ export default function AprobarExpedientes() {
           </div>
         </div>
       </Modal>
+
+      <PreviewModal
+        isOpen={showPreviewModal}
+        onClose={() => {
+          if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+          setShowPreviewModal(false);
+          setPreviewUrl(null);
+          setPreviewDoc(null);
+          setDocxBlob(null);
+        }}
+        title={`Vista previa: ${previewDoc?.title || 'Documento'}`}
+        footer={
+          <div className="flex gap-2">
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+                setShowPreviewModal(false);
+                setPreviewUrl(null);
+                setPreviewDoc(null);
+                setDocxBlob(null);
+              }}
+            >
+              Cerrar
+            </button>
+            {previewUrl && (
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = previewUrl;
+                  link.download = previewDoc?.title || 'documento';
+                  link.target = '_blank';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Descargar
+              </button>
+            )}
+          </div>
+        }
+      >
+        <div>
+          {previewUrl && getFileType(previewDoc) === 'pdf' && (
+            <iframe
+              src={previewUrl}
+              className="w-full rounded-lg border border-gray-200"
+              style={{ height: '80vh' }}
+              title="Vista previa del documento"
+            />
+          )}
+          {previewUrl && getFileType(previewDoc) === 'docx' && docxBlob && (
+            <DocxPreview blob={docxBlob} />
+          )}
+          {previewUrl && getFileType(previewDoc) === 'image' && (
+            <div className="flex justify-center">
+              <img
+                src={previewUrl}
+                alt={previewDoc?.title || 'Documento'}
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+              />
+            </div>
+          )}
+          {previewUrl && getFileType(previewDoc) === 'video' && (
+            <video controls className="w-full max-h-[80vh] rounded-lg">
+              <source src={previewUrl} />
+              Tu navegador no soporta la reproducción de video.
+            </video>
+          )}
+          {previewUrl && getFileType(previewDoc) === 'other' && (
+            <div className="text-center p-8">
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-4 text-gray-400">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = previewUrl;
+                  link.download = previewDoc?.title || 'documento';
+                  link.target = '_blank';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
+                Descargar documento
+              </button>
+            </div>
+          )}
+        </div>
+      </PreviewModal>
     </div>
   );
 }

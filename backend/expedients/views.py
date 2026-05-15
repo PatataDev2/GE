@@ -139,12 +139,30 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         
         expedient.is_draft = True
         expedient.save(update_fields=['is_draft', 'updated_at'])
+
+        create_activity_log(
+            user=user,
+            action='Guardó expediente como borrador',
+            action_type='edit',
+            target=f'#{expedient.id} - {expedient.title}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
         
         return Response({
             'success': True,
             'message': 'Expediente guardado como borrador',
             'expedient': ExpedientSerializer(expedient).data
         })
+
+    def perform_update(self, serializer):
+        expedient = serializer.save()
+        create_activity_log(
+            user=self.request.user,
+            action='Editó expediente',
+            action_type='edit',
+            target=f'#{expedient.id} - {expedient.title}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
 
     def get_permissions(self):
         if self.action == 'destroy':
