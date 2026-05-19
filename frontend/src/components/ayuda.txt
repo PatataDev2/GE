@@ -1,16 +1,1 @@
-ncaught TypeError: can't access property "approval_status", exp is null
-    getExpedienteStatus ValidarExpedientes.jsx:59
-    ValidarExpedientes ValidarExpedientes.jsx:199
-    React 10
-    performWorkUntilDeadline scheduler.development.js:45
-    js scheduler.development.js:223
-    js scheduler.development.js:364
-    __require chunk-G3PMV62Z.js:8
-    js index.js:6
-    __require chunk-G3PMV62Z.js:8
-    React 2
-    __require chunk-G3PMV62Z.js:8
-    js React
-    __require chunk-G3PMV62Z.js:8
-    <anonymous> react-dom_client.js:18075
-ValidarExpedientes.jsx:59:9
+PATATA
