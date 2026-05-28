@@ -62,9 +62,13 @@ REST_FRAMEWORK = {
 
 }
 
-AUTH_USER_MODEL = 'users.UsersCustom'  # Custom user model
+AUTH_USER_MODEL = 'users.UsersCustom'
+AUTHENTICATION_BACKENDS = [
+    'users.auth_backends.CuentaActivaBackend',
+]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -72,7 +76,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [

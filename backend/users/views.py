@@ -4,9 +4,15 @@ from rest_framework import viewsets, generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .serializers import UserSerializer, RegisterSerializer, RoleSerializer, UserUpdateRoleSerializer, AdminUserCreateSerializer
-from .models import UsersCustom, Role
+from .serializers import UserSerializer, RegisterSerializer, AdminCreateFuncionarioSerializer, AdminUpdateFuncionarioSerializer
+from .models import UsersCustom
 from .permissions import IsAdminUser
+
+
+class RegisterView(generics.CreateAPIView):
+    queryset = UsersCustom.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
 
 
 class CurrentUserView(generics.RetrieveAPIView):
@@ -16,27 +22,23 @@ class CurrentUserView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-class RegisterView(generics.CreateAPIView):
-    queryset = UsersCustom.objects.all()
-    serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        # Add custom claims
         token['username'] = user.username
         token['email'] = user.email
         return token
-    
+
+
 class Custom_token_obtain_pair_view(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
-# Create your views here.
+
 class UserView(viewsets.ModelViewSet):
-    serializer_class=UserSerializer
-    queryset=UsersCustom.objects.all()
+    serializer_class = UserSerializer
+    queryset = UsersCustom.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_destroy(self, instance):
@@ -50,72 +52,39 @@ class UserView(viewsets.ModelViewSet):
         )
         instance.delete()
 
-class RoleViewSet(viewsets.ModelViewSet):
-    queryset = Role.objects.all()
-    serializer_class = RoleSerializer
+
+class AdminCreateFuncionarioView(generics.CreateAPIView):
+    queryset = UsersCustom.objects.all()
+    serializer_class = AdminCreateFuncionarioSerializer
     permission_classes = [IsAdminUser]
 
-class UserRoleUpdateView(generics.UpdateAPIView):
-    serializer_class = UserUpdateRoleSerializer
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        password = getattr(serializer, '_generated_password', '')
+        data = UserSerializer(user).data
+        data['password'] = password
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class AdminUpdateFuncionarioView(generics.UpdateAPIView):
+    queryset = UsersCustom.objects.all()
+    serializer_class = AdminUpdateFuncionarioSerializer
+    permission_classes = [IsAdminUser]
+
+
+class AdminToggleActivoView(generics.UpdateAPIView):
     queryset = UsersCustom.objects.all()
     permission_classes = [IsAdminUser]
-    
+
     def update(self, request, *args, **kwargs):
         user = self.get_object()
-        
-        if user == request.user:
-            return Response(
-                {"error": "No puedes modificar tu propio rol"}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        role_id = request.data.get('role')
-        if role_id:
-            try:
-                old_role = user.role.name if user.role else 'sin rol'
-                role = Role.objects.get(id=role_id)
-                user.role = role
-                user.save()
+        user.cuenta_activa = not user.cuenta_activa
+        user.is_active = user.cuenta_activa
+        user.save()
+        return Response({'cuenta_activa': user.cuenta_activa})
 
-                from notifications.utils import create_activity_log
-                create_activity_log(
-                    user=request.user,
-                    action='Cambió rol',
-                    action_type='edit',
-                    target=f'{user.username} → {role.name}',
-                    ip_address=request.META.get('REMOTE_ADDR'),
-                )
-
-                return Response(
-                    UserSerializer(user).data, 
-                    status=status.HTTP_200_OK
-                )
-            except Role.DoesNotExist:
-                return Response(
-                    {"error": "Rol no encontrado"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        
-        return Response(
-            {"error": "Se requiere un rol válido"}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-class AdminUserCreateView(generics.CreateAPIView):
-    queryset = UsersCustom.objects.all()
-    serializer_class = AdminUserCreateSerializer
-    permission_classes = [IsAdminUser]
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        from notifications.utils import create_activity_log
-        create_activity_log(
-            user=self.request.user,
-            action='Creó usuario',
-            action_type='create',
-            target=user.username,
-            ip_address=self.request.META.get('REMOTE_ADDR'),
-        )
 
 class AdminDashboardView(generics.GenericAPIView):
     permission_classes = [IsAdminUser]
@@ -125,7 +94,7 @@ class AdminDashboardView(generics.GenericAPIView):
         from expedients.models import Expedient
 
         total_users = UsersCustom.objects.count()
-        active_users = UsersCustom.objects.filter(is_active=True).count()
+        active_users = UsersCustom.objects.filter(cuenta_activa=True).count()
 
         today = timezone.now().date()
         today_actions = Notification.objects.filter(created_at__date=today).count()
@@ -158,4 +127,3 @@ class AdminDashboardView(generics.GenericAPIView):
                 'rejected': rejected,
             }
         })
-

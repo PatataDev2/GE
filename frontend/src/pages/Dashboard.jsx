@@ -20,12 +20,22 @@ import MisExpedientes from './employee/MisExpedientes';
 import SubirDocumentos from './employee/SubirDocumentos';
 import Notificaciones from './employee/Notificaciones';
 // Real user data from API
+const roleMap = {
+  admin: 'admin', analyst: 'analyst', employee: 'employee',
+  Administrador: 'admin', Analista: 'analyst',
+  Trabajador: 'employee', Empleado: 'employee',
+  'Usuario Normal': 'employee',
+};
+
 const fetchUserRole = async () => {
   try {
     const res = await api.get('users/api/v1/me/');
-    return { role: res.data.role_name };
+    const role = roleMap[res.data.rol] || 'employee';
+    localStorage.setItem('userRole', role);
+    return { role };
   } catch {
-    return { role: localStorage.getItem('userRole') || 'employee' };
+    const stored = localStorage.getItem('userRole');
+    return { role: roleMap[stored] || 'employee' };
   }
 };
 const timeAgo = (isoString) => {

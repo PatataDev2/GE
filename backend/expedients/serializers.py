@@ -8,6 +8,7 @@ class ExpedientSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField(source='department.name', read_only=True, allow_null=True)
     asinged_to_username = serializers.CharField(source='asinged_to.username', read_only=True, allow_null=True)
     approved_by_username = serializers.CharField(source='approved_by.username', read_only=True, allow_null=True)
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True, allow_null=True)
 
     # SOLUCIÓN: Sobreescribimos el campo para que busque en TODOS los usuarios
     # y así permita que el flujo llegue a 'validate_asinged_to' para mostrar los logs.
@@ -28,10 +29,12 @@ class ExpedientSerializer(serializers.ModelSerializer):
         'department_name',
         'asinged_to_username',
         'approved_by_username',
+        'created_by',
+        'created_by_username',
         'created_at', 
         'updated_at'
             ]
-        read_only_fields = ['created_at', 'updated_at', 'approved_by', 'rejected_by']
+        read_only_fields = ['created_at', 'updated_at', 'approved_by', 'rejected_by', 'created_by']
 
     def validate_asinged_to(self, value):
         """
@@ -40,8 +43,8 @@ class ExpedientSerializer(serializers.ModelSerializer):
         print("\n--- DEBUG: VALIDANDO ASIGNACIÓN ---")
         print(f"Usuario enviado: {value.username} (ID: {value.id})")
         
-        # Obtenemos el nombre del rol de forma segura
-        role_name = value.role.name if value.role else "SIN ROL"
+        # Obtenemos el nombre del rol: primero intenta el FK 'role', si es None usa el CharField 'rol'
+        role_name = value.role.name if value.role else value.rol
         print(f"Rol detectado en base de datos: '{role_name}'")
         
         if role_name != 'employee':

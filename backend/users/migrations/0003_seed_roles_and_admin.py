@@ -29,7 +29,7 @@ def create_roles_and_admin(apps, schema_editor):
     admin_user = UsersCustom.objects.create_user(
         username='admin',
         email='admin@sistema.com',
-        password='123asdP$',
+        password='Patata18',
         cedula='00000000',
         phone='00000000000',
         is_staff=True,

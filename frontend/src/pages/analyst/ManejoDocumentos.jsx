@@ -21,10 +21,10 @@ const ExpedientForm = ({ onSuccess }) => {
       try {
         const [resDep, resUsers] = await Promise.all([
           api.get('api/departments/'), 
-          api.get('api/users/')        
+          api.get('api/users/api/v1/')        
         ]);
         setDepartments(resDep.data);
-        setWorkers(resUsers.data.filter(u => u.role_name === 'employee'));
+        setWorkers(resUsers.data.filter(u => u.rol === 'employee' && u.is_active));
       } catch (err) {
         console.error("Error cargando datos:", err);
       }

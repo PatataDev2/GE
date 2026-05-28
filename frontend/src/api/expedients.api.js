@@ -19,6 +19,6 @@ export const getExpedientDocuments = (expedientId) => api.get(`documents/?expedi
 export const uploadDocument = (formData) => api.post('documents/', formData, {
   headers: { 'Content-Type': 'multipart/form-data' }
 });
-export const getDocumentTypes = () => api.get('document-types/');
+export const getDocumentTypes = () => api.get('api/document-types/');
 
 export default api;

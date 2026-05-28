@@ -11,7 +11,7 @@ class DocumentTypeAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'description', 'is_active')
+            'fields': ('name', 'description', 'is_active', 'is_required')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),

@@ -1,26 +1,32 @@
-
-'use client';
-
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
-import { getUsers, createUser, updateUser, deleteUser } from '../../api/users.api';
+import { getUsers, createFuncionario, updateFuncionario, toggleActivo } from '../../api/users.api';
 
-
-
-const roleLabels = {
-  1: 'Administrador',
-  2: 'Analista',
-  3: 'Trabajador',
-  4: 'Usuario Normal'
+const rolLabels = {
+  admin: 'Administrador',
+  analyst: 'Analista',
+  employee: 'Empleado',
 };
 
 export default function UsersManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterRole, setFilterRole] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    cedula: '',
+    first_name: '',
+    last_name: '',
+    email: '',
+    rol: 'employee',
+  });
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
     try {
@@ -33,124 +39,71 @@ export default function UsersManagement() {
       setLoading(false);
     }
   };
-  const [search, setSearch] = useState('');
-  const [filterRole, setFilterRole] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    cedula: '',
-    phone: '',
-    role: 'employee',
-    password: '',
-    confirmPassword: ''
-  });
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.username.toLowerCase().includes(search.toLowerCase()) ||
-                          user.email.toLowerCase().includes(search.toLowerCase()) ||
-                          user.cedula.includes(search);
-    const matchesRole = !filterRole || user.role === filterRole;
+    const q = search.toLowerCase();
+    const matchesSearch = !q ||
+      (user.first_name || '').toLowerCase().includes(q) ||
+      (user.last_name || '').toLowerCase().includes(q) ||
+      (user.email || '').toLowerCase().includes(q) ||
+      (user.cedula || '').includes(q);
+    const matchesRole = !filterRole || user.rol === filterRole;
     return matchesSearch && matchesRole;
   });
 
   const handleOpenCreate = () => {
     setSelectedUser(null);
-    setFormData({ username: '', email: '', cedula: '', phone: '', role: 'employee', password: '', confirmPassword: '' });
+    setEditing(false);
+    setFormData({ cedula: '', first_name: '', last_name: '', email: '', rol: 'employee' });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (user) => {
     setSelectedUser(user);
-    const roleMap = {
-      1: 'admin',
-      2: 'analyst', 
-      3: 'employee',
-      4: 'user'
-    };
-    setFormData({ 
-      ...user, 
-      role: roleMap[user.role] || 'employee', 
-      password: '', 
-      confirmPassword: '' 
+    setEditing(true);
+    setFormData({
+      cedula: user.cedula,
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      email: user.email,
+      rol: user.rol,
     });
     setIsModalOpen(true);
   };
 
-  const handleOpenDelete = (user) => {
-    setSelectedUser(user);
-    setIsDeleteModalOpen(true);
-  };
-
   const handleSaveUser = async () => {
     try {
-      if (selectedUser) {
-        const roleMap = {
-          'admin': 1,
-          'analyst': 2,
-          'employee': 3,
-          'user': 4
-        };
-        
-        await updateUser(selectedUser.id, {
-          username: formData.username,
+      if (editing && selectedUser) {
+        await updateFuncionario(selectedUser.id, {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
           email: formData.email,
-          cedula: formData.cedula,
-          phone: formData.phone,
-          role: roleMap[formData.role]
+          rol: formData.rol,
         });
-        setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...formData } : u));
+        setUsers(users.map(u =>
+          u.id === selectedUser.id
+            ? { ...u, ...formData, first_name: formData.first_name, last_name: formData.last_name }
+            : u
+        ));
+        setIsModalOpen(false);
       } else {
-        if (formData.password !== formData.confirmPassword) {
-          alert('Las contraseñas no coinciden');
-          return;
-        }
-        const roleMap = {
-          'admin': 1,
-          'analyst': 2, 
-          'employee': 3,
-          'user': 4
-        };
-        
-        await createUser({
-          username: formData.username,
-          email: formData.email,
-          cedula: formData.cedula,
-          phone: formData.phone,
-          role: roleMap[formData.role],
-          password: formData.password,
-          password2: formData.confirmPassword
-        });
+        const res = await createFuncionario(formData);
+        setGeneratedPassword(res.data.password);
+        setIsPasswordModalOpen(true);
+        setIsModalOpen(false);
         await fetchUsers();
       }
-      setIsModalOpen(false);
     } catch (error) {
       console.error('Error saving user:', error);
-      alert('Error al guardar usuario');
+      alert(error.response?.data?.cedula?.[0] || 'Error al guardar usuario');
     }
   };
 
-  const handleDeleteUser = async () => {
+  const handleToggleActivo = async (userId) => {
     try {
-      await deleteUser(selectedUser.id);
-      setUsers(users.filter(u => u.id !== selectedUser.id));
-      setIsDeleteModalOpen(false);
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      alert('Error al eliminar usuario');
-    }
-  };
-
-  const handleToggleStatus = async (userId) => {
-    try {
-      const user = users.find(u => u.id === userId);
-      await updateUser(userId, { is_active: !user.is_active });
-      setUsers(users.map(u => 
-        u.id === userId 
-          ? { ...u, is_active: !u.is_active }
-          : u
+      const res = await toggleActivo(userId);
+      setUsers(users.map(u =>
+        u.id === userId ? { ...u, cuenta_activa: res.data.cuenta_activa } : u
       ));
     } catch (error) {
       console.error('Error toggling user status:', error);
@@ -158,9 +111,15 @@ export default function UsersManagement() {
     }
   };
 
+  const stats = {
+    total: users.length,
+    activos: users.filter(u => u.cuenta_activa).length,
+    analysts: users.filter(u => u.rol === 'analyst').length,
+    employees: users.filter(u => u.rol === 'employee').length,
+  };
+
   return (
     <div>
-      {/* Stats */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon blue">
@@ -172,8 +131,8 @@ export default function UsersManagement() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{users.length}</div>
-            <div className="stat-label">Total Usuarios</div>
+            <div className="stat-value">{stats.total}</div>
+            <div className="stat-label">Total Funcionarios</div>
           </div>
         </div>
         <div className="stat-card">
@@ -184,8 +143,8 @@ export default function UsersManagement() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{users.filter(u => u.is_active).length}</div>
-            <div className="stat-label">Usuarios Activos</div>
+            <div className="stat-value">{stats.activos}</div>
+            <div className="stat-label">Cuentas Activas</div>
           </div>
         </div>
         <div className="stat-card">
@@ -197,7 +156,7 @@ export default function UsersManagement() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{users.filter(u => u.role?.id === 2 || u.role === 2).length}</div>
+            <div className="stat-value">{stats.analysts}</div>
             <div className="stat-label">Analistas</div>
           </div>
         </div>
@@ -211,13 +170,12 @@ export default function UsersManagement() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{users.filter(u => u.role?.id === 3 || u.role === 3).length}</div>
-            <div className="stat-label">Trabajadores</div>
+            <div className="stat-value">{stats.employees}</div>
+            <div className="stat-label">Empleados</div>
           </div>
         </div>
       </div>
 
-      {/* Filter Bar */}
       <div className="card">
         <div className="filter-bar">
           <div className="search-input" style={{ flex: 1 }}>
@@ -225,171 +183,158 @@ export default function UsersManagement() {
               <circle cx="11" cy="11" r="8"/>
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input 
-              type="text" 
-              className="form-input" 
+            <input
+              type="text"
+              className="form-input"
               placeholder="Buscar por nombre, email o cédula..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ paddingLeft: '2.5rem' }}
             />
           </div>
-          <select 
-            className="form-select" 
+          <select
+            className="form-select"
             style={{ width: 'auto', minWidth: '150px' }}
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
           >
             <option value="">Todos los roles</option>
-            <option value="user">Usuario Normal</option>
             <option value="admin">Administrador</option>
             <option value="analyst">Analista</option>
-            <option value="employee">Trabajador</option>
+            <option value="employee">Empleado</option>
           </select>
           <button className="btn btn-primary" onClick={handleOpenCreate}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Nuevo Usuario
+            Nuevo Funcionario
           </button>
         </div>
 
-         {/* Table */}
-         <div className="table-container">
-           {loading ? (
-             <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando usuarios...</div>
-           ) : (
-             <table>
-               <thead>
-                  <tr>
-                    <th>Usuario</th>
-                    <th>Email</th>
-                    <th>Cédula</th>
-                    <th>Teléfono</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-               </thead>
-               <tbody>
-                 {filteredUsers.map(user => (
-                <tr key={user.id}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ 
-                        width: '32px', 
-                        height: '32px', 
-                        borderRadius: '50%', 
-                        background: '#dbeafe', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        fontWeight: '600',
-                        color: '#2563eb',
-                        fontSize: '0.875rem'
-                      }}>
-                        {user.username.charAt(0).toUpperCase()}
-                      </div>
-                      {user.username}
-                    </div>
-                  </td>
-                  <td>{user.email}</td>
-                  <td>{user.cedula}</td>
-                  <td>{user.phone}</td>
-                   <td>
-                     <span className={`badge ${
-                       user.role?.id === 1 || user.role === 1 ? 'badge-danger' : 
-                       user.role?.id === 2 || user.role === 2 ? 'badge-info' : 
-                       user.role?.id === 4 || user.role === 4 ? 'badge-primary' : 'badge-secondary'
-                     }`}>
-                       {roleLabels[user.role?.id || user.role] || 'Trabajador'}
-                     </span>
-                   </td>
-                   <td>
-                     <span className={`badge ${user.is_active ? 'badge-success' : 'badge-warning'}`}>
-                       {user.is_active ? 'activo' : 'inactivo'}
-                     </span>
-                   </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button 
-                        className="btn-icon" 
-                        title="Editar"
-                        onClick={() => handleOpenEdit(user)}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                       <button 
-                         className="btn-icon" 
-                         title={user.is_active ? 'Desactivar' : 'Activar'}
-                         onClick={() => handleToggleStatus(user.id)}
-                       >
-                         {user.is_active ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-                          </svg>
-                        )}
-                      </button>
-                      <button 
-                        className="btn-icon" 
-                        title="Eliminar"
-                        onClick={() => handleOpenDelete(user)}
-                        style={{ color: '#ef4444' }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                          <line x1="10" y1="11" x2="10" y2="17"/>
-                          <line x1="14" y1="11" x2="14" y2="17"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
+        <div className="table-container">
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando funcionarios...</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Cédula</th>
+                  <th>Nombre</th>
+                  <th>Apellido</th>
+                  <th>Correo</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
-                 ))}
-               </tbody>
-             </table>
-           )}
-         </div>
+              </thead>
+              <tbody>
+                {filteredUsers.map(user => (
+                  <tr key={user.id} style={user.cuenta_activa ? {} : { opacity: 0.45, backgroundColor: '#f1f5f9' }}>
+                    <td><strong>{user.cedula}</strong></td>
+                    <td>{user.first_name || '-'}</td>
+                    <td>{user.last_name || '-'}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <span className={`badge ${
+                        user.rol === 'admin' ? 'badge-danger' :
+                        user.rol === 'analyst' ? 'badge-info' : 'badge-secondary'
+                      }`}>
+                        {rolLabels[user.rol] || user.rol}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${user.cuenta_activa ? 'badge-success' : 'badge-warning'}`}>
+                        {user.cuenta_activa ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="btn-icon"
+                          title="Editar"
+                          onClick={() => handleOpenEdit(user)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                        <button
+                          className="btn-icon"
+                          title={user.cuenta_activa ? 'Inactivar' : 'Activar'}
+                          onClick={() => handleToggleActivo(user.id)}
+                        >
+                          {user.cuenta_activa ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                              <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
-      {/* Create/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={selectedUser ? 'Editar Usuario' : 'Crear Usuario'}
+        title={editing ? 'Editar Funcionario' : 'Nuevo Funcionario'}
         footer={
           <>
             <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
               Cancelar
             </button>
             <button className="btn btn-primary" onClick={handleSaveUser}>
-              {selectedUser ? 'Guardar Cambios' : 'Crear Usuario'}
+              {editing ? 'Guardar Cambios' : 'Crear Funcionario'}
             </button>
           </>
         }
       >
         <div className="form-group">
-          <label className="form-label">Nombre de Usuario</label>
+          <label className="form-label">Cédula</label>
           <input
             type="text"
             className="form-input"
-            value={formData.username}
-            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            value={formData.cedula}
+            disabled={editing}
+            maxLength={8}
+            style={editing ? { backgroundColor: '#e2e8f0', cursor: 'not-allowed' } : {}}
+            onChange={(e) => setFormData({ ...formData, cedula: e.target.value.replace(/\D/g, '').slice(0, 8) })}
+          />
+          {editing && <small style={{ color: '#94a3b8' }}>La cédula no se puede modificar</small>}
+        </div>
+        <div className="form-group">
+          <label className="form-label">Nombre</label>
+          <input
+            type="text"
+            className="form-input"
+            value={formData.first_name}
+            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
           />
         </div>
         <div className="form-group">
-          <label className="form-label">Email</label>
+          <label className="form-label">Apellido</label>
+          <input
+            type="text"
+            className="form-input"
+            value={formData.last_name}
+            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+          />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Correo</label>
           <input
             type="email"
             className="form-input"
@@ -398,83 +343,51 @@ export default function UsersManagement() {
           />
         </div>
         <div className="form-group">
-          <label className="form-label">Cédula</label>
-          <input
-            type="text"
-            className="form-input"
-            value={formData.cedula}
-            onChange={(e) => setFormData({ ...formData, cedula: e.target.value })}
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Teléfono</label>
-          <input
-            type="text"
-            className="form-input"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          />
-        </div>
-        <div className="form-group">
           <label className="form-label">Rol</label>
           <select
             className="form-select"
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            value={formData.rol}
+            onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
           >
-            <option value="user">Usuario Normal</option>
-            <option value="user">Usuario Normal</option>
-            <option value="employee">Trabajador</option>
+            <option value="employee">Empleado</option>
             <option value="analyst">Analista</option>
             <option value="admin">Administrador</option>
           </select>
         </div>
-         {!selectedUser && (
-           <>
-             <div className="form-group">
-               <label className="form-label">Contraseña</label>
-               <input
-                 type="password"
-                 className="form-input"
-                 value={formData.password}
-                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-               />
-             </div>
-             <div className="form-group">
-               <label className="form-label">Confirmar Contraseña</label>
-               <input
-                 type="password"
-                 className="form-input"
-                 value={formData.confirmPassword}
-                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-               />
-             </div>
-           </>
-         )}
       </Modal>
 
-      {/* Delete Modal */}
       <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        title="Confirmar Eliminación"
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        title="Funcionario Creado"
         footer={
-          <>
-            <button className="btn btn-secondary" onClick={() => setIsDeleteModalOpen(false)}>
-              Cancelar
-            </button>
-            <button className="btn btn-danger" onClick={handleDeleteUser}>
-              Eliminar Usuario
-            </button>
-          </>
+          <button className="btn btn-primary" onClick={() => setIsPasswordModalOpen(false)}>
+            Cerrar
+          </button>
         }
       >
-        <p>¿Estás seguro de que deseas eliminar al usuario <strong>{selectedUser?.username}</strong>?</p>
-        <p style={{ marginTop: '0.5rem', color: '#64748b', fontSize: '0.875rem' }}>
-          Esta acción no se puede deshacer.
-        </p>
+        <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+          <p>El funcionario se ha registrado correctamente.</p>
+          <p style={{ marginTop: '1rem', fontWeight: 600 }}>Clave temporal generada:</p>
+          <div style={{
+            fontSize: '1.5rem',
+            fontWeight: '700',
+            fontFamily: 'monospace',
+            background: '#f0fdf4',
+            color: '#16a34a',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.5rem',
+            marginTop: '0.5rem',
+            display: 'inline-block',
+            letterSpacing: '0.1em',
+          }}>
+            {generatedPassword}
+          </div>
+          <p style={{ marginTop: '1rem', color: '#64748b', fontSize: '0.875rem' }}>
+            Entrégale esta clave al funcionario. Deberá cambiarla al iniciar sesión.
+          </p>
+        </div>
       </Modal>
     </div>
   );
 }
-

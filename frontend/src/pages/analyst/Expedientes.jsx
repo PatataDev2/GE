@@ -50,8 +50,8 @@ export default function Expedientes() {
   };
   const fetchWorkers = async () => {
     try {
-      const res = await api.get('api/users/');
-      setWorkers(res.data.filter(u => u.role_name === 'employee'));
+      const res = await api.get('api/users/api/v1/');
+      setWorkers(res.data.filter(u => u.rol === 'employee' && u.is_active));
     } catch (err) {
       console.error("Error fetching workers:", err);
     }

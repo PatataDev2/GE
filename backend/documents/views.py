@@ -16,10 +16,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated or not user.role:
+        role_name = user.role.name if user.role else user.rol
+        if not user.is_authenticated or not role_name:
             return Document.objects.none()
 
-        if user.role.name in ['admin', 'analyst']:
+        if role_name in ['admin', 'analyst']:
             queryset = Document.objects.all()
         else:
             queryset = Document.objects.filter(expedient__asinged_to=user)
@@ -58,7 +59,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         
-        if 'approval_status' in request.data and request.user.role.name == 'employee':
+        if 'approval_status' in request.data and (request.user.role.name if request.user.role else request.user.rol) == 'employee':
             return Response(
                 {"error": "Los trabajadores no pueden aprobar documentos."},
                 status=status.HTTP_403_FORBIDDEN
@@ -84,7 +85,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document = self.get_object()
         user = request.user
         
-        if user.role.name != 'employee':
+        if (user.role.name if user.role else user.rol) != 'employee':
             return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
         
         if document.expedient.asinged_to != user:
@@ -193,7 +194,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def review(self, request, pk=None):
         document = self.get_object()
         
-        if request.user.role.name == 'employee':
+        if (request.user.role.name if request.user.role else request.user.rol) == 'employee':
             return Response(
                 {"error": "No tienes permiso para revisar documentos."},
                 status=status.HTTP_403_FORBIDDEN

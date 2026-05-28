@@ -22,7 +22,7 @@ export default function LayoutWrapper() {
           id: response.data.id,
           username: response.data.username,
           email: response.data.email,
-          role: response.data.role_name || 'user'
+          role: response.data.rol || 'employee'
         };
         setUser(userData);
       } catch (error) {

@@ -29,6 +29,14 @@ class Expedient(models.Model):
         limit_choices_to={'role__name': 'employee'}, 
         verbose_name="Asignado a"
     )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expedientes_creados",
+        verbose_name="Creado por"
+    )
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
