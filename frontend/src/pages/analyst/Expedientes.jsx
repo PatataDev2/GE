@@ -87,7 +87,7 @@ export default function Expedientes() {
       if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
         docs = docs.results || [];
       }
-      const filteredDocs = (Array.isArray(docs) ? docs : []).filter(d => d.expedient === expedientId);
+      const filteredDocs = Array.isArray(docs) ? docs : [];
       setDocuments(filteredDocs);
     } catch (err) {
       console.error("Error fetching docs:", err);
@@ -112,6 +112,7 @@ export default function Expedientes() {
   if (!exp) return 'pendiente';
   const s = exp.status;
   if (s === 'Aprobado' || s === 'Finalizado') return 'activo';
+  if (s === 'Pre_Aprobado') return 'pre_aprobado';
   if (s === 'Rechazado') return 'rechazado';
   return 'en_revision';
 };
@@ -338,16 +339,19 @@ export default function Expedientes() {
             >
               <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 transition-transform group-hover:scale-150 ${
   getExpedienteStatus(exp) === 'activo' ? 'bg-green-500' :
+  getExpedienteStatus(exp) === 'pre_aprobado' ? 'bg-purple-500' :
   getExpedienteStatus(exp) === 'rechazado' ? 'bg-red-500' :
   'bg-yellow-500'
 }`}></div>
               <div className="flex justify-between items-start mb-4">
                <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${
   getExpedienteStatus(exp) === 'activo' ? 'bg-green-50 text-green-600 border-green-100' :
+  getExpedienteStatus(exp) === 'pre_aprobado' ? 'bg-purple-50 text-purple-600 border-purple-100' :
   getExpedienteStatus(exp) === 'rechazado' ? 'bg-red-50 text-red-600 border-red-100' :
   'bg-yellow-50 text-yellow-600 border-yellow-100'
 }`}>
   {getExpedienteStatus(exp) === 'activo' ? '✓ ACTIVO' :
+   getExpedienteStatus(exp) === 'pre_aprobado' ? '⬡ PRE-APROBADO' :
    getExpedienteStatus(exp) === 'rechazado' ? '✗ RECHAZADO' :
    '⏳ REVISIÓN'}
 </span>

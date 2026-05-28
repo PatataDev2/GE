@@ -1,15 +1,12 @@
-FROM node:22-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar solo package.json y package-lock.json primero para cachear instalación
-COPY package*.json ./
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Instalar dependencias
-RUN npm install
-
-# Copiar el resto del código
 COPY . .
 
-# Comando para desarrollo
+EXPOSE 3000
+
 CMD ["npm", "run", "dev"]

@@ -1,0 +1,15 @@
+#!/bin/sh
+# Pre-commit hook to prevent accidental commits of the SQLite database
+
+STAGED_DB=$(git diff --cached --name-only | grep -E "db\.sqlite3|db_backup\.sqlite3$" || true)
+
+if [ -n "$STAGED_DB" ]; then
+    echo ""
+    echo "ERROR: You are trying to commit the SQLite database file!"
+    echo "  $STAGED_DB"
+    echo ""
+    echo "This should NOT be committed. The .gitignore should exclude it."
+    echo "If you need to share data, use: python manage.py backup_restore backup"
+    echo ""
+    exit 1
+fi

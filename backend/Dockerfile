@@ -1,18 +1,20 @@
-# Dockerfile para backend Django
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copia requirements y los instala
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia el resto del código
 COPY . .
 
-# Expone el puerto donde corre Django
+RUN chmod +x entrypoint.sh
+
 EXPOSE 8000
 
-# Comando para correr el servidor Django (puedes cambiarlo para producción)
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-# Comando para correr las migraciones al iniciar el contenedor
+ENTRYPOINT ["./entrypoint.sh"]

@@ -1,0 +1,612 @@
+[
+{
+  "model": "users.role",
+  "pk": 1,
+  "fields": {
+    "name": "admin",
+    "description": "Administrador del sistema con acceso completo",
+    "created_at": "2026-05-28T03:51:35.707Z",
+    "updated_at": "2026-05-28T03:51:35.707Z"
+  }
+},
+{
+  "model": "users.role",
+  "pk": 2,
+  "fields": {
+    "name": "analyst",
+    "description": "Analista que puede revisar y validar expedientes",
+    "created_at": "2026-05-28T03:51:35.711Z",
+    "updated_at": "2026-05-28T03:51:35.711Z"
+  }
+},
+{
+  "model": "users.role",
+  "pk": 3,
+  "fields": {
+    "name": "employee",
+    "description": "Trabajador que puede subir y gestionar sus expedientes",
+    "created_at": "2026-05-28T03:51:35.712Z",
+    "updated_at": "2026-05-28T03:51:35.712Z"
+  }
+},
+{
+  "model": "users.role",
+  "pk": 4,
+  "fields": {
+    "name": "user",
+    "description": "Usuario normal con acceso básico",
+    "created_at": "2026-05-28T03:51:35.713Z",
+    "updated_at": "2026-05-28T03:51:35.713Z"
+  }
+},
+{
+  "model": "users.userscustom",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$QEIaXoQ78qLTs1IwKLXdW2$rtDQWmJcbMipZ96/oepzqplAOHkaLXNnJ4oCr3EuAhs=",
+    "last_login": null,
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin@sistema.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-05-28T03:51:35.715Z",
+    "cedula": "00000000",
+    "phone": "00000000000",
+    "role": 1,
+    "rol": "admin",
+    "clave_temporal": true,
+    "cuenta_activa": true,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "users.userscustom",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$Uu2cL5EOZqTa0ZNOZqIII9$PMHyjZk6/Ui05y8+2jY5oZ188cy0sjPnNcm7iO1EBm0=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "pepeempleado",
+    "first_name": "pepe",
+    "last_name": "empleado",
+    "email": "sfajksafjfsa@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-28T04:26:31.938Z",
+    "cedula": "12560654",
+    "phone": null,
+    "role": null,
+    "rol": "employee",
+    "clave_temporal": true,
+    "cuenta_activa": true,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "users.userscustom",
+  "pk": 3,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$uQOpJ97ePVUvnloNIzVE1d$8YXWtCXS4eXUT4XPKA5nVWCk5ysvCRGwaZHMB1xtexU=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "marianalista",
+    "first_name": "maria",
+    "last_name": "nalista",
+    "email": "hnsaiasfjsaf@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-28T04:27:23.883Z",
+    "cedula": "2956654",
+    "phone": null,
+    "role": null,
+    "rol": "analyst",
+    "clave_temporal": true,
+    "cuenta_activa": true,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 1,
+  "fields": {
+    "name": "Recursos Humanos",
+    "description": "Gestión del personal, contratación, nóminas y beneficios.",
+    "created_at": "2026-05-28T03:51:34.860Z",
+    "updated_at": "2026-05-28T03:51:34.860Z",
+    "is_active": true
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 2,
+  "fields": {
+    "name": "Tecnología",
+    "description": "Desarrollo de software, infraestructura técnica y soporte TI.",
+    "created_at": "2026-05-28T03:51:34.866Z",
+    "updated_at": "2026-05-28T03:51:34.866Z",
+    "is_active": true
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 3,
+  "fields": {
+    "name": "Marketing",
+    "description": "Publicidad, relaciones públicas, branding y campañas digitales.",
+    "created_at": "2026-05-28T03:51:34.869Z",
+    "updated_at": "2026-05-28T03:51:34.869Z",
+    "is_active": true
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 4,
+  "fields": {
+    "name": "Ventas",
+    "description": "Gestión de clientes, ventas directas y estrategias comerciales.",
+    "created_at": "2026-05-28T03:51:34.872Z",
+    "updated_at": "2026-05-28T03:51:34.872Z",
+    "is_active": true
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 5,
+  "fields": {
+    "name": "Finanzas",
+    "description": "Contabilidad, presupuestos, informes financieros y auditoría.",
+    "created_at": "2026-05-28T03:51:34.874Z",
+    "updated_at": "2026-05-28T03:51:34.874Z",
+    "is_active": true
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 6,
+  "fields": {
+    "name": "Operaciones",
+    "description": "Logística, cadena de suministro y optimización de procesos.",
+    "created_at": "2026-05-28T03:51:34.876Z",
+    "updated_at": "2026-05-28T03:51:34.876Z",
+    "is_active": true
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 7,
+  "fields": {
+    "name": "Atención al Cliente",
+    "description": "Soporte postventa, servicio al cliente y gestión de quejas.",
+    "created_at": "2026-05-28T03:51:34.878Z",
+    "updated_at": "2026-05-28T03:51:34.878Z",
+    "is_active": true
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 8,
+  "fields": {
+    "name": "Investigación y Desarrollo",
+    "description": "Innovación de productos, investigación de mercado y desarrollo de nuevos proyectos.",
+    "created_at": "2026-05-28T03:51:34.881Z",
+    "updated_at": "2026-05-28T03:51:34.881Z",
+    "is_active": true
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 9,
+  "fields": {
+    "name": "Calidad",
+    "description": "Control de calidad, auditorías internas y mejora continua.",
+    "created_at": "2026-05-28T03:51:34.883Z",
+    "updated_at": "2026-05-28T03:51:34.883Z",
+    "is_active": true
+  }
+},
+{
+  "model": "departments.department",
+  "pk": 10,
+  "fields": {
+    "name": "Legal",
+    "description": "Asesoría legal, cumplimiento normativo y gestión de contratos.",
+    "created_at": "2026-05-28T03:51:34.884Z",
+    "updated_at": "2026-05-28T03:51:34.884Z",
+    "is_active": true
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 1,
+  "fields": {
+    "name": "Cédula de Identidad",
+    "description": "Documento oficial de identificación personal emitido por el gobierno.",
+    "is_active": true,
+    "is_required": true,
+    "created_at": "2026-05-28T03:51:34.938Z",
+    "updated_at": "2026-05-28T03:51:34.938Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 2,
+  "fields": {
+    "name": "Pasaporte",
+    "description": "Documento de viaje e identificación internacional.",
+    "is_active": true,
+    "is_required": false,
+    "created_at": "2026-05-28T03:51:34.943Z",
+    "updated_at": "2026-05-28T03:51:34.943Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 3,
+  "fields": {
+    "name": "Licencia de Conducir",
+    "description": "Permiso oficial para conducir vehículos de motor.",
+    "is_active": true,
+    "is_required": false,
+    "created_at": "2026-05-28T03:51:34.947Z",
+    "updated_at": "2026-05-28T03:51:34.947Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 4,
+  "fields": {
+    "name": "Registro de Nacimiento",
+    "description": "Certificado oficial de nacimiento emitido por el registro civil.",
+    "is_active": true,
+    "is_required": true,
+    "created_at": "2026-05-28T03:51:34.950Z",
+    "updated_at": "2026-05-28T03:51:34.950Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 5,
+  "fields": {
+    "name": "Título Universitario",
+    "description": "Documento académico que certifica la culminación de estudios superiores.",
+    "is_active": true,
+    "is_required": false,
+    "created_at": "2026-05-28T03:51:34.952Z",
+    "updated_at": "2026-05-28T03:51:34.952Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 6,
+  "fields": {
+    "name": "Certificado de Estudios",
+    "description": "Constancia oficial de estudios realizados o en curso.",
+    "is_active": true,
+    "is_required": false,
+    "created_at": "2026-05-28T03:51:34.957Z",
+    "updated_at": "2026-05-28T03:51:34.957Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 7,
+  "fields": {
+    "name": "Carta de Trabajo",
+    "description": "Documento que certifica la experiencia laboral de una persona.",
+    "is_active": true,
+    "is_required": false,
+    "created_at": "2026-05-28T03:51:34.961Z",
+    "updated_at": "2026-05-28T03:51:34.961Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 8,
+  "fields": {
+    "name": "Comprobante de Domicilio",
+    "description": "Documento que verifica la dirección de residencia.",
+    "is_active": true,
+    "is_required": true,
+    "created_at": "2026-05-28T03:51:34.963Z",
+    "updated_at": "2026-05-28T03:51:34.963Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 9,
+  "fields": {
+    "name": "Acta de Matrimonio",
+    "description": "Documento oficial que certifica el matrimonio civil o religioso.",
+    "is_active": true,
+    "is_required": false,
+    "created_at": "2026-05-28T03:51:34.965Z",
+    "updated_at": "2026-05-28T03:51:34.965Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 10,
+  "fields": {
+    "name": "CURP",
+    "description": "Clave Única de Registro de Población de México.",
+    "is_active": true,
+    "is_required": true,
+    "created_at": "2026-05-28T03:51:34.968Z",
+    "updated_at": "2026-05-28T03:51:34.968Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 11,
+  "fields": {
+    "name": "RFC",
+    "description": "Registro Federal de Contribuyentes para fines fiscales.",
+    "is_active": true,
+    "is_required": true,
+    "created_at": "2026-05-28T03:51:34.969Z",
+    "updated_at": "2026-05-28T03:51:34.969Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 12,
+  "fields": {
+    "name": "INE",
+    "description": "Instituto Nacional Electoral - credencial para votar en México.",
+    "is_active": true,
+    "is_required": true,
+    "created_at": "2026-05-28T03:51:34.971Z",
+    "updated_at": "2026-05-28T03:51:34.971Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 13,
+  "fields": {
+    "name": "Visa",
+    "description": "Autorización oficial para ingresar y permanecer en un país extranjero.",
+    "is_active": true,
+    "is_required": false,
+    "created_at": "2026-05-28T03:51:34.974Z",
+    "updated_at": "2026-05-28T03:51:34.974Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 14,
+  "fields": {
+    "name": "Permiso de Residencia",
+    "description": "Documento que autoriza la residencia legal en un país.",
+    "is_active": true,
+    "is_required": false,
+    "created_at": "2026-05-28T03:51:34.976Z",
+    "updated_at": "2026-05-28T03:51:34.976Z"
+  }
+},
+{
+  "model": "document_types.documenttype",
+  "pk": 15,
+  "fields": {
+    "name": "Certificado Médico",
+    "description": "Documento emitido por profesional médico que certifica estado de salud.",
+    "is_active": true,
+    "is_required": false,
+    "created_at": "2026-05-28T03:51:34.978Z",
+    "updated_at": "2026-05-28T03:51:34.978Z"
+  }
+},
+{
+  "model": "expedients.expedient",
+  "pk": 1,
+  "fields": {
+    "title": "Jose Madero",
+    "description": "recien ingresado",
+    "status": "Pre_Aprobado",
+    "is_draft": true,
+    "department": 7,
+    "asinged_to": [
+      "pepeempleado"
+    ],
+    "created_by": [
+      "marianalista"
+    ],
+    "approved_by": [
+      "marianalista"
+    ],
+    "rejected_by": null,
+    "created_at": "2026-05-28T04:28:53.049Z",
+    "updated_at": "2026-05-28T04:46:56.293Z"
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 1,
+  "fields": {
+    "title": "visa",
+    "file": "uploads/docs/expedient_1/PLANIFICACIÓN.doc",
+    "path": "PLANIFICACIÓN.doc",
+    "docname": "PLANIFICACIÓN.doc",
+    "description_state": null,
+    "description_content": "",
+    "description_corrections": null,
+    "expedient": 1,
+    "document_type": 13,
+    "uploaded_by": [
+      "pepeempleado"
+    ],
+    "approval_status": null,
+    "expiration_date": null,
+    "uploaded_at": "2026-05-28T04:29:55.668Z"
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 2,
+  "fields": {
+    "title": "carta de trabajo",
+    "file": "uploads/docs/expedient_1/INSTRUMENTO_VALIDACION.docx",
+    "path": "INSTRUMENTO_VALIDACION.docx",
+    "docname": "INSTRUMENTO_VALIDACION.docx",
+    "description_state": null,
+    "description_content": "sfasaffas",
+    "description_corrections": null,
+    "expedient": 1,
+    "document_type": 7,
+    "uploaded_by": [
+      "pepeempleado"
+    ],
+    "approval_status": null,
+    "expiration_date": null,
+    "uploaded_at": "2026-05-28T04:35:48.346Z"
+  }
+},
+{
+  "model": "documents.document",
+  "pk": 3,
+  "fields": {
+    "title": "Pasaporte",
+    "file": "uploads/docs/expedient_1/TESIS_DEFINITIVA_2_2026131_kGJQDuE.docx",
+    "path": "TESIS_DEFINITIVA_2_20261(3)(1).docx",
+    "docname": "TESIS_DEFINITIVA_2_20261(3)(1).docx",
+    "description_state": null,
+    "description_content": null,
+    "description_corrections": null,
+    "expedient": 1,
+    "document_type": 2,
+    "uploaded_by": [
+      "pepeempleado"
+    ],
+    "approval_status": null,
+    "expiration_date": null,
+    "uploaded_at": "2026-05-28T04:45:03.540Z"
+  }
+},
+{
+  "model": "notifications.activitylog",
+  "pk": 1,
+  "fields": {
+    "user": [
+      "marianalista"
+    ],
+    "action": "Creó expediente",
+    "target": "#1 - Jose Madero",
+    "action_type": "create",
+    "ip_address": "127.0.0.1",
+    "created_at": "2026-05-28T04:28:53.116Z"
+  }
+},
+{
+  "model": "notifications.activitylog",
+  "pk": 2,
+  "fields": {
+    "user": [
+      "pepeempleado"
+    ],
+    "action": "Subió documento",
+    "target": "uploads/docs/expedient_1/PLANIFICACIÓN.doc",
+    "action_type": "upload",
+    "ip_address": "127.0.0.1",
+    "created_at": "2026-05-28T04:29:55.680Z"
+  }
+},
+{
+  "model": "notifications.activitylog",
+  "pk": 3,
+  "fields": {
+    "user": [
+      "pepeempleado"
+    ],
+    "action": "Guardó expediente como borrador",
+    "target": "#1 - Jose Madero",
+    "action_type": "edit",
+    "ip_address": "127.0.0.1",
+    "created_at": "2026-05-28T04:29:58.177Z"
+  }
+},
+{
+  "model": "notifications.activitylog",
+  "pk": 4,
+  "fields": {
+    "user": [
+      "pepeempleado"
+    ],
+    "action": "Subió documento",
+    "target": "uploads/docs/expedient_1/INSTRUMENTO_VALIDACION.docx",
+    "action_type": "upload",
+    "ip_address": "127.0.0.1",
+    "created_at": "2026-05-28T04:35:48.363Z"
+  }
+},
+{
+  "model": "notifications.activitylog",
+  "pk": 5,
+  "fields": {
+    "user": [
+      "pepeempleado"
+    ],
+    "action": "Subió documento",
+    "target": "uploads/docs/expedient_1/TESIS_DEFINITIVA_2_2026131_kGJQDuE.docx",
+    "action_type": "upload",
+    "ip_address": "127.0.0.1",
+    "created_at": "2026-05-28T04:45:03.554Z"
+  }
+},
+{
+  "model": "notifications.activitylog",
+  "pk": 6,
+  "fields": {
+    "user": [
+      "marianalista"
+    ],
+    "action": "Pre-aprobó expediente",
+    "target": "#1 - Jose Madero",
+    "action_type": "approve",
+    "ip_address": "127.0.0.1",
+    "created_at": "2026-05-28T04:46:56.316Z"
+  }
+},
+{
+  "model": "notifications.notification",
+  "pk": 1,
+  "fields": {
+    "recipient": [
+      "pepeempleado"
+    ],
+    "actor": [
+      "marianalista"
+    ],
+    "notification_type": "asignado",
+    "title": "Expediente Asignado",
+    "message": "Se te ha asignado el expediente \"Jose Madero\" para su gestion.",
+    "expedient_id": 1,
+    "document_id": null,
+    "read": false,
+    "created_at": "2026-05-28T04:28:53.104Z"
+  }
+},
+{
+  "model": "notifications.notification",
+  "pk": 2,
+  "fields": {
+    "recipient": [
+      "admin"
+    ],
+    "actor": [
+      "marianalista"
+    ],
+    "notification_type": "revision",
+    "title": "Expediente Pre-Aprobado",
+    "message": "El analista marianalista ha pre-aprobado el expediente \"Jose Madero\" y espera tu aprobacion final.",
+    "expedient_id": 1,
+    "document_id": null,
+    "read": true,
+    "created_at": "2026-05-28T04:46:56.309Z"
+  }
+}
+]

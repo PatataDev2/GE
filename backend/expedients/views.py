@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Q
 from .models import Expedient
 from .serializers import ExpedientSerializer
 from documents.models import Document
@@ -180,7 +181,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         if role_name == 'admin':
             return Expedient.objects.all()
         if role_name == 'analyst':
-            return Expedient.objects.filter(created_by=user)
+            return Expedient.objects.filter(Q(created_by=user) | Q(is_draft=False))
         if role_name == 'employee':
             return Expedient.objects.filter(asinged_to=user)
         return Expedient.objects.none()
@@ -209,8 +210,9 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         """Analista pre-aprueba el expediente, lo envia a admin para aprobacion final"""
         expedient = self.get_object()
         expedient.status = 'Pre_Aprobado'
+        expedient.is_draft = False
         expedient.approved_by = request.user
-        expedient.save(update_fields=['status', 'approved_by', 'updated_at'])
+        expedient.save(update_fields=['status', 'is_draft', 'approved_by', 'updated_at'])
         from users.models import UsersCustom
         admins = UsersCustom.objects.filter(role__name='admin')
         for admin in admins:

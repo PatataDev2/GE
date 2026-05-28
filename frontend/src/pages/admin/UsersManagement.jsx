@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
-import { getUsers, createFuncionario, updateFuncionario, toggleActivo } from '../../api/users.api';
+import { getUsers, createFuncionario, updateFuncionario, toggleActivo, resetPassword } from '../../api/users.api';
 
 const rolLabels = {
   admin: 'Administrador',
@@ -16,6 +16,9 @@ export default function UsersManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [editGeneratedPassword, setEditGeneratedPassword] = useState('');
+  const [showEditPassword, setShowEditPassword] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -89,6 +92,7 @@ export default function UsersManagement() {
       } else {
         const res = await createFuncionario(formData);
         setGeneratedPassword(res.data.password);
+        setIsPasswordReset(false);
         setIsPasswordModalOpen(true);
         setIsModalOpen(false);
         await fetchUsers();
@@ -108,6 +112,30 @@ export default function UsersManagement() {
     } catch (error) {
       console.error('Error toggling user status:', error);
       alert('Error al cambiar estado del usuario');
+    }
+  };
+
+  const handleGeneratePasswordInEdit = async () => {
+    if (!selectedUser) return;
+    try {
+      const res = await resetPassword(selectedUser.id);
+      setEditGeneratedPassword(res.data.password);
+      setShowEditPassword(true);
+    } catch (error) {
+      console.error('Error generating password:', error);
+      alert('Error al generar contraseña');
+    }
+  };
+
+  const handleResetPassword = async (user) => {
+    try {
+      const res = await resetPassword(user.id);
+      setGeneratedPassword(res.data.password);
+      setIsPasswordReset(true);
+      setIsPasswordModalOpen(true);
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      alert('Error al restablecer contraseña');
     }
   };
 
@@ -354,6 +382,35 @@ export default function UsersManagement() {
             <option value="admin">Administrador</option>
           </select>
         </div>
+        {editing && (
+          <div className="form-group" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+            <label className="form-label">Contraseña</label>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ width: '100%' }}
+              onClick={handleGeneratePasswordInEdit}
+            >
+              Generar Contraseña Aleatoria
+            </button>
+            {showEditPassword && (
+              <div style={{
+                marginTop: '0.75rem',
+                textAlign: 'center',
+                fontSize: '1.25rem',
+                fontWeight: '700',
+                fontFamily: 'monospace',
+                background: '#f0fdf4',
+                color: '#16a34a',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                letterSpacing: '0.1em',
+              }}>
+                {editGeneratedPassword}
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
 
       <Modal

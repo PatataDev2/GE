@@ -17,7 +17,6 @@ import Reportes from './analyst/Reportes';
 
 // Employee Dashboard imports
 import MisExpedientes from './employee/MisExpedientes';
-import SubirDocumentos from './employee/SubirDocumentos';
 import Notificaciones from './employee/Notificaciones';
 // Real user data from API
 const roleMap = {
@@ -460,8 +459,8 @@ const EmployeeDashboardContent = () => {
             <h3 className="card-title">Acciones Rápidas</h3>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <a href="/employee/subir-documentos" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-              Subir Nuevos Documentos
+            <a href="/employee/mis-expedientes" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+              Mis Expedientes
             </a>
             <a href="/employee/mis-expedientes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
               Ver Mis Expedientes
@@ -504,6 +503,5 @@ export {
   ValidarExpedientes,
   Reportes,
   MisExpedientes,
-  SubirDocumentos,
   Notificaciones
 };

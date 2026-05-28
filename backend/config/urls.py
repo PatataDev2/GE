@@ -18,10 +18,10 @@ from django.contrib import admin
 from django.urls import path , include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.static import serve
 from users.views import AdminDashboardView
 from notifications.views import ActivityLogViewSet
 from rest_framework.routers import DefaultRouter
+from . import backup_views
 
 
 router = DefaultRouter()
@@ -38,8 +38,9 @@ urlpatterns = [
     path('api/notifications/', include('notifications.urls')),
     path('api/users/', include('users.urls')),
     path('api/admin/dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
+    path('api/admin/backups/', backup_views.backup_list, name='backup-list'),
+    path('api/admin/backups/<str:filename>/', backup_views.backup_detail, name='backup-detail'),
     path('api/', include(router.urls)),
-    path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
 
 if settings.DEBUG:

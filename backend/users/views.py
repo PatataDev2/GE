@@ -86,6 +86,20 @@ class AdminToggleActivoView(generics.UpdateAPIView):
         return Response({'cuenta_activa': user.cuenta_activa})
 
 
+class AdminResetPasswordView(generics.UpdateAPIView):
+    queryset = UsersCustom.objects.all()
+    permission_classes = [IsAdminUser]
+
+    def update(self, request, *args, **kwargs):
+        import secrets
+        user = self.get_object()
+        password = secrets.token_hex(6)
+        user.set_password(password)
+        user.clave_temporal = True
+        user.save()
+        return Response({'password': password})
+
+
 class AdminDashboardView(generics.GenericAPIView):
     permission_classes = [IsAdminUser]
 

@@ -20,3 +20,21 @@ dist/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Databases
+backend/db.sqlite3
+backend/db_backup.sqlite3
+
+# Backups
+backend/backups/
+
+# Environment files
+.env
+backend/.env
+
+# Media / uploaded files
+backend/media/
+
+# IDE settings
+.vscode/
+.idea/
