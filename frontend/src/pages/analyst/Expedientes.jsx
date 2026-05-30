@@ -32,6 +32,7 @@ export default function Expedientes() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReassignModal, setShowReassignModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+
   const [editForm, setEditForm] = useState({ title: '', description: '' });
   const [workers, setWorkers] = useState([]);
   const [editSubmitting, setEditSubmitting] = useState(false);
@@ -423,9 +424,11 @@ export default function Expedientes() {
         }}
         title={`Expediente #${selectedExpediente?.id} - ${selectedExpediente?.title}`}
         footer={
-          <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
-            Cerrar
-          </button>
+          <div className="flex gap-2 w-full">
+            <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
+              Cerrar
+            </button>
+          </div>
         }
       >
         {selectedExpediente && (
@@ -539,9 +542,8 @@ export default function Expedientes() {
             setIsModalOpen(true);
             if (newExpediente?.id) {
               await fetchDocuments(newExpediente.id);
-            } else {
-              await fetchExpedientes();
             }
+            await fetchExpedientes();
           }} />
         </div>
       </Modal>

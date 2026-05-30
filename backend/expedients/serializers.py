@@ -44,7 +44,7 @@ class ExpedientSerializer(serializers.ModelSerializer):
         print(f"Usuario enviado: {value.username} (ID: {value.id})")
         
         # Obtenemos el nombre del rol: primero intenta el FK 'role', si es None usa el CharField 'rol'
-        role_name = value.role.name if value.role else value.rol
+        role_name = value.rol
         print(f"Rol detectado en base de datos: '{role_name}'")
         
         if role_name != 'employee':

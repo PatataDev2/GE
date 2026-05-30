@@ -7,16 +7,12 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     - Solo administradores pueden realizar acciones de escritura/borrado.
     """
     def has_permission(self, request, view):
-        # Si la acción es de lectura, permitimos
         if request.method in permissions.SAFE_METHODS:
             return True
-        
-        # Si es borrar o editar, verificamos si es admin
         return bool(
-            request.user and 
-            request.user.is_authenticated and 
-            request.user.role and 
-            request.user.role.name == 'admin'
+            request.user and
+            request.user.is_authenticated and
+            request.user.rol == 'admin'
         )
 
 class IsAdminToDelete(permissions.BasePermission):
@@ -25,5 +21,5 @@ class IsAdminToDelete(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         if request.method == 'DELETE':
-            return bool(request.user.role and request.user.role.name == 'admin')
+            return request.user.is_authenticated and request.user.rol == 'admin'
         return True

@@ -293,7 +293,7 @@ export default function AprobarExpedientes() {
 
       <Modal
         isOpen={isModalOpen && !!selectedExp}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => { setIsModalOpen(false); fetchAll(); }}
         title={`Expediente #${selectedExp?.id}`}
         size="md"
         footer={

@@ -12,7 +12,7 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if (user.role.name if user.role else user.rol) != 'admin':
+        if user.rol != 'admin':
             return ActivityLog.objects.none()
         return ActivityLog.objects.all()
 

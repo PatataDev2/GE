@@ -6,6 +6,7 @@ from .models import Expedient
 from .serializers import ExpedientSerializer
 from documents.models import Document
 from document_types.models import DocumentType
+from users.models import UsersCustom
 from notifications.utils import create_notification, create_activity_log
 
 class ExpedientViewSet(viewsets.ModelViewSet):
@@ -16,7 +17,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     def my(self, request):
         """Obtiene los expedients asignados al usuario actual (incluye borradores)"""
         user = request.user
-        if (user.role.name if user.role else user.rol) == 'employee':
+        if user.rol == 'employee':
             expedients = Expedient.objects.filter(asinged_to=user)
         else:
             expedients = Expedient.objects.none()
@@ -27,7 +28,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     def my_drafts(self, request):
         """Obtiene los borradores del usuario actual"""
         user = request.user
-        if (user.role.name if user.role else user.rol) == 'employee':
+        if user.rol == 'employee':
             drafts = Expedient.objects.filter(asinged_to=user, is_draft=True)
         else:
             drafts = Expedient.objects.none()
@@ -38,7 +39,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     def corrections_needed(self, request):
         """Obtiene documentos rechazados con correcciones pendientes para el usuario"""
         user = request.user
-        if (user.role.name if user.role else user.rol) != 'employee':
+        if user.rol != 'employee':
             return Response([])
         
         docs = Document.objects.filter(
@@ -65,7 +66,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         expedient = self.get_object()
         user = request.user
         
-        if (user.role.name if user.role else user.rol) != 'employee':
+        if user.rol != 'employee':
             return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
         
         if expedient.asinged_to != user:
@@ -100,8 +101,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         expedient.status = 'Pendiente'
         expedient.save(update_fields=['is_draft', 'status', 'updated_at'])
         
-        from users.models import UsersCustom
-        analysts = UsersCustom.objects.filter(role__name='analyst')
+        analysts = UsersCustom.objects.filter(rol='analyst')
         for analyst in analysts:
             create_notification(
                 recipient=analyst,
@@ -132,7 +132,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         expedient = self.get_object()
         user = request.user
         
-        if (user.role.name if user.role else user.rol) != 'employee':
+        if user.rol != 'employee':
             return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
         
         if expedient.asinged_to != user:
@@ -169,13 +169,13 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         if self.action == 'destroy':
             class IsAdminRole(permissions.BasePermission):
                 def has_permission(self, request, view):
-                    return bool(request.user.role and request.user.role.name == 'admin')
+                    return request.user.is_authenticated and request.user.rol == 'admin'
             return [permissions.IsAuthenticated(), IsAdminRole()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
-        role_name = user.role.name if user.role else user.rol
+        role_name = user.rol
         if not user.is_authenticated or not role_name:
             return Expedient.objects.none()
         if role_name == 'admin':
@@ -208,13 +208,16 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         """Analista pre-aprueba el expediente, lo envia a admin para aprobacion final"""
+        if request.user.rol not in ['admin', 'analyst']:
+            return Response({'error': 'Solo analistas o administradores pueden pre-aprobar expedientes'}, status=status.HTTP_403_FORBIDDEN)
         expedient = self.get_object()
+        if expedient.status != 'Pendiente':
+            return Response({'error': 'Solo se pueden pre-aprobar expedientes en estado Pendiente'}, status=status.HTTP_400_BAD_REQUEST)
         expedient.status = 'Pre_Aprobado'
         expedient.is_draft = False
         expedient.approved_by = request.user
         expedient.save(update_fields=['status', 'is_draft', 'approved_by', 'updated_at'])
-        from users.models import UsersCustom
-        admins = UsersCustom.objects.filter(role__name='admin')
+        admins = UsersCustom.objects.filter(rol='admin')
         for admin in admins:
             create_notification(
                 recipient=admin,
@@ -236,9 +239,11 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def admin_approve(self, request, pk=None):
         """Admin da la aprobacion final al expediente"""
-        expedient = self.get_object()
-        if (request.user.role.name if request.user.role else request.user.rol) != 'admin':
+        if request.user.rol != 'admin':
             return Response({'error': 'Solo administradores pueden dar la aprobacion final'}, status=status.HTTP_403_FORBIDDEN)
+        expedient = self.get_object()
+        if expedient.status != 'Pre_Aprobado':
+            return Response({'error': 'Solo se pueden aprobar expedientes en estado Pre-Aprobado'}, status=status.HTTP_400_BAD_REQUEST)
         expedient.status = 'Aprobado'
         expedient.approved_by = request.user
         expedient.save(update_fields=['status', 'approved_by', 'updated_at'])
@@ -262,7 +267,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def pending_admin(self, request):
         """Lista expedientes pre-aprobados pendientes de aprobacion del admin"""
-        if (request.user.role.name if request.user.role else request.user.rol) != 'admin':
+        if request.user.rol != 'admin':
             return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
         expedients = Expedient.objects.filter(status='Pre_Aprobado', is_draft=False)
         serializer = self.get_serializer(expedients, many=True)
@@ -271,7 +276,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def approved(self, request):
         """Lista expedientes aprobados definitivamente"""
-        if (request.user.role.name if request.user.role else request.user.rol) not in ['admin', 'analyst']:
+        if request.user.rol not in ['admin', 'analyst']:
             return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
         expedients = Expedient.objects.filter(status='Aprobado', is_draft=False).order_by('-updated_at')
         serializer = self.get_serializer(expedients, many=True)
@@ -279,9 +284,12 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
+        if request.user.rol not in ['admin', 'analyst']:
+            return Response({'error': 'No tienes permiso para rechazar expedientes'}, status=status.HTTP_403_FORBIDDEN)
         expedient = self.get_object()
         expedient.status = 'Rechazado'
-        expedient.save(update_fields=['status'])
+        expedient.rejected_by = request.user
+        expedient.save(update_fields=['status', 'rejected_by', 'updated_at'])
         correcciones = request.data.get('correcciones', request.data.get('observation', ''))
         mensaje = f'Tu expediente "{expedient.title}" ha sido rechazado.'
         if correcciones:
