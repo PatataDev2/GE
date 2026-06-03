@@ -14,7 +14,7 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
         if user.rol != 'admin':
             return ActivityLog.objects.none()
-        return ActivityLog.objects.all()
+        return ActivityLog.objects.select_related('user').all()
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -49,9 +49,10 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
 
     def get_queryset(self):
-        return Notification.objects.filter(recipient=self.request.user)
+        return Notification.objects.select_related('actor').filter(recipient=self.request.user)
 
     @action(detail=False, methods=['get'])
     def unread_count(self, request):

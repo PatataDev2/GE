@@ -17,8 +17,8 @@ class Expedient(models.Model):
 
     title = models.CharField(max_length=100)
     description = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS, default="Pendiente")
-    is_draft = models.BooleanField(default=True, help_text="Si es True, el analista no puede ver este expediente")
+    status = models.CharField(max_length=20, choices=STATUS, default="Pendiente", db_index=True)
+    is_draft = models.BooleanField(default=True, db_index=True, help_text="Si es True, el analista no puede ver este expediente")
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="expedientes", null=True, blank=True)
     # Relación con el usuario personalizado
     asinged_to = models.ForeignKey(
@@ -54,7 +54,7 @@ class Expedient(models.Model):
         verbose_name="Rechazado por"
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

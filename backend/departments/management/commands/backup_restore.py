@@ -38,7 +38,6 @@ class Command(BaseCommand):
         os.makedirs(os.path.dirname(output), exist_ok=True)
 
         apps = [
-            'users.Role',
             'users.UsersCustom',
             'departments.Department',
             'document_types.DocumentType',

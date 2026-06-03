@@ -106,7 +106,7 @@ export default function Register() {
           </div>
           <div className="flex flex-col items-center">
             <img 
-              src="/photo_5172934641273473906_y(1).jpg" 
+              src="/logo.jpg" 
               alt="Expedientes App" 
               className="w-16 h-16 mb-2 rounded-lg"
             />

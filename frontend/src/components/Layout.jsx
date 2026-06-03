@@ -134,20 +134,13 @@ const getMenuItems = (role) => {
           { path: '/admin/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
         ];
      case 'analyst':
-       return [
-         ...commonItems,
-         { path: '/analyst/expedientes', label: 'Expedientes', icon: Icons.Folder },
-         { path: '/analyst/validar', label: 'Validar Expedientes', icon: Icons.CheckCircle },
-         { path: '/analyst/reportes', label: 'Reportes', icon: Icons.BarChart },
-         { path: '/analyst/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
-       ];
-    case 'analyst':
-      return [
-        ...commonItems,
-        { path: '/analyst/expedientes', label: 'Expedientes', icon: Icons.Folder },
-        { path: '/analyst/validar', label: 'Validar Expedientes', icon: Icons.CheckCircle },
-        { path: '/analyst/reportes', label: 'Reportes', icon: Icons.BarChart }
-      ];
+        return [
+          ...commonItems,
+          { path: '/analyst/expedientes', label: 'Expedientes', icon: Icons.Folder },
+          { path: '/analyst/validar', label: 'Validar Expedientes', icon: Icons.CheckCircle },
+          { path: '/analyst/reportes', label: 'Reportes', icon: Icons.BarChart },
+          { path: '/analyst/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
+        ];
     case 'employee':
       return [
         ...commonItems,
@@ -281,7 +274,7 @@ export default function Layout({ children, user }) {
       <aside className="sidebar">
         <div className="sidebar-logo flex justify-center">
           <img 
-            src="/photo_5172934641273473906_y(1).jpg" 
+            src="/logo.jpg" 
             alt="Expedientes App" 
             className="w-16 h-16 rounded-lg mb-2"
           />

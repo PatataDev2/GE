@@ -25,9 +25,9 @@ class ActivityLog(models.Model):
     )
     action = models.CharField(max_length=255, verbose_name='Acción')
     target = models.CharField(max_length=255, blank=True, default='-', verbose_name='Objetivo')
-    action_type = models.CharField(max_length=20, choices=ACTION_TYPES, verbose_name='Tipo de acción')
+    action_type = models.CharField(max_length=20, choices=ACTION_TYPES, db_index=True, verbose_name='Tipo de acción')
     ip_address = models.GenericIPAddressField(blank=True, null=True, verbose_name='Dirección IP')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha/Hora')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Fecha/Hora')
 
     class Meta:
         ordering = ['-created_at']
@@ -62,12 +62,12 @@ class Notification(models.Model):
         related_name='notifications_created',
         verbose_name='Actor'
     )
-    notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES, db_index=True)
     title = models.CharField(max_length=200)
     message = models.TextField()
     expedient_id = models.IntegerField(null=True, blank=True)
     document_id = models.IntegerField(null=True, blank=True)
-    read = models.BooleanField(default=False)
+    read = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

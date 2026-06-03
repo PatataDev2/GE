@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useEffect, useRef, useState } from 'react';
 import { renderAsync } from 'docx-preview';
 
@@ -15,8 +15,6 @@ export default function DocxPreview({ blob }) {
     setLoading(true);
     setError(null);
 
-    console.log('Rendering DOCX, blob size:', blob.size);
-
     renderAsync(blob, containerRef.current, null, {
       className: 'docx-preview',
       inWrapper: true,
@@ -27,7 +25,6 @@ export default function DocxPreview({ blob }) {
       debug: false,
     })
       .then(() => {
-        console.log('DOCX rendered successfully');
         if (!cancelled) setLoading(false);
       })
       .catch((err) => {

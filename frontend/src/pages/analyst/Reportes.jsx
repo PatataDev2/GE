@@ -1,12 +1,12 @@
-'use client';
+﻿'use client';
 import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const STATUS_MAP = {
   'Aprobado': 'Activos',
   'Finalizado': 'Activos',
-  'Pendiente': 'En Revisión',
-  'Proceso': 'En Revisión',
+  'Pendiente': 'En Revisi\u00f3n',
+  'Proceso': 'En Revisi\u00f3n',
   'Rechazado': 'Cerrados'
 };
 export default function Reportes() {
@@ -37,6 +37,68 @@ export default function Reportes() {
     };
     fetchData();
   }, []);
+  const [filterFeedback, setFilterFeedback] = useState('');
+
+  const handleFilter = () => {
+    setFilterFeedback('Filtrado aplicado: ' + filteredExpedientes.length + ' expedientes');
+    setTimeout(function() { setFilterFeedback(''); }, 3000);
+  };
+
+  const handleExportPDF = () => {
+    var html = '';
+    html += '<!DOCTYPE html><html><head><title>Reporte</title>';
+    html += '<style>';
+    html += 'body{font-family:Arial;padding:20px}';
+    html += 'table{width:100%;border-collapse:collapse}';
+    html += 'th,td{border:1px solid #ddd;padding:8px;text-align:left}';
+    html += 'th{background:#2563eb;color:white}';
+    html += 'h2{color:#1e293b}';
+    html += '</style></head><body>';
+    html += '<h2>Reporte de Expedientes</h2>';
+    html += '<p>Total: ' + totalExpedientes + ' | Aprobados: ' + aprobados + ' | Rechazados: ' + rechazados + ' | Tasa: ' + tasaAprobacion + '%</p>';
+    html += '<table><tr><th>Estado</th><th>Cantidad</th><th>Porcentaje</th></tr>';
+    expedientesPorEstado.forEach(function(e) {
+      html += '<tr><td>' + e.estado + '</td><td>' + e.cantidad + '</td><td>' + e.porcentaje + '%</td></tr>';
+    });
+    html += '</table>';
+    html += '<h3 style="margin-top:20px">Por Departamento</h3>';
+    html += '<table><tr><th>Departamento</th><th>Cantidad</th></tr>';
+    expedientesPorDepartamento.forEach(function(d) {
+      html += '<tr><td>' + d.departamento + '</td><td>' + d.cantidad + '</td></tr>';
+    });
+    html += '</table>';
+    html += '<p style="margin-top:20px;color:#64748b;font-size:12px">Generado el ' + new Date().toLocaleDateString() + '</p>';
+    html += '</body></html>';
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var win = window.open(url, '_blank', 'noopener,noreferrer');
+    if (win) {
+      win.onload = function() { URL.revokeObjectURL(url); win.print(); };
+    } else {
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleExportExcel = () => {
+    const rows = [['Estado', 'Cantidad', 'Porcentaje']];
+    expedientesPorEstado.forEach(e => rows.push([e.estado, e.cantidad, e.porcentaje + '%']));
+    rows.push([]);
+    rows.push(['Departamento', 'Cantidad']);
+    expedientesPorDepartamento.forEach(d => rows.push([d.departamento, d.cantidad]));
+    rows.push([]);
+    rows.push(['Mes', 'Creados', 'Aprobados', 'Rechazados']);
+    actividadReciente.forEach(a => rows.push([a.mes, a.creados, a.aprobados, a.rechazados]));
+
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'reporte_expedientes_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const getDeptName = (deptId) => {
     const dept = departments.find(d => d.id === deptId);
     return dept?.name || 'Sin departamento';
@@ -44,19 +106,19 @@ export default function Reportes() {
   const filteredExpedientes = expedientes.filter(exp => {
     const created = new Date(exp.created_at);
     if (fechaDesde && created < new Date(fechaDesde)) return false;
-    if (fechaHasta && created > new Date(fechaHasta + 'T23:59:59')) return false;
+    if (fechaHasta && created < new Date(fechaHasta + 'T23:59:59')) return false;
     return true;
   });
   const expedientesPorEstado = (() => {
-    const groups = { 'Activos': 0, 'En Revisión': 0, 'Cerrados': 0 };
+    const groups = { 'Activos': 0, 'En Revisi\u00f3n': 0, 'Cerrados': 0 };
     filteredExpedientes.forEach(exp => {
-      const mapped = STATUS_MAP[exp.status] || 'En Revisión';
+      const mapped = STATUS_MAP[exp.status] || 'En Revisi\u00f3n';
       groups[mapped]++;
     });
     const total = filteredExpedientes.length || 1;
     return [
       { estado: 'Activos', cantidad: groups['Activos'], porcentaje: Math.round((groups['Activos'] / total) * 100) },
-      { estado: 'En Revisión', cantidad: groups['En Revisión'], porcentaje: Math.round((groups['En Revisión'] / total) * 100) },
+      { estado: 'En Revisi\u00f3n', cantidad: groups['En Revisi\u00f3n'], porcentaje: Math.round((groups['En Revisi\u00f3n'] / total) * 100) },
       { estado: 'Cerrados', cantidad: groups['Cerrados'], porcentaje: Math.round((groups['Cerrados'] / total) * 100) }
     ];
   })();
@@ -72,7 +134,7 @@ export default function Reportes() {
     const months = {};
     filteredExpedientes.forEach(exp => {
       const d = new Date(exp.created_at);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
       if (!months[key]) months[key] = { mes: MESES[d.getMonth()], creados: 0, aprobados: 0, rechazados: 0 };
       months[key].creados++;
       if (exp.status === 'Aprobado' || exp.status === 'Finalizado') months[key].aprobados++;
@@ -134,8 +196,8 @@ export default function Reportes() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{avgReviewDays} días</div>
-            <div className="stat-label">Tiempo Promedio Revisión</div>
+            <div className="stat-value">{avgReviewDays} d\u00edas</div>
+            <div className="stat-label">Tiempo Promedio Revisi\u00f3n</div>
           </div>
         </div>
         <div className="stat-card">
@@ -147,7 +209,7 @@ export default function Reportes() {
           </div>
           <div>
             <div className="stat-value">{tasaAprobacion}%</div>
-            <div className="stat-label">Tasa de Aprobación</div>
+            <div className="stat-label">Tasa de Aprobaci\u00f3n</div>
           </div>
         </div>
       </div>
@@ -179,13 +241,16 @@ export default function Reportes() {
             value={fechaHasta}
             onChange={(e) => setFechaHasta(e.target.value)}
           />
-          <button className="btn btn-primary">
+          {filterFeedback && (
+            <span style={{ color: '#16a34a', fontSize: '0.875rem', alignSelf: 'center' }}>{filterFeedback}</span>
+          )}
+          <button className="btn btn-primary" onClick={handleFilter}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
             </svg>
             Filtrar
           </button>
-          <button className="btn btn-secondary">
+          <button className="btn btn-secondary" onClick={handleExportPDF}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
@@ -193,7 +258,7 @@ export default function Reportes() {
             </svg>
             Exportar PDF
           </button>
-          <button className="btn btn-secondary">
+          <button className="btn btn-secondary" onClick={handleExportExcel}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
@@ -221,7 +286,7 @@ export default function Reportes() {
                   <div 
                     className="progress-fill" 
                     style={{ 
-                      width: `${item.porcentaje}%`,
+                      width: item.porcentaje + '%',
                       background: idx === 0 ? '#10b981' : idx === 1 ? '#f59e0b' : '#64748b'
                     }}
                   ></div>
@@ -253,7 +318,7 @@ export default function Reportes() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ width: '12px', height: '12px', background: '#f59e0b', borderRadius: '2px' }}></div>
-              <span style={{ fontSize: '0.875rem' }}>En Revisión</span>
+              <span style={{ fontSize: '0.875rem' }}>En Revisi\u00f3n</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ width: '12px', height: '12px', background: '#64748b', borderRadius: '2px' }}></div>
@@ -276,7 +341,7 @@ export default function Reportes() {
                     <div 
                       className="progress-fill" 
                       style={{ 
-                        width: `${(item.cantidad / maxDepartamento) * 100}%`,
+                        width: (item.cantidad / maxDepartamento) * 100 + '%',
                         background: '#2563eb'
                       }}
                     ></div>
@@ -302,7 +367,7 @@ export default function Reportes() {
                 <th>Expedientes Creados</th>
                 <th>Aprobados</th>
                 <th>Rechazados</th>
-                <th>Tasa de Aprobación</th>
+                <th>Tasa de Aprobaci\u00f3n</th>
               </tr>
             </thead>
             <tbody>
@@ -332,7 +397,7 @@ export default function Reportes() {
                           <div 
                             className="progress-fill" 
                             style={{ 
-                              width: `${tasaAprobacion}%`,
+                              width: tasaAprobacion + '%',
                               background: tasaAprobacion >= 90 ? '#10b981' : tasaAprobacion >= 70 ? '#f59e0b' : '#ef4444'
                             }}
                           ></div>

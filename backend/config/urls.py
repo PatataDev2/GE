@@ -36,7 +36,7 @@ urlpatterns = [
     path('api/documents/', include('documents.urls')),
     path('api/departments/', include('departments.urls')),
     path('api/notifications/', include('notifications.urls')),
-    path('api/users/', include('users.urls')),
+    # path('api/users/', include('users.urls')),  # Duplicate — users/ is the canonical prefix
     path('api/admin/dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
     path('api/admin/backups/', backup_views.backup_list, name='backup-list'),
     path('api/admin/backups/<str:filename>/', backup_views.backup_detail, name='backup-detail'),

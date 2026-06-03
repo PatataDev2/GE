@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from users.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework import serializers
 from .models import Department
@@ -25,6 +26,9 @@ def department_list(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
+        permission = IsAdminUser()
+        if not permission.has_permission(request, None):
+            return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
         serializer = DepartmentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -47,13 +51,16 @@ def department_detail(request, pk):
         serializer = DepartmentSerializer(department)
         return Response(serializer.data)
 
-    elif request.method == 'PUT':
-        serializer = DepartmentSerializer(department, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        department.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    elif request.method in ('PUT', 'DELETE'):
+        permission = IsAdminUser()
+        if not permission.has_permission(request, None):
+            return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
+        if request.method == 'PUT':
+            serializer = DepartmentSerializer(department, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        elif request.method == 'DELETE':
+            department.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)

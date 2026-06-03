@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useContext } from 'react';
 import api from '../api/users.api';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../api/users.api';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const [data, setData] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   useEffect(() => {
     const token = localStorage.getItem('access');
@@ -27,11 +29,12 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await api.post('/login/', data);
+      const res = await api.post('users/api/v1/login/', data);
       localStorage.setItem('access', res.data.access);
       localStorage.setItem('refresh', res.data.refresh);
+      // Refresh auth context with the new token
+      await refreshUser();
       const userRes = await getCurrentUser();
-      localStorage.setItem('userRole', userRes.data.rol);
       if (userRes.data.clave_temporal) {
         navigate('/change-password');
       } else {
@@ -98,7 +101,7 @@ export default function Login() {
           />
           <input
             type="password"
-            placeholder="Contraseña"
+            placeholder="Contrase\u00f1a"
             className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150"
             disabled={loading}
             onChange={e => setData({...data, password: e.target.value})}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
@@ -81,9 +81,7 @@ export default function Expedientes() {
     setCurrentExpedientId(expedientId);
     setDocuments([]);
     try {
-      console.log('Fetching documents for expedient:', expedientId);
       const res = await api.get(`api/documents/?expedient=${expedientId}`);
-      console.log('Documents response:', res.data);
       let docs = res.data;
       if (docs && typeof docs === 'object' && !Array.isArray(docs)) {
         docs = docs.results || [];
@@ -98,7 +96,6 @@ export default function Expedientes() {
     }
   };
   const handleViewDocuments = async (exp) => {
-    console.log('Opening documents for expedient:', exp.id);
     setSelectedExpediente(exp);
     setDocuments([]);
     setIsModalOpen(true);
@@ -137,14 +134,14 @@ export default function Expedientes() {
       if (ext === 'docx') {
         try {
           setShowPreviewModal(true);
-          const response = await fetch(fileUrl);
-          const blob = await response.blob();
+          const response = await api.get(fileUrl, { responseType: 'blob' });
+          const blob = response.data;
           setDocxBlob(blob);
         } catch (err) {
           console.error('Error loading DOCX:', err);
         }
       } else if (getFileType(doc) !== 'image') {
-        window.open(fileUrl, '_blank');
+        window.open(fileUrl, '_blank', 'noopener,noreferrer');
       } else {
         setShowPreviewModal(true);
       }
@@ -192,20 +189,17 @@ export default function Expedientes() {
     if (!selectedDoc) return;
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('access');
-      console.log('Token:', token);
       const res = await api.post(`api/documents/${selectedDoc.id}/review/`, {
         action: reviewAction,
         message: reviewMessage,
         corrections: reviewAction === 'reject' ? reviewMessage : ''
       });
-      console.log('Review response:', res.data);
       setShowReviewModal(false);
       await fetchDocuments(selectedExpediente.id);
     } catch (err) {
       console.error("Error:", err);
       console.error("Response:", err.response);
-      alert('Error al procesar la revisión');
+      alert('Error al procesar la revisiÃ³n');
     } finally {
       setSubmitting(false);
     }
@@ -351,14 +345,14 @@ export default function Expedientes() {
   getExpedienteStatus(exp) === 'rechazado' ? 'bg-red-50 text-red-600 border-red-100' :
   'bg-yellow-50 text-yellow-600 border-yellow-100'
 }`}>
-  {getExpedienteStatus(exp) === 'activo' ? '✓ ACTIVO' :
-   getExpedienteStatus(exp) === 'pre_aprobado' ? '⬡ PRE-APROBADO' :
-   getExpedienteStatus(exp) === 'rechazado' ? '✗ RECHAZADO' :
-   '⏳ REVISIÓN'}
+  {getExpedienteStatus(exp) === 'activo' ? 'âœ“ ACTIVO' :
+   getExpedienteStatus(exp) === 'pre_aprobado' ? 'â¬¡ PRE-APROBADO' :
+   getExpedienteStatus(exp) === 'rechazado' ? 'âœ— RECHAZADO' :
+   'â³ REVISIÃ“N'}
 </span>
    </div>     
               <h3 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">{exp.title}</h3>
-              <p className="text-sm text-gray-500 mb-6 line-clamp-2">{exp.description || 'Sin descripción asignada.'}</p>
+              <p className="text-sm text-gray-500 mb-6 line-clamp-2">{exp.description || 'Sin descripciÃ³n asignada.'}</p>
               <div className="flex items-center gap-3 mb-6 bg-gray-50 p-3 rounded-2xl">
                 <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
                   {exp.asinged_to_username?.charAt(0) || 'A'}
@@ -388,7 +382,7 @@ export default function Expedientes() {
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         <div>
                           <p className="font-semibold">Editar detalles</p>
-                          <p className="text-xs text-gray-400">Modificar información</p>
+                          <p className="text-xs text-gray-400">Modificar informaciÃ³n</p>
                         </div>
                       </button>
                       <div className="border-t border-gray-100"></div>
@@ -436,7 +430,7 @@ export default function Expedientes() {
             <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
               <p><strong>Departamento:</strong> {selectedExpediente.department_name}</p>
               <p><strong>Asignado a:</strong> {selectedExpediente.asinged_to_username || 'No asignado'}</p>
-              <p><strong>Descripción:</strong> {selectedExpediente.description || 'Sin descripción'}</p>
+              <p><strong>DescripciÃ³n:</strong> {selectedExpediente.description || 'Sin descripciÃ³n'}</p>
             </div>
             
             <h4 style={{ marginBottom: '1rem', fontWeight: '600' }}>Documentos</h4>
@@ -654,7 +648,7 @@ export default function Expedientes() {
           {previewUrl && getFileType(previewDoc) === 'video' && (
             <video controls className="w-full max-h-[80vh] rounded-lg">
               <source src={previewUrl} />
-              Tu navegador no soporta la reproducción de video.
+              Tu navegador no soporta la reproducciÃ³n de video.
             </video>
           )}
           {previewUrl && getFileType(previewDoc) === 'other' && (
@@ -663,7 +657,7 @@ export default function Expedientes() {
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
+              <p className="text-gray-600 mb-4">La vista previa no estÃ¡ disponible para este tipo de archivo.</p>
               <button
                 className="btn btn-primary"
                 onClick={() => {
@@ -698,7 +692,7 @@ export default function Expedientes() {
       >
         <div className="p-2">
           <div className="form-group">
-            <label className="form-label">Título</label>
+            <label className="form-label">TÃ­tulo</label>
             <input
               className="form-input"
               type="text"
@@ -707,7 +701,7 @@ export default function Expedientes() {
             />
           </div>
           <div className="form-group" style={{ marginTop: '1rem' }}>
-            <label className="form-label">Descripción</label>
+            <label className="form-label">DescripciÃ³n</label>
             <textarea
               className="form-input"
               rows="4"
@@ -784,7 +778,7 @@ export default function Expedientes() {
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: selectedExpediente?.status === 'Aprobado' ? '#10b981' : '#f59e0b', marginTop: '0.35rem', flexShrink: 0 }}></div>
               <div>
                 <p style={{ fontWeight: '600', fontSize: '0.875rem' }}>Estado actual: {selectedExpediente?.status || 'Pendiente'}</p>
-                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Última actualización: {formatDate(selectedExpediente?.updated_at)}</p>
+                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Ãšltima actualizaciÃ³n: {formatDate(selectedExpediente?.updated_at)}</p>
               </div>
             </div>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
@@ -803,7 +797,7 @@ export default function Expedientes() {
             </div>
           </div>
           <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '1rem', fontStyle: 'italic' }}>
-            Nota: El registro detallado de cambios estará disponible próximamente.
+            Nota: El registro detallado de cambios estarÃ¡ disponible prÃ³ximamente.
           </p>
         </div>
       </Modal>

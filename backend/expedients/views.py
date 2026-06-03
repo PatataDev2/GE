@@ -7,18 +7,19 @@ from .serializers import ExpedientSerializer
 from documents.models import Document
 from document_types.models import DocumentType
 from users.models import UsersCustom
-from notifications.utils import create_notification, create_activity_log
+from notifications.utils import create_notification, bulk_create_notifications, create_activity_log
 
 class ExpedientViewSet(viewsets.ModelViewSet):
     queryset = Expedient.objects.all()
     serializer_class = ExpedientSerializer
+    pagination_class = None
 
     @action(detail=False, methods=['get'])
     def my(self, request):
         """Obtiene los expedients asignados al usuario actual (incluye borradores)"""
         user = request.user
         if user.rol == 'employee':
-            expedients = Expedient.objects.filter(asinged_to=user)
+            expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(asinged_to=user)
         else:
             expedients = Expedient.objects.none()
         serializer = self.get_serializer(expedients, many=True)
@@ -29,7 +30,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         """Obtiene los borradores del usuario actual"""
         user = request.user
         if user.rol == 'employee':
-            drafts = Expedient.objects.filter(asinged_to=user, is_draft=True)
+            drafts = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(asinged_to=user, is_draft=True)
         else:
             drafts = Expedient.objects.none()
         serializer = self.get_serializer(drafts, many=True)
@@ -102,16 +103,15 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         expedient.save(update_fields=['is_draft', 'status', 'updated_at'])
         
         analysts = UsersCustom.objects.filter(rol='analyst')
-        for analyst in analysts:
-            create_notification(
-                recipient=analyst,
-                actor=user,
-                notification_type='revision',
-                title='Expediente en Revision',
-                message=f'El trabajador {user.username} ha enviado el expediente "{expedient.title}" para revision.',
-                expedient_id=expedient.id,
-            )
-        
+        bulk_create_notifications(
+            recipients=analysts,
+            actor=user,
+            notification_type='revision',
+            title='Expediente en Revision',
+            message=f'El trabajador {user.username} ha enviado el expediente "{expedient.title}" para revision.',
+            expedient_id=expedient.id,
+        )
+
         create_activity_log(
             user=user,
             action='Envió expediente a revisión',
@@ -178,12 +178,13 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         role_name = user.rol
         if not user.is_authenticated or not role_name:
             return Expedient.objects.none()
+        qs = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by')
         if role_name == 'admin':
-            return Expedient.objects.all()
+            return qs.all()
         if role_name == 'analyst':
-            return Expedient.objects.filter(Q(created_by=user) | Q(is_draft=False))
+            return qs.filter(Q(created_by=user) | Q(is_draft=False))
         if role_name == 'employee':
-            return Expedient.objects.filter(asinged_to=user)
+            return qs.filter(asinged_to=user)
         return Expedient.objects.none()
 
     def perform_create(self, serializer):
@@ -218,15 +219,14 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         expedient.approved_by = request.user
         expedient.save(update_fields=['status', 'is_draft', 'approved_by', 'updated_at'])
         admins = UsersCustom.objects.filter(rol='admin')
-        for admin in admins:
-            create_notification(
-                recipient=admin,
-                actor=request.user,
-                notification_type='revision',
-                title='Expediente Pre-Aprobado',
-                message=f'El analista {request.user.username} ha pre-aprobado el expediente "{expedient.title}" y espera tu aprobacion final.',
-                expedient_id=expedient.id,
-            )
+        bulk_create_notifications(
+            recipients=admins,
+            actor=request.user,
+            notification_type='revision',
+            title='Expediente Pre-Aprobado',
+            message=f'El analista {request.user.username} ha pre-aprobado el expediente "{expedient.title}" y espera tu aprobacion final.',
+            expedient_id=expedient.id,
+        )
         create_activity_log(
             user=request.user,
             action='Pre-aprobó expediente',
@@ -269,7 +269,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         """Lista expedientes pre-aprobados pendientes de aprobacion del admin"""
         if request.user.rol != 'admin':
             return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
-        expedients = Expedient.objects.filter(status='Pre_Aprobado', is_draft=False)
+        expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(status='Pre_Aprobado', is_draft=False)
         serializer = self.get_serializer(expedients, many=True)
         return Response(serializer.data)
 
@@ -278,7 +278,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         """Lista expedientes aprobados definitivamente"""
         if request.user.rol not in ['admin', 'analyst']:
             return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
-        expedients = Expedient.objects.filter(status='Aprobado', is_draft=False).order_by('-updated_at')
+        expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(status='Aprobado', is_draft=False).order_by('-updated_at')
         serializer = self.get_serializer(expedients, many=True)
         return Response(serializer.data)
 

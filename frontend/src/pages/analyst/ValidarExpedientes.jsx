@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
@@ -139,14 +139,14 @@ export default function ValidarExpedientes() {
       if (ext === 'docx') {
         try {
           setShowPreviewModal(true);
-          const response = await fetch(fileUrl);
-          const blob = await response.blob();
+          const response = await api.get(fileUrl, { responseType: 'blob' });
+          const blob = response.data;
           setDocxBlob(blob);
         } catch (err) {
           console.error('Error loading DOCX:', err);
         }
       } else if (getFileType(doc) !== 'image') {
-        window.open(fileUrl, '_blank');
+        window.open(fileUrl, '_blank', 'noopener,noreferrer');
       } else {
         setShowPreviewModal(true);
       }
@@ -236,7 +236,7 @@ export default function ValidarExpedientes() {
                       </div>
                       <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
                       <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                        {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
+                        {exp.department_name} â€¢ Asignado a: {exp.asinged_to_username || 'Sin asignar'}
                       </p>
                       {exp.description && (
                         <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '0.25rem' }}>{exp.description}</p>
@@ -284,10 +284,10 @@ export default function ValidarExpedientes() {
         {selectedExpediente && (
           <div>
             <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <p><strong>Título:</strong> {selectedExpediente.title}</p>
+              <p><strong>TÃ­tulo:</strong> {selectedExpediente.title}</p>
               <p><strong>Departamento:</strong> {selectedExpediente.department_name}</p>
               <p><strong>Asignado a:</strong> {selectedExpediente.asinged_to_username || 'Sin asignar'}</p>
-              {selectedExpediente.description && <p><strong>Descripción:</strong> {selectedExpediente.description}</p>}
+              {selectedExpediente.description && <p><strong>DescripciÃ³n:</strong> {selectedExpediente.description}</p>}
               <p style={{ marginTop: '0.5rem' }}>
                 <strong>Estado:</strong>{' '}
                 <span className={`badge ${getExpedienteStatus(selectedExpediente) === 'aprobado' ? 'badge-success' : getExpedienteStatus(selectedExpediente) === 'rechazado' ? 'badge-danger' : getExpedienteStatus(selectedExpediente) === 'pre_aprobado' ? 'badge-info' : 'badge-warning'}`}>
@@ -353,7 +353,7 @@ export default function ValidarExpedientes() {
                   rows="3"
                   value={comentario}
                   onChange={(e) => setComentario(e.target.value)}
-                  placeholder="Agrega un comentario para la revisión..."
+                  placeholder="Agrega un comentario para la revisiÃ³n..."
                 />
               </div>
             )}
@@ -468,7 +468,7 @@ export default function ValidarExpedientes() {
           {previewUrl && getFileType(previewDoc) === 'video' && (
             <video controls className="w-full max-h-[80vh] rounded-lg">
               <source src={previewUrl} />
-              Tu navegador no soporta la reproducción de video.
+              Tu navegador no soporta la reproducciÃ³n de video.
             </video>
           )}
           {previewUrl && getFileType(previewDoc) === 'other' && (
@@ -477,7 +477,7 @@ export default function ValidarExpedientes() {
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
+              <p className="text-gray-600 mb-4">La vista previa no estÃ¡ disponible para este tipo de archivo.</p>
               <button
                 className="btn btn-primary"
                 onClick={() => {

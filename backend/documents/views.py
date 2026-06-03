@@ -5,14 +5,14 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from .models import Document
 from .serializers import DocumentSerializer
-from notifications.utils import create_notification, create_activity_log
+from notifications.utils import create_notification, bulk_create_notifications, create_activity_log
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
-      
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
 
     def get_queryset(self):
         user = self.request.user
@@ -20,10 +20,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated or not role_name:
             return Document.objects.none()
 
-        if role_name in ['admin', 'analyst']:
-            queryset = Document.objects.all()
-        else:
-            queryset = Document.objects.filter(expedient__asinged_to=user)
+        queryset = Document.objects.select_related('expedient', 'document_type', 'uploaded_by')
+        if role_name not in ['admin', 'analyst']:
+            queryset = queryset.filter(expedient__asinged_to=user)
         
         expedient_id = self.request.query_params.get('expedient')
         if expedient_id:
@@ -36,16 +35,15 @@ class DocumentViewSet(viewsets.ModelViewSet):
         
         from users.models import UsersCustom
         analysts = UsersCustom.objects.filter(rol='analyst')
-        for analyst in analysts:
-            create_notification(
-                recipient=analyst,
-                actor=self.request.user,
-                notification_type='revision',
-                title='Nuevo Documento Subido',
-                message=f'El trabajador {self.request.user.username} ha subido el documento "{document.title}" del expediente "{document.expedient.title}".',
-                expedient_id=document.expedient.id,
-                document_id=document.id,
-            )
+        bulk_create_notifications(
+            recipients=analysts,
+            actor=self.request.user,
+            notification_type='revision',
+            title='Nuevo Documento Subido',
+            message=f'El trabajador {self.request.user.username} ha subido el documento "{document.title}" del expediente "{document.expedient.title}".',
+            expedient_id=document.expedient.id,
+            document_id=document.id,
+        )
 
         create_activity_log(
             user=self.request.user,
@@ -112,16 +110,15 @@ class DocumentViewSet(viewsets.ModelViewSet):
         
         from users.models import UsersCustom
         analysts = UsersCustom.objects.filter(rol='analyst')
-        for analyst in analysts:
-            create_notification(
-                recipient=analyst,
-                actor=user,
-                notification_type='revision',
-                title='Documento Corregido',
-                message=f'El trabajador {user.username} ha corregido el documento "{document.title}" del expediente "{document.expedient.title}".',
-                expedient_id=document.expedient.id,
-                document_id=document.id,
-            )
+        bulk_create_notifications(
+            recipients=analysts,
+            actor=user,
+            notification_type='revision',
+            title='Documento Corregido',
+            message=f'El trabajador {user.username} ha corregido el documento "{document.title}" del expediente "{document.expedient.title}".',
+            expedient_id=document.expedient.id,
+            document_id=document.id,
+        )
         
         create_activity_log(
             user=user,

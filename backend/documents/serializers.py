@@ -38,7 +38,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         
         if file_obj and expedient_obj:
             data['docname'] = file_obj.name
-            data['path'] = f".uploads/docs/{expedient_obj.id}/{file_obj.name}"
+            data['path'] = f"uploads/docs/{expedient_obj.id}/{file_obj.name}"
             
         return data
 

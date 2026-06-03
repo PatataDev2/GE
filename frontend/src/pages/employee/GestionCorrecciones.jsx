@@ -1,6 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
 import DocxPreview from '../analyst/DocxPreview';
@@ -27,11 +28,13 @@ const [draftDocuments, setDraftDocuments] = useState([]);
 const [newDocType, setNewDocType] = useState('');
 const [newDocFile, setNewDocFile] = useState(null);
 const [newDocUploading, setNewDocUploading] = useState(false);
-const [showPreviewModal, setShowPreviewModal] = useState(false);
-const [previewUrl, setPreviewUrl] = useState(null);
-const [previewDoc, setPreviewDoc] = useState(null);
-const [docxBlob, setDocxBlob] = useState(null);
-  
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [docxBlob, setDocxBlob] = useState(null);
+  const [confirmSendToReview, setConfirmSendToReview] = useState(false);
+
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
   const fetchData = async () => {
@@ -42,8 +45,16 @@ const [docxBlob, setDocxBlob] = useState(null);
         api.get('api/expedients/my_drafts/'),
         api.get('api/document-types/')
       ]);
-      setCorrections(corrRes.data || []);
-      setDrafts(draftsRes.data || []);
+      let corrData = corrRes.data;
+      if (corrData && typeof corrData === 'object' && !Array.isArray(corrData)) {
+        corrData = corrData.results || [];
+      }
+      setCorrections(Array.isArray(corrData) ? corrData : []);
+      let draftsData = draftsRes.data;
+      if (draftsData && typeof draftsData === 'object' && !Array.isArray(draftsData)) {
+        draftsData = draftsData.results || [];
+      }
+      setDrafts(Array.isArray(draftsData) ? draftsData : []);
       let types = typesRes.data;
       if (types && typeof types === 'object' && !Array.isArray(types)) {
         types = types.results || [];
@@ -178,19 +189,39 @@ const handleReplaceDraftDocument = async (docId) => {
   }
 };
 
+const requiredTypes = docTypes.filter(t => t.is_required);
+const uploadedTypeIds = new Set(draftDocuments.map(d => d.document_type));
+const checklist = requiredTypes.map(t => ({
+  ...t,
+  uploaded: uploadedTypeIds.has(t.id)
+}));
+const allRequiredUploaded = checklist.every(t => t.uploaded);
+
 const handleSendToReview = async () => {
   if (!selectedDraft) return;
 
+  const missingTypes = checklist.filter(t => !t.uploaded);
+  if (missingTypes.length > 0 && !confirmSendToReview) {
+    alert(`Faltan documentos obligatorios:\n${missingTypes.map(t => `- ${t.name}`).join('\n')}`);
+    return;
+  }
+
+  if (allRequiredUploaded && !confirmSendToReview) {
+    setConfirmSendToReview(true);
+    return;
+  }
+
   setSendingToReview(true);
+  setConfirmSendToReview(false);
   try {
     await api.post(`api/expedients/${selectedDraft.id}/send_to_review/`);
-    alert('Expediente enviado a revision exitosamente!');
     setShowDraftModal(false);
-    fetchData();
+    navigate('/employee/mis-expedientes');
   } catch (err) {
     console.error('Error sending to review:', err);
     if (err.response?.data?.missing_documents) {
-      alert('No se puede enviar: faltan documentos obligatorios');
+      const missing = err.response.data.missing_documents;
+      alert(`Faltan documentos obligatorios:\n${missing.map(m => `- ${m.name}`).join('\n')}`);
     } else {
       alert('Error al enviar a revision');
     }
@@ -230,14 +261,14 @@ const handleSendToReview = async () => {
       if (ext === 'docx') {
         try {
           setShowPreviewModal(true);
-          const response = await fetch(fileUrl);
-          const blob = await response.blob();
+          const response = await api.get(fileUrl, { responseType: 'blob' });
+          const blob = response.data;
           setDocxBlob(blob);
         } catch (err) {
           console.error('Error loading DOCX:', err);
         }
       } else if (getFileType(doc) !== 'image') {
-        window.open(fileUrl, '_blank');
+        window.open(fileUrl, '_blank', 'noopener,noreferrer');
       } else {
         setShowPreviewModal(true);
       }
@@ -483,48 +514,72 @@ const handleSendToReview = async () => {
 
 <Modal
   isOpen={showDraftModal}
-  onClose={() => setShowDraftModal(false)}
+  onClose={() => { setShowDraftModal(false); setConfirmSendToReview(false); }}
   title={`Borrador #${selectedDraft?.id} - ${selectedDraft?.title}`}
   footer={
-    <>
-      <button 
-        className="btn btn-secondary" 
-        onClick={() => setShowDraftModal(false)}
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '0.5rem',
-          padding: '0.5rem 1rem',
-          borderRadius: '0.5rem',
-          fontWeight: '500'
-        }}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-        Cerrar
-      </button>
-      <button
-        className="btn btn-success"
-        onClick={handleSendToReview}
-        disabled={sendingToReview}
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '0.5rem',
-          padding: '0.5rem 1rem',
-          borderRadius: '0.5rem',
-          fontWeight: '500'
-        }}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M22 2L11 13"/>
-          <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
-        </svg>
-        {sendingToReview ? 'Enviando...' : 'Enviar a Revision'}
-      </button>
-    </>
+    confirmSendToReview ? (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%' }}>
+        <span style={{ fontSize: '0.875rem', color: '#475569', flex: 1 }}>
+          Â¿Enviar a revisiÃ³n? Una vez enviado no podrÃ¡s modificarlo hasta que un analista lo revise.
+        </span>
+        <button
+          className="btn btn-success"
+          onClick={handleSendToReview}
+          disabled={sendingToReview}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: '500' }}
+        >
+          {sendingToReview ? 'Enviando...' : 'SÃ­, Enviar'}
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={() => setConfirmSendToReview(false)}
+          disabled={sendingToReview}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: '500' }}
+        >
+          Cancelar
+        </button>
+      </div>
+    ) : (
+      <>
+        <button 
+          className="btn btn-secondary" 
+          onClick={() => setShowDraftModal(false)}
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            fontWeight: '500'
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Cerrar
+        </button>
+        <button
+          className="btn btn-success"
+          onClick={handleSendToReview}
+          disabled={sendingToReview}
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            fontWeight: '500'
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 2L11 13"/>
+            <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+          </svg>
+          {sendingToReview ? 'Enviando...' : 'Enviar a Revision'}
+        </button>
+      </>
+    )
   }
 >
   {selectedDraft && (
@@ -543,6 +598,22 @@ const handleSendToReview = async () => {
           <strong>Creado:</strong> {formatDate(selectedDraft.created_at)}
         </div>
       </div>
+
+      {requiredTypes.length > 0 && (
+        <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+          <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: '0.5rem' }}>Documentos Requeridos</strong>
+          {checklist.map(t => (
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', padding: '0.25rem 0' }}>
+              <span style={{ color: t.uploaded ? '#22c55e' : '#ef4444', fontSize: '1rem' }}>
+                {t.uploaded ? 'âœ…' : 'âŒ'}
+              </span>
+              <span style={{ color: t.uploaded ? '#166534' : '#991b1b', fontWeight: t.uploaded ? '400' : '500' }}>
+                {t.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>Documentos Subidos</h4>
       {draftDocuments.length > 0 ? (
@@ -649,7 +720,7 @@ const handleSendToReview = async () => {
           ))}
         </div>
       ) : (
-        <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No hay documentos subidos aún.</p>
+        <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No hay documentos subidos aÃºn.</p>
       )}
 
       <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '2px dashed #e2e8f0' }}>
@@ -782,7 +853,7 @@ const handleSendToReview = async () => {
           {previewUrl && getFileType(previewDoc) === 'video' && (
             <video controls className="w-full max-h-[80vh] rounded-lg">
               <source src={previewUrl} />
-              Tu navegador no soporta la reproducción de video.
+              Tu navegador no soporta la reproducciÃ³n de video.
             </video>
           )}
           {previewUrl && getFileType(previewDoc) === 'other' && (
@@ -791,7 +862,7 @@ const handleSendToReview = async () => {
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
+              <p className="text-gray-600 mb-4">La vista previa no estÃ¡ disponible para este tipo de archivo.</p>
               <button
                 className="btn btn-primary"
                 onClick={() => {

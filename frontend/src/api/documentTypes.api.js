@@ -1,30 +1,4 @@
-import axios from 'axios';
-
-const BASE = import.meta.env.VITE_BASE_API_URL;
-
-const api = axios.create({
-  baseURL: BASE,
-});
-
-// Agregar interceptor para incluir token de autenticación
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-    console.log(`aca esta el pinche token ${token}`) // Agrega este console.log para verificar el token
-  }
-  return config;
-});
-
-// Agregar interceptor para incluir token de autenticación
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`; 
-    console.log(`Token incluido en la solicitud: ${token}`); // Agrega este console.log para verificar el token
-  }
-  return config;
-});
+﻿import api from './axios';
 
 export const getDocumentTypes = async () => {
   const response = await api.get('api/document-types/');
@@ -32,7 +6,7 @@ export const getDocumentTypes = async () => {
 };
 
 export const getDocumentType = async (id) => {
-  const response = await api.get(`api/document-types/${id}/`);
+  const response = await api.get('api/document-types/' + id + '/');
   return response.data;
 };
 
@@ -42,16 +16,18 @@ export const createDocumentType = async (documentTypeData) => {
 };
 
 export const updateDocumentType = async (id, documentTypeData) => {
-  const response = await api.put(`api/document-types/${id}/`, documentTypeData);
+  const response = await api.put('api/document-types/' + id + '/', documentTypeData);
   return response.data;
 };
 
 export const deleteDocumentType = async (id) => {
-  const response = await api.delete(`api/document-types/${id}/`);
+  const response = await api.delete('api/document-types/' + id + '/');
   return response.data;
 };
 
 export const toggleDocumentTypeStatus = async (id) => {
-  const response = await api.patch(`api/document-types/${id}/toggle_status/`);
+  const response = await api.patch('api/document-types/' + id + '/toggle_status/');
   return response.data;
 };
+
+export default api;

@@ -19,7 +19,7 @@ export default function DocumentForm({ expedientId, onSuccess }) {
   useEffect(() => {
     const fetchDocTypes = async () => {
       try {
-        const res = await api.get('api/document-types/document-types/ ');
+        const res = await api.get('api/document-types/');
         const data = Array.isArray(res.data) ? res.data : res.data.results || [];
         setDocTypes(data);
       } catch (err) {

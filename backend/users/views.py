@@ -40,6 +40,7 @@ class UserView(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = UsersCustom.objects.all()
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
 
     def perform_destroy(self, instance):
         from notifications.utils import create_activity_log
@@ -105,9 +106,12 @@ class ChangePasswordView(generics.CreateAPIView):
 
     def create(self, request):
         user = request.user
+        old_password = request.data.get('old_password', '')
         new_password = request.data.get('new_password')
         new_password2 = request.data.get('new_password2')
 
+        if not user.check_password(old_password):
+            return Response({'error': 'La contraseña actual es incorrecta'}, status=status.HTTP_400_BAD_REQUEST)
         if not new_password:
             return Response({'error': 'La nueva contraseña es requerida'}, status=status.HTTP_400_BAD_REQUEST)
         if len(new_password) < 6:
@@ -134,7 +138,7 @@ class AdminDashboardView(generics.GenericAPIView):
         today = timezone.now().date()
         today_actions = Notification.objects.filter(created_at__date=today).count()
 
-        recent_activity = Notification.objects.all()[:10]
+        recent_activity = Notification.objects.select_related('actor').all()[:10]
         activity_data = [{
             'id': n.id,
             'actor_username': n.actor.username if n.actor else 'Sistema',

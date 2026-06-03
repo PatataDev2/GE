@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, changePassword } from '../api/users.api';
 
 export default function ChangePassword() {
-  const [form, setForm] = useState({ new_password: '', new_password2: '' });
+  const [form, setForm] = useState({ old_password: '', new_password: '', new_password2: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -81,6 +81,14 @@ export default function ChangePassword() {
               {error}
             </div>
           )}
+          <input
+            type="password"
+            className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150"
+            placeholder="Contraseña actual"
+            disabled={loading}
+            value={form.old_password}
+            onChange={e => setForm({...form, old_password: e.target.value})}
+          />
           <input
             type="password"
             className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150"

@@ -1,6 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
 import DocxPreview from '../analyst/DocxPreview';
@@ -9,6 +10,7 @@ import api from '../../api/axios';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 
 export default function MisExpedientes() {
+  const navigate = useNavigate();
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
@@ -149,10 +151,9 @@ export default function MisExpedientes() {
     
     setSavingAsDraft(true);
     try {
-      await api.post(`api/expedients/${selectedExpediente.id}/save_draft/`);
-      alert('Expediente guardado como borrador exitosamente');
+      const res = await api.post(`api/expedients/${selectedExpediente.id}/save_draft/`);
       handleCloseModal();
-      fetchExpedientes();
+      navigate('/employee/gestion-correcciones');
     } catch (err) {
       console.error('Error saving as draft:', err);
       alert('Error al guardar como borrador: ' + (err.response?.data?.error || err.message));
@@ -192,14 +193,14 @@ export default function MisExpedientes() {
       if (ext === 'docx') {
         try {
           setShowPreviewModal(true);
-          const response = await fetch(fileUrl);
-          const blob = await response.blob();
+          const response = await api.get(fileUrl, { responseType: 'blob' });
+          const blob = response.data;
           setDocxBlob(blob);
         } catch (err) {
           console.error('Error loading DOCX:', err);
         }
       } else if (getFileType(doc) !== 'image') {
-        window.open(fileUrl, '_blank');
+        window.open(fileUrl, '_blank', 'noopener,noreferrer');
       } else {
         setShowPreviewModal(true);
       }
@@ -273,7 +274,7 @@ export default function MisExpedientes() {
     
     const handleClick = () => {
       if (fileUrl) {
-        window.open(fileUrl, '_blank');
+        window.open(fileUrl, '_blank', 'noopener,noreferrer');
       }
     };
 
@@ -400,7 +401,7 @@ export default function MisExpedientes() {
               })}
             </div>
             <a href="/employee/gestion-correcciones" style={{ fontSize: '0.875rem', color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
-              Ver Gestion de Correcciones →
+              Ver Gestion de Correcciones â†’
             </a>
           </div>
         </div>
@@ -526,7 +527,7 @@ export default function MisExpedientes() {
                     <line x1="12" y1="3" x2="12" y2="15"/>
                   </svg>
                   <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                    <span style={{ color: '#2563eb', fontWeight: '500' }}>Haz click</span> o arrastra archivos aquí
+                    <span style={{ color: '#2563eb', fontWeight: '500' }}>Haz click</span> o arrastra archivos aquÃ­
                   </span>
                   <span id="file-name-display" style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#2563eb', fontWeight: '500' }}></span>
                 </label>
@@ -648,7 +649,7 @@ export default function MisExpedientes() {
           {previewUrl && getFileType(previewDoc) === 'video' && (
             <video controls className="w-full max-h-[80vh] rounded-lg">
               <source src={previewUrl} />
-              Tu navegador no soporta la reproducción de video.
+              Tu navegador no soporta la reproducciÃ³n de video.
             </video>
           )}
           {previewUrl && getFileType(previewDoc) === 'other' && (
@@ -657,7 +658,7 @@ export default function MisExpedientes() {
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
+              <p className="text-gray-600 mb-4">La vista previa no estÃ¡ disponible para este tipo de archivo.</p>
               <button
                 className="btn btn-primary"
                 onClick={() => {

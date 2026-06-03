@@ -48,7 +48,7 @@ def backup_list(request):
         output = os.path.join(BACKUP_DIR, f'backup_{ts}.json')
 
         apps = [
-            'users.Role', 'users.UsersCustom',
+            'users.UsersCustom',
             'departments.Department',
             'document_types.DocumentType',
             'expedients.Expedient',
@@ -86,6 +86,7 @@ def backup_list(request):
 @api_view(['GET', 'DELETE', 'POST'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def backup_detail(request, filename):
+    filename = os.path.basename(filename)
     filepath = os.path.join(BACKUP_DIR, filename)
 
     if not os.path.exists(filepath):
