@@ -9,7 +9,7 @@ REM   backup.bat restore      - Restore from a backup file (will prompt)
 REM   backup.bat restore mybackup.json - Restore without prompt
 REM ============================================
 
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 if /I "%1"=="restore" (
     if "%2"=="" (

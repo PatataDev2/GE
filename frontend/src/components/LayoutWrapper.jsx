@@ -18,6 +18,12 @@ export default function LayoutWrapper() {
 
       try {
         const response = await getCurrentUser();
+
+        if (response.data.clave_temporal) {
+          navigate('/change-password', { replace: true });
+          return;
+        }
+
         const userData = {
           id: response.data.id,
           username: response.data.username,

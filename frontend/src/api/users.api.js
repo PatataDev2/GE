@@ -24,5 +24,6 @@ export const createFuncionario = (data) => api.post('admin/create-funcionario/',
 export const updateFuncionario = (userId, data) => api.put(`admin/update-funcionario/${userId}/`, data);
 export const toggleActivo = (userId) => api.put(`admin/toggle-activo/${userId}/`);
 export const resetPassword = (userId) => api.put(`admin/reset-password/${userId}/`);
+export const changePassword = (data) => api.post('change-password/', data);
 
 export default api;

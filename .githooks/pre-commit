@@ -1,7 +1,7 @@
 #!/bin/sh
 # Pre-commit hook to prevent accidental commits of the SQLite database
 
-STAGED_DB=$(git diff --cached --name-only | grep -E "db\.sqlite3|db_backup\.sqlite3$" || true)
+STAGED_DB=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "db\.sqlite3|db_backup\.sqlite3$" || true)
 
 if [ -n "$STAGED_DB" ]; then
     echo ""

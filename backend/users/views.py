@@ -100,6 +100,27 @@ class AdminResetPasswordView(generics.UpdateAPIView):
         return Response({'password': password})
 
 
+class ChangePasswordView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request):
+        user = request.user
+        new_password = request.data.get('new_password')
+        new_password2 = request.data.get('new_password2')
+
+        if not new_password:
+            return Response({'error': 'La nueva contraseña es requerida'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(new_password) < 6:
+            return Response({'error': 'La contraseña debe tener al menos 6 caracteres'}, status=status.HTTP_400_BAD_REQUEST)
+        if new_password != new_password2:
+            return Response({'error': 'Las contraseñas no coinciden'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.clave_temporal = False
+        user.save()
+        return Response({'message': 'Contraseña cambiada exitosamente'})
+
+
 class AdminDashboardView(generics.GenericAPIView):
     permission_classes = [IsAdminUser]
 

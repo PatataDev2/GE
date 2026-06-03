@@ -3,6 +3,7 @@
   import { BrowserRouter, Routes, Route } from 'react-router-dom';
   import Login from './pages/Login';
   import Register from './pages/Register';
+  import ChangePassword from './pages/ChangePassword';
   import Dashboard from './pages/Dashboard';
   import LayoutWrapper from './components/LayoutWrapper';
   
@@ -31,6 +32,7 @@
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/" element={<LayoutWrapper />}>
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />

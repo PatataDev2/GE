@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserView, RegisterView, Custom_token_obtain_pair_view, CurrentUserView, AdminCreateFuncionarioView, AdminUpdateFuncionarioView, AdminToggleActivoView, AdminResetPasswordView
+from .views import UserView, RegisterView, Custom_token_obtain_pair_view, CurrentUserView, AdminCreateFuncionarioView, AdminUpdateFuncionarioView, AdminToggleActivoView, AdminResetPasswordView, ChangePasswordView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 router = DefaultRouter()
@@ -15,5 +15,6 @@ urlpatterns = [
     path('api/v1/admin/update-funcionario/<int:pk>/', AdminUpdateFuncionarioView.as_view(), name='admin-update-funcionario'),
     path('api/v1/admin/toggle-activo/<int:pk>/', AdminToggleActivoView.as_view(), name='admin-toggle-activo'),
     path('api/v1/admin/reset-password/<int:pk>/', AdminResetPasswordView.as_view(), name='admin-reset-password'),
+    path('api/v1/change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('api/v1/', include(router.urls)),
 ]
