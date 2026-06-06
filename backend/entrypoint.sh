@@ -14,4 +14,4 @@ echo "Running migrations..."
 python manage.py migrate --noinput
 
 echo "Starting server..."
-python manage.py runserver 0.0.0.0:8000
+gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120

@@ -40,7 +40,7 @@ export default function BackupConfig() {
   };
 
   const handleDeleteBackup = async (backup) => {
-    if (!confirm(`Â¿Eliminar respaldo "${backup.name}"?`)) return;
+    if (!confirm(`¿Eliminar respaldo "${backup.name}"?`)) return;
     try {
       await api.delete(`api/admin/backups/${backup.name}/`);
       setBackups(prev => prev.filter(b => b.id !== backup.id));
@@ -66,8 +66,8 @@ export default function BackupConfig() {
   };
 
   const handleRestoreBackup = async (backup) => {
-    if (!confirm(`Â¿Restaurar desde "${backup.name}"? Esto reemplazarÃ¡ TODOS los datos actuales.`)) return;
-    if (!confirm('Â¿EstÃ¡s SEGURO? Esta acciÃ³n NO se puede deshacer.')) return;
+    if (!confirm(`¿Restaurar desde "${backup.name}"? Esto reemplazará TODOS los datos actuales.`)) return;
+    if (!confirm('¿Estás SEGURO? Esta acción NO se puede deshacer.')) return;
     setRestoring(backup.name);
     try {
       await api.post(`api/admin/backups/${backup.name}/`);
@@ -109,8 +109,8 @@ export default function BackupConfig() {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <div>
-            <div className="stat-value">{backups.length > 0 ? backups[0]?.date?.slice(0, 10) || 'â€”' : 'â€”'}</div>
-            <div className="stat-label">Ãšltimo Respaldo</div>
+            <div className="stat-value">{backups.length > 0 ? backups[0]?.date?.slice(0, 10) || '—' : '—'}</div>
+            <div className="stat-label">Último Respaldo</div>
           </div>
         </div>
         <div className="stat-card">
@@ -127,12 +127,12 @@ export default function BackupConfig() {
       <div className="grid-2">
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">GestiÃ³n de Respaldos</h3>
+            <h3 className="card-title">Gestión de Respaldos</h3>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <span style={{ color: '#64748b' }}>Respaldos AutomÃ¡ticos</span>
+              <span style={{ color: '#64748b' }}>Respaldos Automáticos</span>
               <span className={`badge ${config.enabled ? 'badge-success' : 'badge-danger'}`}>
                 {config.enabled ? 'Activado' : 'Desactivado'}
               </span>
@@ -148,13 +148,13 @@ export default function BackupConfig() {
               <span style={{ fontWeight: '500' }}>{config.time}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <span style={{ color: '#64748b' }}>RetenciÃ³n</span>
-              <span style={{ fontWeight: '500' }}>{config.retention} dÃ­as</span>
+              <span style={{ color: '#64748b' }}>Retención</span>
+              <span style={{ fontWeight: '500' }}>{config.retention} días</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
               <span style={{ color: '#64748b' }}>Incluir Archivos</span>
               <span className={`badge ${config.includeFiles ? 'badge-success' : 'badge-secondary'}`}>
-                {config.includeFiles ? 'SÃ­' : 'No'}
+                {config.includeFiles ? 'Sí' : 'No'}
               </span>
             </div>
           </div>
@@ -195,7 +195,7 @@ export default function BackupConfig() {
           {loading ? (
             <div className="p-4 text-center text-gray-400">Cargando...</div>
           ) : backups.length === 0 ? (
-            <div className="p-4 text-center text-gray-400">No hay respaldos aÃºn</div>
+            <div className="p-4 text-center text-gray-400">No hay respaldos aún</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {backups.slice(0, 10).map(backup => (
@@ -208,9 +208,9 @@ export default function BackupConfig() {
                   <div className="document-info">
                     <div className="document-name">{backup.name}</div>
                     <div className="document-size">
-                      {backup.size} Â· {backup.date} Â·
+                      {backup.size} · {backup.date} ·
                       <span className={`badge ${backup.type === 'auto' ? 'badge-info' : 'badge-secondary'}`} style={{ marginLeft: '0.5rem' }}>
-                        {backup.type === 'auto' ? 'AutomÃ¡tico' : 'Manual'}
+                        {backup.type === 'auto' ? 'Automático' : 'Manual'}
                       </span>
                     </div>
                   </div>

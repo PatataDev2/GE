@@ -38,9 +38,14 @@ class Custom_token_obtain_pair_view(TokenObtainPairView):
 
 class UserView(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    queryset = UsersCustom.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol in ['admin', 'analyst']:
+            return UsersCustom.objects.all()
+        return UsersCustom.objects.filter(id=user.id)
 
     def perform_destroy(self, instance):
         from notifications.utils import create_activity_log
@@ -63,9 +68,7 @@ class AdminCreateFuncionarioView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        password = getattr(serializer, '_generated_password', '')
         data = UserSerializer(user).data
-        data['password'] = password
         return Response(data, status=status.HTTP_201_CREATED)
 
 
@@ -98,7 +101,7 @@ class AdminResetPasswordView(generics.UpdateAPIView):
         user.set_password(password)
         user.clave_temporal = True
         user.save()
-        return Response({'password': password})
+        return Response({'message': 'Contraseña restablecida exitosamente. El usuario debe cambiar su contraseña en el próximo inicio de sesión.'})
 
 
 class ChangePasswordView(generics.CreateAPIView):

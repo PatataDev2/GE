@@ -126,9 +126,9 @@ const getMenuItems = (role) => {
         return [
           ...commonItems,
           { path: '/admin/aprobar-expedientes', label: 'Aprobar Expedientes', icon: Icons.CheckCircle },
-          { path: '/admin/users', label: 'Gestion de Usuarios', icon: Icons.Users },
-          { path: '/admin/departments', label: 'Gestion de Departamentos', icon: Icons.Folder },
-          { path: '/admin/document-types', label: 'Gestion de Tipos de Documento', icon: Icons.FileText },
+          { path: '/admin/users', label: 'Gestión de Usuarios', icon: Icons.Users },
+          { path: '/admin/departments', label: 'Gestión de Departamentos', icon: Icons.Folder },
+          { path: '/admin/document-types', label: 'Gestión de Tipos de Documento', icon: Icons.FileText },
           { path: '/admin/logs', label: 'Registro de Actividad', icon: Icons.Activity },
           { path: '/admin/backup', label: 'Respaldos', icon: Icons.Database },
           { path: '/admin/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
@@ -145,7 +145,7 @@ const getMenuItems = (role) => {
       return [
         ...commonItems,
         { path: '/employee/mis-expedientes', label: 'Mis Expedientes', icon: Icons.Folder },
-        { path: '/employee/gestion-correcciones', label: 'Gestion de Correcciones', icon: Icons.Activity },
+        { path: '/employee/gestion-correcciones', label: 'Gestión de Correcciones', icon: Icons.Activity },
         { path: '/employee/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
       ];
     case 'user':

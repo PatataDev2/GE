@@ -10,7 +10,7 @@ class ExpedientSerializer(serializers.ModelSerializer):
     approved_by_username = serializers.CharField(source='approved_by.username', read_only=True, allow_null=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True, allow_null=True)
 
-    # SOLUCIÓN: Sobreescribimos el campo para que busque en TODOS los usuarios
+    # SOLUCIÓN: Sobrescribimos el campo para que busque en TODOS los usuarios
     # y así permita que el flujo llegue a 'validate_asinged_to' para mostrar los logs.
     asinged_to = serializers.PrimaryKeyRelatedField(
         queryset=UsersCustom.objects.all()
@@ -37,22 +37,10 @@ class ExpedientSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at', 'approved_by', 'rejected_by', 'created_by']
 
     def validate_asinged_to(self, value):
-        """
-        Validación manual con logs para depuración en consola.
-        """
-        print("\n--- DEBUG: VALIDANDO ASIGNACIÓN ---")
-        print(f"Usuario enviado: {value.username} (ID: {value.id})")
-        
-        # Obtenemos el nombre del rol: primero intenta el FK 'role', si es None usa el CharField 'rol'
         role_name = value.rol
-        print(f"Rol detectado en base de datos: '{role_name}'")
-        
+
         if role_name != 'employee':
-            print(f"RESULTADO: Rechazado. '{role_name}' no es igual a 'employee'")
             raise serializers.ValidationError(
                 f"Este usuario tiene el rol '{role_name}'. Solo se pueden asignar expedientes a 'trabajador'."
             )
-        
-        print("RESULTADO: Validación exitosa.")
-        print("-----------------------------------\n")
         return value

@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name='Notification',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('notification_type', models.CharField(choices=[('asignado', 'Asignado'), ('aprobado', 'Aprobado'), ('rechazado', 'Rechazado'), ('revision', 'En Revision'), ('correccion', 'Correccion Requerida'), ('info', 'Informacion')], max_length=20)),
+                ('notification_type', models.CharField(choices=[('asignado', 'Asignado'), ('aprobado', 'Aprobado'), ('rechazado', 'Rechazado'), ('revision', 'En Revisión'), ('correccion', 'Correccion Requerida'), ('info', 'Informacion')], max_length=20)),
                 ('title', models.CharField(max_length=200)),
                 ('message', models.TextField()),
                 ('expedient_id', models.IntegerField(blank=True, null=True)),

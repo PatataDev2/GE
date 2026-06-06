@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='documenttype',
             name='is_required',
-            field=models.BooleanField(default=False, help_text='Si es True, este documento es obligatorio para enviar a revision'),
+            field=models.BooleanField(default=False, help_text='Si es True, este documento es obligatorio para enviar a revisión'),
         ),
     ]

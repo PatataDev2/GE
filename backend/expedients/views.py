@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 from .models import Expedient
 from .serializers import ExpedientSerializer
+from .permissions import IsAdminRole
 from documents.models import Document
 from document_types.models import DocumentType
 from users.models import UsersCustom
@@ -63,7 +64,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def send_to_review(self, request, pk=None):
-        """Envia un borrador a revision verificando el checklist de documentos"""
+        """Envia un borrador a revisión verificando el checklist de documentos"""
         expedient = self.get_object()
         user = request.user
         
@@ -74,7 +75,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Este expediente no te pertenece'}, status=status.HTTP_403_FORBIDDEN)
         
         if not expedient.is_draft:
-            return Response({'error': 'Este expediente ya fue enviado a revision'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Este expediente ya fue enviado a revisión'}, status=status.HTTP_400_BAD_REQUEST)
         
         required_types = DocumentType.objects.filter(is_active=True, is_required=True)
         uploaded_type_ids = set(
@@ -108,7 +109,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             actor=user,
             notification_type='revision',
             title='Expediente en Revision',
-            message=f'El trabajador {user.username} ha enviado el expediente "{expedient.title}" para revision.',
+            message=f'El trabajador {user.username} ha enviado el expediente "{expedient.title}" para revisión.',
             expedient_id=expedient.id,
         )
 
@@ -122,7 +123,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         
         return Response({
             'success': True,
-            'message': 'Expediente enviado a revision exitosamente',
+            'message': 'Expediente enviado a revisión exitosamente',
             'expedient': ExpedientSerializer(expedient).data
         })
 
@@ -167,9 +168,6 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'destroy':
-            class IsAdminRole(permissions.BasePermission):
-                def has_permission(self, request, view):
-                    return request.user.is_authenticated and request.user.rol == 'admin'
             return [permissions.IsAuthenticated(), IsAdminRole()]
         return [permissions.IsAuthenticated()]
 
@@ -195,7 +193,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             actor=self.request.user,
             notification_type='asignado',
             title='Expediente Asignado',
-            message=f'Se te ha asignado el expediente "{expedient.title}" para su gestion.',
+            message=f'Se te ha asignado el expediente "{expedient.title}" para su gestión.',
             expedient_id=expedient.id,
         )
         create_activity_log(
@@ -208,7 +206,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
-        """Analista pre-aprueba el expediente, lo envia a admin para aprobacion final"""
+        """Analista pre-aprueba el expediente, lo envía a admin para aprobación final"""
         if request.user.rol not in ['admin', 'analyst']:
             return Response({'error': 'Solo analistas o administradores pueden pre-aprobar expedientes'}, status=status.HTTP_403_FORBIDDEN)
         expedient = self.get_object()
@@ -224,7 +222,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             actor=request.user,
             notification_type='revision',
             title='Expediente Pre-Aprobado',
-            message=f'El analista {request.user.username} ha pre-aprobado el expediente "{expedient.title}" y espera tu aprobacion final.',
+            message=f'El analista {request.user.username} ha pre-aprobado el expediente "{expedient.title}" y espera tu aprobación final.',
             expedient_id=expedient.id,
         )
         create_activity_log(
@@ -234,13 +232,13 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             target=f'#{expedient.id} - {expedient.title}',
             ip_address=self.request.META.get('REMOTE_ADDR'),
         )
-        return Response({'status': 'expediente pre-aprobado, pendiente de aprobacion del admin', 'id': expedient.id})
+        return Response({'status': 'expediente pre-aprobado, pendiente de aprobación del admin', 'id': expedient.id})
 
     @action(detail=True, methods=['post'])
     def admin_approve(self, request, pk=None):
-        """Admin da la aprobacion final al expediente"""
+        """Admin da la aprobación final al expediente"""
         if request.user.rol != 'admin':
-            return Response({'error': 'Solo administradores pueden dar la aprobacion final'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': 'Solo administradores pueden dar la aprobación final'}, status=status.HTTP_403_FORBIDDEN)
         expedient = self.get_object()
         if expedient.status != 'Pre_Aprobado':
             return Response({'error': 'Solo se pueden aprobar expedientes en estado Pre-Aprobado'}, status=status.HTTP_400_BAD_REQUEST)
@@ -266,7 +264,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def pending_admin(self, request):
-        """Lista expedientes pre-aprobados pendientes de aprobacion del admin"""
+        """Lista expedientes pre-aprobados pendientes de aprobación del admin"""
         if request.user.rol != 'admin':
             return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
         expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(status='Pre_Aprobado', is_draft=False)

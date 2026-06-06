@@ -401,7 +401,7 @@ export default function MisExpedientes() {
               })}
             </div>
             <a href="/employee/gestion-correcciones" style={{ fontSize: '0.875rem', color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
-              Ver Gestion de Correcciones â†’
+              Ver Gestión de Correcciones →
             </a>
           </div>
         </div>
@@ -527,7 +527,7 @@ export default function MisExpedientes() {
                     <line x1="12" y1="3" x2="12" y2="15"/>
                   </svg>
                   <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                    <span style={{ color: '#2563eb', fontWeight: '500' }}>Haz click</span> o arrastra archivos aquÃ­
+                    <span style={{ color: '#2563eb', fontWeight: '500' }}>Haz click</span> o arrastra archivos aquí
                   </span>
                   <span id="file-name-display" style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#2563eb', fontWeight: '500' }}></span>
                 </label>
@@ -649,7 +649,7 @@ export default function MisExpedientes() {
           {previewUrl && getFileType(previewDoc) === 'video' && (
             <video controls className="w-full max-h-[80vh] rounded-lg">
               <source src={previewUrl} />
-              Tu navegador no soporta la reproducciÃ³n de video.
+              Tu navegador no soporta la reproducción de video.
             </video>
           )}
           {previewUrl && getFileType(previewDoc) === 'other' && (
@@ -658,7 +658,7 @@ export default function MisExpedientes() {
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              <p className="text-gray-600 mb-4">La vista previa no estÃ¡ disponible para este tipo de archivo.</p>
+              <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
               <button
                 className="btn btn-primary"
                 onClick={() => {

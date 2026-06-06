@@ -27,15 +27,9 @@ const roleMap = {
 };
 
 const fetchUserRole = async () => {
-  try {
-    const res = await api.get('users/api/v1/me/');
-    const role = roleMap[res.data.rol] || 'employee';
-    localStorage.setItem('userRole', role);
-    return { role };
-  } catch {
-    const stored = localStorage.getItem('userRole');
-    return { role: roleMap[stored] || 'employee' };
-  }
+  const res = await api.get('users/api/v1/me/');
+  const role = roleMap[res.data.rol] || 'employee';
+  return { role };
 };
 const timeAgo = (isoString) => {
   const now = new Date();

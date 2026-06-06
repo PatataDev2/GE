@@ -53,7 +53,7 @@ class Command(BaseCommand):
             },
             {
                 'name': 'INE',
-                'description': 'Instituto Nacional Electoral - credencia para votar en México.'
+                'description': 'Instituto Nacional Electoral - credencial para votar en México.'
             },
             {
                 'name': 'Visa',

@@ -1,0 +1,8 @@
+WARNING 2026-06-04 15:23:46,164 log 27 124453237282496 Not Found: /api/users/api/v1/
+WARNING 2026-06-04 15:23:46,180 log 27 124453478401728 Not Found: /api/users/api/v1/
+WARNING 2026-06-04 15:23:46,186 basehttp 27 124453237282496 "GET /api/users/api/v1/ HTTP/1.1" 404 4743
+WARNING 2026-06-04 15:23:46,209 basehttp 27 124453478401728 "GET /api/users/api/v1/ HTTP/1.1" 404 4743
+WARNING 2026-06-04 19:01:17,983 log 41 129056395679424 Unauthorized: /api/notifications/unread_count/
+WARNING 2026-06-04 19:01:17,999 basehttp 41 129056395679424 "GET /api/notifications/unread_count/ HTTP/1.1" 401 172
+WARNING 2026-06-06 19:36:54,142 log 41 129056395679424 Unauthorized: /users/api/v1/token/refresh/
+WARNING 2026-06-06 19:36:54,194 basehttp 41 129056395679424 "POST /users/api/v1/token/refresh/ HTTP/1.1" 401 54

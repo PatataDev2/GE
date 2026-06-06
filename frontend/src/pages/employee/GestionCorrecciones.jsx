@@ -223,7 +223,7 @@ const handleSendToReview = async () => {
       const missing = err.response.data.missing_documents;
       alert(`Faltan documentos obligatorios:\n${missing.map(m => `- ${m.name}`).join('\n')}`);
     } else {
-      alert('Error al enviar a revision');
+      alert('Error al enviar a revisión');
     }
   } finally {
     setSendingToReview(false);
@@ -288,7 +288,7 @@ const handleSendToReview = async () => {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion de Correcciones</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Gestión de Correcciones</h2>
         <p className="text-gray-500 mt-1">Atiende documentos rechazados y gestiona tus borradores</p>
       </div>
 
@@ -303,7 +303,7 @@ const handleSendToReview = async () => {
           </div>
           <div>
             <div className="stat-value">{correctionsCount}</div>
-            <div className="stat-label">Atencion Requerida</div>
+            <div className="stat-label">Atención Requerida</div>
           </div>
         </div>
         <div className="stat-card">
@@ -328,7 +328,7 @@ const handleSendToReview = async () => {
             <div className="card mb-6">
               <div className="card-header">
                 <h3 className="card-title" style={{ color: '#ef4444' }}>
-                  Atencion Requerida
+                  Atención Requerida
                 </h3>
                 <span className="badge badge-danger">{correctionsCount} documentos</span>
               </div>
@@ -506,7 +506,7 @@ const handleSendToReview = async () => {
               />
             </div>
             <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
-              Al reemplazar el archivo, el documento volvera a estado <strong>Pendiente</strong> para revision.
+              Al reemplazar el archivo, el documento volverá a estado <strong>Pendiente</strong> para revision.
             </p>
           </div>
         )}
@@ -520,7 +520,7 @@ const handleSendToReview = async () => {
     confirmSendToReview ? (
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%' }}>
         <span style={{ fontSize: '0.875rem', color: '#475569', flex: 1 }}>
-          Â¿Enviar a revisiÃ³n? Una vez enviado no podrÃ¡s modificarlo hasta que un analista lo revise.
+          ¿Enviar a revisión? Una vez enviado no podrás modificarlo hasta que un analista lo revise.
         </span>
         <button
           className="btn btn-success"
@@ -528,7 +528,7 @@ const handleSendToReview = async () => {
           disabled={sendingToReview}
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: '500' }}
         >
-          {sendingToReview ? 'Enviando...' : 'SÃ­, Enviar'}
+          {sendingToReview ? 'Enviando...' : 'Sí, Enviar'}
         </button>
         <button
           className="btn btn-secondary"
@@ -605,7 +605,7 @@ const handleSendToReview = async () => {
           {checklist.map(t => (
             <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', padding: '0.25rem 0' }}>
               <span style={{ color: t.uploaded ? '#22c55e' : '#ef4444', fontSize: '1rem' }}>
-                {t.uploaded ? 'âœ…' : 'âŒ'}
+                {t.uploaded ? '✅' : '❌'}
               </span>
               <span style={{ color: t.uploaded ? '#166534' : '#991b1b', fontWeight: t.uploaded ? '400' : '500' }}>
                 {t.name}
@@ -720,7 +720,7 @@ const handleSendToReview = async () => {
           ))}
         </div>
       ) : (
-        <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No hay documentos subidos aÃºn.</p>
+        <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No hay documentos subidos aún.</p>
       )}
 
       <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '2px dashed #e2e8f0' }}>
@@ -853,7 +853,7 @@ const handleSendToReview = async () => {
           {previewUrl && getFileType(previewDoc) === 'video' && (
             <video controls className="w-full max-h-[80vh] rounded-lg">
               <source src={previewUrl} />
-              Tu navegador no soporta la reproducciÃ³n de video.
+              Tu navegador no soporta la reproducción de video.
             </video>
           )}
           {previewUrl && getFileType(previewDoc) === 'other' && (
@@ -862,7 +862,7 @@ const handleSendToReview = async () => {
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              <p className="text-gray-600 mb-4">La vista previa no estÃ¡ disponible para este tipo de archivo.</p>
+              <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
               <button
                 className="btn btn-primary"
                 onClick={() => {

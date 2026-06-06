@@ -228,7 +228,7 @@ export default function AprobarExpedientes() {
                       </div>
                       <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
                       <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                        {exp.department_name} â€¢ Asignado a: {exp.asinged_to_username || 'Sin asignar'}
+                        {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
                       </p>
                       {exp.approved_by_username && (
                         <p style={{ color: '#8b5cf6', fontSize: '0.8rem', marginTop: '0.25rem' }}>
@@ -253,7 +253,7 @@ export default function AprobarExpedientes() {
           <div className="card">
             <div className="empty-state">
               <h3>No hay expedientes aprobados</h3>
-              <p>Aun no se han aprobado expedientes.</p>
+              <p>Aún no se han aprobado expedientes.</p>
             </div>
           </div>
         ) : (
@@ -269,7 +269,7 @@ export default function AprobarExpedientes() {
                       </div>
                       <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
                       <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                        {exp.department_name} â€¢ Asignado a: {exp.asinged_to_username || 'Sin asignar'}
+                        {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
                       </p>
                       {exp.approved_by_username && (
                         <p style={{ color: '#22c55e', fontSize: '0.8rem', marginTop: '0.25rem' }}>
@@ -497,7 +497,7 @@ export default function AprobarExpedientes() {
           {previewUrl && getFileType(previewDoc) === 'video' && (
             <video controls className="w-full max-h-[80vh] rounded-lg">
               <source src={previewUrl} />
-              Tu navegador no soporta la reproducciÃ³n de video.
+              Tu navegador no soporta la reproducción de video.
             </video>
           )}
           {previewUrl && getFileType(previewDoc) === 'other' && (
@@ -506,7 +506,7 @@ export default function AprobarExpedientes() {
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              <p className="text-gray-600 mb-4">La vista previa no estÃ¡ disponible para este tipo de archivo.</p>
+              <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
               <button
                 className="btn btn-primary"
                 onClick={() => {

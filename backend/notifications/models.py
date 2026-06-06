@@ -43,7 +43,7 @@ class Notification(models.Model):
         ('asignado', 'Asignado'),
         ('aprobado', 'Aprobado'),
         ('rechazado', 'Rechazado'),
-        ('revision', 'En Revision'),
+        ('revision', 'En Revisión'),
         ('correccion', 'Correccion Requerida'),
         ('info', 'Informacion'),
     ]

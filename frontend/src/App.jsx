@@ -2,6 +2,7 @@
 import './styles.css'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './pages/ChangePassword';
@@ -61,11 +62,12 @@ import LayoutWrapper from './components/LayoutWrapper';
  }
 
 
- export default function App() {
-   return (
-     <AuthProvider>
-       <BrowserRouter>
-         <Routes>
+  export default function App() {
+    return (
+      <AuthProvider>
+        <BrowserRouter>
+          <ErrorBoundary>
+          <Routes>
            <Route path="/login" element={<Login />} />
            <Route path="/register" element={<Register />} />
            <Route path="/change-password" element={<ChangePassword />} />
@@ -88,8 +90,9 @@ import LayoutWrapper from './components/LayoutWrapper';
              <Route path="employee/notificaciones" element={<ProtectedRoute allowedRoles={['admin', 'analyst', 'employee']}><Notificaciones /></ProtectedRoute>} />
            </Route>
            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-         </Routes>
-       </BrowserRouter>
-     </AuthProvider>
-   );
- }
+          </Routes>
+          </ErrorBoundary>
+        </BrowserRouter>
+      </AuthProvider>
+    );
+  }

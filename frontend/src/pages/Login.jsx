@@ -95,13 +95,13 @@ export default function Login() {
           <input
             type="text"
             className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150"
-            placeholder="Username"
+            placeholder="Usuario"
             disabled={loading}
             onChange={e => setData({...data, username: e.target.value})}
           />
           <input
             type="password"
-            placeholder="Contrase\u00f1a"
+            placeholder="Contraseña"
             className="bg-gray-100 text-gray-900 border-0 rounded-md p-2 mb-4 focus:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-green-500 transition ease-in-out duration-150"
             disabled={loading}
             onChange={e => setData({...data, password: e.target.value})}

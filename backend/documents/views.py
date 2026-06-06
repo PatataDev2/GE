@@ -128,7 +128,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
             ip_address=self.request.META.get('REMOTE_ADDR'),
         )
 
-        from .serializers import DocumentSerializer
         return Response({
             'message': 'Archivo reemplazado exitosamente',
             'document': DocumentSerializer(document).data
@@ -137,15 +136,21 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def view_pdf(self, request, pk=None):
         """Convierte DOCX a PDF y lo devuelve para visualizacion en el navegador"""
+        import io
         import tempfile
         import subprocess
         from django.http import FileResponse
+        from django.conf import settings
 
         document = self.get_object()
         if not document.file:
             return Response({'error': 'El documento no tiene archivo'}, status=status.HTTP_400_BAD_REQUEST)
 
-        file_path = document.file.path
+        file_path = os.path.realpath(document.file.path)
+        media_root = os.path.realpath(settings.MEDIA_ROOT)
+        if not file_path.startswith(media_root):
+            return Response({'error': 'Ruta de archivo inválida'}, status=status.HTTP_400_BAD_REQUEST)
+
         ext = os.path.splitext(file_path)[1].lower() if file_path else ''
 
         if ext == '.pdf':
@@ -154,6 +159,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             return response
 
         if ext == '.docx':
+            pdf_buffer = io.BytesIO()
             with tempfile.TemporaryDirectory() as tmpdir:
                 try:
                     home_dir = os.path.join(tmpdir, 'lo_home')
@@ -164,7 +170,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
                         capture_output=True, timeout=60,
                         env={**os.environ, 'HOME': home_dir}
                     )
-                    # cleanup LibreOffice user profile
                     import shutil
                     lo_config = os.path.join(home_dir, '.config', 'libreoffice')
                     if os.path.exists(lo_config):
@@ -181,9 +186,13 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 pdf_path = os.path.join(tmpdir, pdf_name)
 
                 if os.path.exists(pdf_path):
-                    response = FileResponse(open(pdf_path, 'rb'), content_type='application/pdf')
-                    response['Content-Disposition'] = f'inline; filename="{os.path.splitext(document.docname)[0]}.pdf"'
-                    return response
+                    with open(pdf_path, 'rb') as f:
+                        pdf_buffer.write(f.read())
+
+            pdf_buffer.seek(0)
+            response = FileResponse(pdf_buffer, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="{os.path.splitext(document.docname)[0]}.pdf"'
+            return response
 
         return Response({'error': 'Tipo de archivo no soportado'}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -4,6 +4,9 @@ from .models import Document
 from expedients.serializers import ExpedientSerializer
 from document_types.serializers import DocumentTypeSerializer
 
+ALLOWED_EXTENSIONS = {'.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
 class DocumentSerializer(serializers.ModelSerializer):
     path = serializers.CharField(read_only=True)
     docname = serializers.CharField(read_only=True)
@@ -37,6 +40,15 @@ class DocumentSerializer(serializers.ModelSerializer):
         expedient_obj = data.get('expedient')
         
         if file_obj and expedient_obj:
+            ext = os.path.splitext(file_obj.name)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                raise serializers.ValidationError(
+                    f"Tipo de archivo no permitido ({ext}). Extensiones permitidas: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+                )
+            if file_obj.size > MAX_FILE_SIZE:
+                raise serializers.ValidationError(
+                    f"El archivo excede el tamaño máximo de 10 MB."
+                )
             data['docname'] = file_obj.name
             data['path'] = f"uploads/docs/{expedient_obj.id}/{file_obj.name}"
             
