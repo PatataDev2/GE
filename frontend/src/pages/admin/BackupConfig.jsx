@@ -1,8 +1,11 @@
 ﻿import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import api from '../../api/axios';
+import { useToast } from '../../context/ToastContext';
+import { logError } from '../../utils/logger';
 
 export default function BackupConfig() {
+  const { showToast } = useToast();
   const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isBackupRunning, setIsBackupRunning] = useState(false);
@@ -12,19 +15,24 @@ export default function BackupConfig() {
     enabled: true, frequency: 'daily', time: '23:00', retention: 30, includeFiles: true
   });
 
-  const fetchBackups = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get('api/admin/backups/');
-      setBackups(res.data);
-    } catch (err) {
-      console.error('Error fetching backups:', err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const ac = new AbortController();
+    async function fetchBackups() {
+      setLoading(true);
+      try {
+        const res = await api.get('api/admin/backups/', { signal: ac.signal });
+        setBackups(res.data);
+      } catch (err) {
+        if (err.name !== 'CanceledError') {
+          logError('Error fetching backups:', err);
+        }
+      } finally {
+        setLoading(false);
+      }
     }
-  };
-
-  useEffect(() => { fetchBackups(); }, []);
+    fetchBackups();
+    return () => ac.abort();
+  }, []);
 
   const handleRunBackup = async () => {
     setIsBackupRunning(true);
@@ -32,8 +40,8 @@ export default function BackupConfig() {
       const res = await api.post('api/admin/backups/');
       setBackups(prev => [res.data, ...prev]);
     } catch (err) {
-      console.error('Error creating backup:', err);
-      alert('Error al crear respaldo');
+      logError('Error creating backup:', err);
+      showToast('Error al crear respaldo', 'error');
     } finally {
       setIsBackupRunning(false);
     }
@@ -45,8 +53,8 @@ export default function BackupConfig() {
       await api.delete(`api/admin/backups/${backup.name}/`);
       setBackups(prev => prev.filter(b => b.id !== backup.id));
     } catch (err) {
-      console.error('Error deleting backup:', err);
-      alert('Error al eliminar respaldo');
+      logError('Error deleting backup:', err);
+      showToast('Error al eliminar respaldo', 'error');
     }
   };
 
@@ -60,8 +68,8 @@ export default function BackupConfig() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Error downloading backup:', err);
-      alert('Error al descargar respaldo');
+      logError('Error downloading backup:', err);
+      showToast('Error al descargar respaldo', 'error');
     }
   };
 
@@ -71,10 +79,10 @@ export default function BackupConfig() {
     setRestoring(backup.name);
     try {
       await api.post(`api/admin/backups/${backup.name}/`);
-      alert('Datos restaurados exitosamente');
+      showToast('Datos restaurados exitosamente', 'success');
     } catch (err) {
-      console.error('Error restoring backup:', err);
-      alert('Error al restaurar: ' + (err.response?.data?.error || err.message));
+      logError('Error restoring backup:', err);
+      showToast('Error al restaurar: ' + (err.response?.data?.error || err.message), 'error');
     } finally {
       setRestoring(null);
     }

@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import api from '../../api/axios';
+import { useToast } from '../../context/ToastContext';
+import { logError } from '../../utils/logger';
 
 const ExpedientForm = ({ onSuccess }) => {
+  const { showToast } = useToast();
   const [departments, setDepartments] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -17,19 +20,23 @@ const ExpedientForm = ({ onSuccess }) => {
   });
 
   useEffect(() => {
+    const ac = new AbortController();
     const fetchData = async () => {
       try {
         const [resDep, resUsers] = await Promise.all([
-          api.get('api/departments/'), 
-          api.get('api/users/api/v1/')        
+          api.get('api/departments/', { signal: ac.signal }), 
+          api.get('api/users/api/v1/', { signal: ac.signal })        
         ]);
         setDepartments(resDep.data);
         setWorkers(resUsers.data.filter(u => u.rol === 'employee' && u.is_active));
       } catch (err) {
-        console.error("Error cargando datos:", err);
+        if (err.name !== 'CanceledError') {
+          logError("Error cargando datos:", err);
+        }
       }
     };
     fetchData();
+    return () => ac.abort();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -39,7 +46,7 @@ const ExpedientForm = ({ onSuccess }) => {
       const res = await api.post('api/expedients/', formData);
       onSuccess(res.data); 
     } catch (err) {
-      alert("Error: " + JSON.stringify(err.response?.data));
+      showToast("Error: " + JSON.stringify(err.response?.data), 'error');
     } finally {
       setLoading(false);
     }

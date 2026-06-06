@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, changePassword } from '../api/users.api';
+import api from '../api/users.api';
 
 export default function ChangePassword() {
   const [form, setForm] = useState({ old_password: '', new_password: '', new_password2: '' });
@@ -9,6 +10,7 @@ export default function ChangePassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const ac = new AbortController();
     const token = localStorage.getItem('access');
     if (!token) {
       navigate('/login');
@@ -16,17 +18,20 @@ export default function ChangePassword() {
     }
     const checkUser = async () => {
       try {
-        const res = await getCurrentUser();
+        const res = await api.get('users/api/v1/me/', { signal: ac.signal });
         if (!res.data.clave_temporal) {
           navigate('/dashboard');
         }
-      } catch {
-        localStorage.removeItem('access');
-        localStorage.removeItem('refresh');
-        navigate('/login');
+      } catch (err) {
+        if (err.name !== 'CanceledError') {
+          localStorage.removeItem('access');
+          localStorage.removeItem('refresh');
+          navigate('/login');
+        }
       }
     };
     checkUser();
+    return () => ac.abort();
   }, [navigate]);
 
   const handleSubmit = async (e) => {

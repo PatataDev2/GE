@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import api, { registerUser } from '../api/users.api';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { logError } from '../utils/logger';
 
 export default function Register() {
+  const { showToast } = useToast();
   const [form, setForm] = useState({
     username: '', 
     password: '', 
@@ -84,11 +87,11 @@ export default function Register() {
 
     try {
       await registerUser(form);
-      alert('Registrado correctamente');
+      showToast('Registrado correctamente', 'success');
       navigate('/login');
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      alert('Error en el registro: ' + (err.response?.data?.message || err.message));
+      logError(err.response?.data || err.message);
+      showToast('Error en el registro: ' + (err.response?.data?.message || err.message), 'error');
     }
   };
 

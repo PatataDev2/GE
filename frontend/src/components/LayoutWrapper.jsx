@@ -3,6 +3,8 @@ import { useNavigate, Outlet } from 'react-router-dom';
 import Layout from './Layout';
 import { useAuth } from '../context/AuthContext';
 import { getCurrentUser } from '../api/users.api';
+import api from '../api/users.api';
+import { logError } from '../utils/logger';
 
 export default function LayoutWrapper() {
   const navigate = useNavigate();
@@ -11,6 +13,7 @@ export default function LayoutWrapper() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const ac = new AbortController();
     // If AuthProvider already has user data, use it directly
     if (!authLoading && authUser) {
       setUser(authUser);
@@ -27,7 +30,7 @@ export default function LayoutWrapper() {
       }
 
       try {
-        const response = await getCurrentUser();
+        const response = await api.get('users/api/v1/me/', { signal: ac.signal });
 
         if (response.data.clave_temporal) {
           navigate('/change-password', { replace: true });
@@ -42,10 +45,12 @@ export default function LayoutWrapper() {
         };
         setUser(userData);
       } catch (error) {
-        console.error('Error loading user:', error);
-        localStorage.removeItem('access');
-        localStorage.removeItem('refresh');
-        navigate('/login');
+        if (error.name !== 'CanceledError') {
+          logError('Error loading user:', error);
+          localStorage.removeItem('access');
+          localStorage.removeItem('refresh');
+          navigate('/login');
+        }
       } finally {
         setLoading(false);
       }
@@ -54,6 +59,7 @@ export default function LayoutWrapper() {
     if (!authLoading && !authUser) {
       loadUser();
     }
+    return () => ac.abort();
   }, [navigate, authUser, authLoading]);
 
   if (loading || authLoading) {

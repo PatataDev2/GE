@@ -11,18 +11,22 @@ export default function Login() {
   const { refreshUser } = useAuth();
 
   useEffect(() => {
+    const ac = new AbortController();
     const token = localStorage.getItem('access');
-    if (!token) return;
+    if (!token) { return; }
     const fetchUser = async () => {
       try {
-        await getCurrentUser();
+        await api.get('users/api/v1/me/', { signal: ac.signal });
         navigate('/dashboard');
-      } catch {
-        localStorage.removeItem('access');
-        localStorage.removeItem('refresh');
+      } catch (err) {
+        if (err.name !== 'CanceledError') {
+          localStorage.removeItem('access');
+          localStorage.removeItem('refresh');
+        }
       }
     };
     fetchUser();
+    return () => ac.abort();
   }, [navigate]);
 
   const handleSubmit = async (e) => {

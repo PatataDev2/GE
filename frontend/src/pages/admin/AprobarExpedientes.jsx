@@ -4,8 +4,11 @@ import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
 import DocxPreview from '../analyst/DocxPreview';
 import api from '../../api/axios';
+import { useToast } from '../../context/ToastContext';
+import { logError } from '../../utils/logger';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 export default function AprobarExpedientes() {
+  const { showToast } = useToast();
   const [tab, setTab] = useState('pendientes');
   const [pendientes, setPendientes] = useState([]);
   const [aprobados, setAprobados] = useState([]);
@@ -21,23 +24,25 @@ export default function AprobarExpedientes() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [docxBlob, setDocxBlob] = useState(null);
-  const fetchAll = async () => {
+  const fetchAll = async (signal) => {
     setLoading(true);
     try {
       const [pendRes, aprobRes] = await Promise.all([
-        api.get('api/expedients/pending_admin/'),
-        api.get('api/expedients/approved/'),
+        api.get('api/expedients/pending_admin/', { signal }),
+        api.get('api/expedients/approved/', { signal }),
       ]);
       setPendientes(pendRes.data);
       setAprobados(aprobRes.data);
     } catch (err) {
-      console.error("Error fetching:", err);
+      if (err.name !== 'CanceledError') {
+        logError("Error fetching:", err);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { const ac = new AbortController(); fetchAll(ac.signal); return () => ac.abort(); }, []);
 
   const fetchDocuments = async (expedientId) => {
     setDocLoading(true);
@@ -49,7 +54,7 @@ export default function AprobarExpedientes() {
       }
       setDocuments((Array.isArray(docs) ? docs : []).filter(d => d.expedient === expedientId));
     } catch (err) {
-      console.error("Error fetching docs:", err);
+      logError("Error fetching docs:", err);
       setDocuments([]);
     } finally {
       setDocLoading(false);
@@ -109,8 +114,8 @@ export default function AprobarExpedientes() {
           const blob = response.data;
           setDocxBlob(blob);
         } catch (err) {
-          console.error('Error loading DOCX:', err);
-          alert('Error al cargar el documento');
+          logError('Error loading DOCX:', err);
+          showToast('Error al cargar el documento', 'error');
         }
       } else if (ext === 'pdf' || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
         setShowPreviewModal(true);
@@ -150,8 +155,8 @@ export default function AprobarExpedientes() {
       setIsModalOpen(false);
       fetchAll();
     } catch (err) {
-      console.error('Error approving:', err);
-      alert('Error al aprobar el expediente');
+      logError('Error approving:', err);
+      showToast('Error al aprobar el expediente', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -164,7 +169,7 @@ export default function AprobarExpedientes() {
 
   const handleConfirmReject = async () => {
     if (!correcciones.trim()) {
-      alert('Debes ingresar las correcciones requeridas.');
+      showToast('Debes ingresar las correcciones requeridas.', 'error');
       return;
     }
     setSubmitting(true);
@@ -176,8 +181,8 @@ export default function AprobarExpedientes() {
       setIsModalOpen(false);
       fetchAll();
     } catch (err) {
-      console.error('Error rejecting:', err);
-      alert('Error al rechazar el expediente');
+      logError('Error rejecting:', err);
+      showToast('Error al rechazar el expediente', 'error');
     } finally {
       setSubmitting(false);
     }

@@ -1,5 +1,6 @@
 ﻿import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getCurrentUser } from '../api/users.api';
+import api from '../api/users.api';
 
 const AuthContext = createContext(null);
 
@@ -7,7 +8,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUser = useCallback(async () => {
+  const fetchUser = useCallback(async (signal) => {
     const token = localStorage.getItem('access');
     if (!token) {
       setUser(null);
@@ -16,7 +17,7 @@ export function AuthProvider({ children }) {
     }
     setLoading(true);
     try {
-      const response = await getCurrentUser();
+      const response = await api.get('users/api/v1/me/', { signal });
       const data = response.data;
       setUser({
         id: data.id,
@@ -26,17 +27,21 @@ export function AuthProvider({ children }) {
         claveTemporal: data.clave_temporal || false,
       });
     } catch (err) {
-      localStorage.removeItem('access');
-      localStorage.removeItem('refresh');
-      localStorage.removeItem('userRole');
-      setUser(null);
+      if (err.name !== 'CanceledError') {
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        localStorage.removeItem('userRole');
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchUser();
+    const ac = new AbortController();
+    fetchUser(ac.signal);
+    return () => ac.abort();
   }, [fetchUser]);
 
   const logout = useCallback(() => {

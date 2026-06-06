@@ -3,6 +3,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { getNotifications, getUnreadCount, markAllAsRead } from '../api/notifications.api';
+import { logError } from '../utils/logger';
 
 // Icon components
 const Icons = {
@@ -195,7 +196,7 @@ export default function Layout({ children, user }) {
         const res = await getUnreadCount();
         setUnreadCount(res.data.count);
       } catch (err) {
-        console.error('Error fetching unread count:', err);
+        logError('Error fetching unread count:', err);
       }
     };
 
@@ -225,7 +226,7 @@ export default function Layout({ children, user }) {
         const res = await getNotifications();
         setNotifications(res.data.slice(0, 10));
       } catch (err) {
-        console.error('Error fetching notifications:', err);
+        logError('Error fetching notifications:', err);
       } finally {
         setNotifLoading(false);
       }
@@ -240,7 +241,7 @@ export default function Layout({ children, user }) {
       setUnreadCount(0);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (err) {
-      console.error('Error marking all read:', err);
+      logError('Error marking all read:', err);
     }
   };
 

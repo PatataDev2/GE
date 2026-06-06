@@ -4,23 +4,28 @@ import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import DocumentForm from '../../components/DocumentForm';
 import Modal from '../../components/Modal';
+import { logError } from '../../utils/logger';
 
 export default function GestionDocumentos({ expedientId = 1 }) { // ID de prueba
   const [documentos, setDocumentos] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchDocumentos = async () => {
+  const fetchDocumentos = async (signal) => {
     try {
       // Filtramos documentos por el ID del expediente
-      const res = await api.get(`documents/?expedient=${expedientId}`);
+      const res = await api.get(`documents/?expedient=${expedientId}`, { signal });
       setDocumentos(res.data);
     } catch (err) {
-      console.error("Error cargando documentos");
+      if (err.name !== 'CanceledError') {
+        logError("Error cargando documentos");
+      }
     }
   };
 
   useEffect(() => {
-    fetchDocumentos();
+    const ac = new AbortController();
+    fetchDocumentos(ac.signal);
+    return () => ac.abort();
   }, [expedientId]);
 
   return (

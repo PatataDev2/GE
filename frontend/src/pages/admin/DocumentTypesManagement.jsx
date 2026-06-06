@@ -9,6 +9,8 @@ import {
   deleteDocumentType, 
   toggleDocumentTypeStatus 
 } from '../../api/documentTypes.api';
+import api from '../../api/axios';
+import { logError } from '../../utils/logger';
 
 export default function DocumentTypesManagement() {
   const [documentTypes, setDocumentTypes] = useState([]);
@@ -25,18 +27,23 @@ export default function DocumentTypesManagement() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadDocumentTypes();
+    const ac = new AbortController();
+    loadDocumentTypes(ac.signal);
+    return () => ac.abort();
   }, []);
 
-  const loadDocumentTypes = async () => {
+  const loadDocumentTypes = async (signal) => {
     try {
       setLoading(true);
-      const data = await getDocumentTypes();
+      const response = await api.get('api/document-types/', { signal });
+      const data = response.data;
       setDocumentTypes(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError('Error al cargar tipos de documentos');
-      console.error(err);
-      setDocumentTypes([]);
+      if (err.name !== 'CanceledError') {
+        setError('Error al cargar tipos de documentos');
+        logError(err);
+        setDocumentTypes([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -90,7 +97,7 @@ export default function DocumentTypesManagement() {
       setError('');
     } catch (err) {
       setError('Error al guardar tipo de documento');
-      console.error(err);
+      logError(err);
     }
   };
 
@@ -101,7 +108,7 @@ export default function DocumentTypesManagement() {
       setIsDeleteModalOpen(false);
     } catch (err) {
       setError('Error al eliminar tipo de documento');
-      console.error(err);
+      logError(err);
     }
   };
 
@@ -111,7 +118,7 @@ export default function DocumentTypesManagement() {
       await loadDocumentTypes();
     } catch (err) {
       setError('Error al cambiar estado');
-      console.error(err);
+      logError(err);
     }
   };
 

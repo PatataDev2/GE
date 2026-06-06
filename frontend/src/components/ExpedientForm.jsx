@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
+import { useToast } from '../context/ToastContext';
+import { logError } from '../utils/logger';
 
 export default function DocumentForm({ expedientId, onSuccess }) {
+  const { showToast } = useToast();
   const [docTypes, setDocTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,24 +20,28 @@ export default function DocumentForm({ expedientId, onSuccess }) {
 
   // 1. Cargar tipos de documentos (Seeds)
   useEffect(() => {
+    const ac = new AbortController();
     const fetchDocTypes = async () => {
       try {
-        const res = await api.get('api/document-types/');
+        const res = await api.get('api/document-types/', { signal: ac.signal });
         const data = Array.isArray(res.data) ? res.data : res.data.results || [];
         setDocTypes(data);
       } catch (err) {
-        console.error("Error cargando tipos de documentos:", err);
+        if (err.name !== 'CanceledError') {
+          logError("Error cargando tipos de documentos:", err);
+        }
         setDocTypes([]);
       } finally {
         setLoading(false);
       }
     };
     fetchDocTypes();
+    return () => ac.abort();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.file) return alert("Por favor, selecciona un archivo");
+    if (!formData.file) return showToast("Por favor, selecciona un archivo", 'error');
 
     setIsSubmitting(true);
 
@@ -54,8 +61,8 @@ export default function DocumentForm({ expedientId, onSuccess }) {
       onSuccess();
       setFormData({ title: '', document_type: '', description_content: '', file: null });
     } catch (err) {
-      console.error(err.response?.data);
-      alert("Error al subir el documento. Verifica el formato.");
+      logError(err.response?.data);
+      showToast("Error al subir el documento. Verifica el formato.", 'error');
     } finally {
       setIsSubmitting(false);
     }

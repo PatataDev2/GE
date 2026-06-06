@@ -6,10 +6,13 @@ import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
 import DocxPreview from '../analyst/DocxPreview';
 import api from '../../api/axios';
+import { useToast } from '../../context/ToastContext';
+import { logError } from '../../utils/logger';
 
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 
 export default function MisExpedientes() {
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,34 +36,38 @@ export default function MisExpedientes() {
   const typeSelectRef = useRef(null);
   const descInputRef = useRef(null);
 
-  const fetchExpedientes = async () => {
+  const fetchExpedientes = async (signal) => {
     setLoading(true);
     try {
-      const res = await api.get('api/expedients/my/');
+      const res = await api.get('api/expedients/my/', { signal });
       let expData = res.data;
       if (expData && typeof expData === 'object' && !Array.isArray(expData)) {
         expData = expData.results || [];
       }
       setExpedientes(Array.isArray(expData) ? expData : []);
     } catch (err) {
-      console.error("Error fetching expedients:", err);
+      if (err.name !== 'CanceledError') {
+        logError("Error fetching expedients:", err);
+      }
       setExpedientes([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchDocTypes = async () => {
+  const fetchDocTypes = async (signal) => {
     setLoadingDocTypes(true);
     try {
-      const res = await api.get('api/document-types/');
+      const res = await api.get('api/document-types/', { signal });
       let types = res.data;
       if (types && typeof types === 'object' && !Array.isArray(types)) {
         types = types.results || [];
       }
       setDocTypes(Array.isArray(types) ? types : []);
     } catch (err) {
-      console.error("Error fetching doc types:", err);
+      if (err.name !== 'CanceledError') {
+        logError("Error fetching doc types:", err);
+      }
       setDocTypes([]);
     } finally {
       setLoadingDocTypes(false);
@@ -68,8 +75,10 @@ export default function MisExpedientes() {
   };
 
   useEffect(() => { 
-    fetchExpedientes(); 
-    fetchDocTypes();
+    const ac = new AbortController();
+    fetchExpedientes(ac.signal); 
+    fetchDocTypes(ac.signal);
+    return () => ac.abort();
   }, []);
 
   const fetchDocuments = async (expedientId) => {
@@ -84,7 +93,7 @@ export default function MisExpedientes() {
       const filteredDocs = (Array.isArray(docs) ? docs : []).filter(d => d.expedient === expedientId);
       setDocuments(filteredDocs);
     } catch (err) {
-      console.error("Error fetching documents:", err);
+      logError("Error fetching documents:", err);
       setDocuments([]);
     } finally {
       setDocLoading(false);
@@ -113,7 +122,7 @@ export default function MisExpedientes() {
     const description = descInputRef.current?.value;
     
     if (!file || !documentType) {
-      alert("Seleccione un archivo y tipo de documento");
+      showToast("Seleccione un archivo y tipo de documento", 'error');
       return;
     }
     
@@ -137,10 +146,10 @@ export default function MisExpedientes() {
       
       await fetchDocuments(selectedExpediente.id);
       await fetchExpedientes();
-      alert("Documento subido exitosamente");
+      showToast("Documento subido exitosamente", 'success');
     } catch (err) {
-      console.error("Error uploading:", err);
-      alert("Error al subir documento: " + (err.response?.data?.detail || err.message));
+      logError("Error uploading:", err);
+      showToast("Error al subir documento: " + (err.response?.data?.detail || err.message), 'error');
     } finally {
       setUploading(false);
     }
@@ -155,8 +164,8 @@ export default function MisExpedientes() {
       handleCloseModal();
       navigate('/employee/gestion-correcciones');
     } catch (err) {
-      console.error('Error saving as draft:', err);
-      alert('Error al guardar como borrador: ' + (err.response?.data?.error || err.message));
+      logError('Error saving as draft:', err);
+      showToast('Error al guardar como borrador: ' + (err.response?.data?.error || err.message), 'error');
     } finally {
       setSavingAsDraft(false);
     }
@@ -197,7 +206,7 @@ export default function MisExpedientes() {
           const blob = response.data;
           setDocxBlob(blob);
         } catch (err) {
-          console.error('Error loading DOCX:', err);
+          logError('Error loading DOCX:', err);
         }
       } else if (getFileType(doc) !== 'image') {
         window.open(fileUrl, '_blank', 'noopener,noreferrer');

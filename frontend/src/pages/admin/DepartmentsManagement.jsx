@@ -9,6 +9,8 @@ import {
   deleteDepartment, 
   toggleDepartmentStatus 
 } from '../../api/departments.api';
+import api from '../../api/axios';
+import { logError } from '../../utils/logger';
 
 export default function DepartmentsManagement() {
   const [departments, setDepartments] = useState([]);
@@ -25,17 +27,22 @@ export default function DepartmentsManagement() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadDepartments();
+    const ac = new AbortController();
+    loadDepartments(ac.signal);
+    return () => ac.abort();
   }, []);
 
-  const loadDepartments = async () => {
+  const loadDepartments = async (signal) => {
     try {
       setLoading(true);
-      const data = await getDepartments();
+      const response = await api.get('api/departments/', { signal });
+      const data = response.data;
       setDepartments(data);
     } catch (err) {
-      setError('Error al cargar departamentos');
-      console.error(err);
+      if (err.name !== 'CanceledError') {
+        setError('Error al cargar departamentos');
+        logError(err);
+      }
     } finally {
       setLoading(false);
     }
@@ -89,7 +96,7 @@ export default function DepartmentsManagement() {
       setError('');
     } catch (err) {
       setError('Error al guardar departamento');
-      console.error(err);
+      logError(err);
     }
   };
 
@@ -100,7 +107,7 @@ export default function DepartmentsManagement() {
       setIsDeleteModalOpen(false);
     } catch (err) {
       setError('Error al eliminar departamento');
-      console.error(err);
+      logError(err);
     }
   };
 
@@ -110,7 +117,7 @@ export default function DepartmentsManagement() {
       await loadDepartments();
     } catch (err) {
       setError('Error al cambiar estado');
-      console.error(err);
+      logError(err);
     }
   };
 

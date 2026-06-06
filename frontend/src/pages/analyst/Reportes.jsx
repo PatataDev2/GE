@@ -1,6 +1,7 @@
 ﻿'use client';
 import { useState, useEffect } from 'react';
 import api from '../../api/axios';
+import { logError } from '../../utils/logger';
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const STATUS_MAP = {
   'Aprobado': 'Activos',
@@ -18,24 +19,28 @@ export default function Reportes() {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
+    const ac = new AbortController();
     const fetchData = async () => {
       setLoading(true);
       try {
         const [expRes, docRes, deptRes] = await Promise.all([
-          api.get('api/expedients/'),
-          api.get('api/documents/'),
-          api.get('api/departments/')
+          api.get('api/expedients/', { signal: ac.signal }),
+          api.get('api/documents/', { signal: ac.signal }),
+          api.get('api/departments/', { signal: ac.signal })
         ]);
         setExpedientes(expRes.data);
         setDocuments(docRes.data);
         setDepartments(deptRes.data);
       } catch (err) {
-        console.error('Error fetching data:', err);
+        if (err.name !== 'CanceledError') {
+          logError('Error fetching data:', err);
+        }
       } finally {
         setLoading(false);
       }
     };
     fetchData();
+    return () => ac.abort();
   }, []);
   const [filterFeedback, setFilterFeedback] = useState('');
 

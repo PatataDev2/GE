@@ -6,10 +6,13 @@ import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
 import DocxPreview from '../analyst/DocxPreview';
 import api from '../../api/axios';
+import { useToast } from '../../context/ToastContext';
+import { logError } from '../../utils/logger';
 
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 
 export default function GestionCorrecciones() {
+  const { showToast } = useToast();
   const [corrections, setCorrections] = useState([]);
   const [drafts, setDrafts] = useState([]);
   const [docTypes, setDocTypes] = useState([]);
@@ -37,13 +40,13 @@ const [newDocUploading, setNewDocUploading] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  const fetchData = async () => {
+  const fetchData = async (signal) => {
     setLoading(true);
     try {
       const [corrRes, draftsRes, typesRes] = await Promise.all([
-        api.get('api/expedients/corrections_needed/'),
-        api.get('api/expedients/my_drafts/'),
-        api.get('api/document-types/')
+        api.get('api/expedients/corrections_needed/', { signal }),
+        api.get('api/expedients/my_drafts/', { signal }),
+        api.get('api/document-types/', { signal })
       ]);
       let corrData = corrRes.data;
       if (corrData && typeof corrData === 'object' && !Array.isArray(corrData)) {
@@ -61,14 +64,18 @@ const [newDocUploading, setNewDocUploading] = useState(false);
       }
       setDocTypes(Array.isArray(types) ? types : []);
     } catch (err) {
-      console.error('Error fetching data:', err);
+      if (err.name !== 'CanceledError') {
+        logError('Error fetching data:', err);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    const ac = new AbortController();
+    fetchData(ac.signal);
+    return () => ac.abort();
   }, []);
 
   const handleOpenReplaceModal = (correction) => {
@@ -89,7 +96,7 @@ const handleOpenDraftModal = async (draft) => {
     }
     setDraftDocuments(Array.isArray(docs) ? docs : []);
   } catch (err) {
-    console.error('Error fetching draft documents:', err);
+    logError('Error fetching draft documents:', err);
     setDraftDocuments([]);
   }
   setShowDraftModal(true);
@@ -97,7 +104,7 @@ const handleOpenDraftModal = async (draft) => {
 
 const handleUploadNewDocument = async () => {
   if (!newDocFile || !newDocType || !selectedDraft) {
-    alert('Selecciona un tipo de documento y un archivo');
+    showToast('Selecciona un tipo de documento y un archivo', 'error');
     return;
   }
 
@@ -116,7 +123,7 @@ const handleUploadNewDocument = async () => {
     await api.post('api/documents/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
-    alert('Documento subido exitosamente');
+    showToast('Documento subido exitosamente', 'success');
     setNewDocFile(null);
     setNewDocType('');
 
@@ -127,8 +134,8 @@ const handleUploadNewDocument = async () => {
     }
     setDraftDocuments(Array.isArray(docs) ? docs : []);
   } catch (err) {
-    console.error('Error uploading document:', err);
-    alert('Error al subir documento: ' + (err.response?.data?.error || err.message));
+    logError('Error uploading document:', err);
+    showToast('Error al subir documento: ' + (err.response?.data?.error || err.message), 'error');
   } finally {
     setNewDocUploading(false);
   }
@@ -137,7 +144,7 @@ const handleUploadNewDocument = async () => {
 const handleReplaceFile = async () => {
     const file = fileInputRef.current?.files[0];
     if (!file) {
-      alert('Selecciona un archivo para reemplazar');
+      showToast('Selecciona un archivo para reemplazar', 'error');
       return;
     }
 
@@ -149,12 +156,12 @@ const handleReplaceFile = async () => {
       await api.post(`api/documents/${selectedCorrection.id}/replace_file/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      alert('Archivo reemplazado exitosamente. El documento vuelve a estado Pendiente.');
+      showToast('Archivo reemplazado exitosamente. El documento vuelve a estado Pendiente.', 'success');
       setShowReplaceModal(false);
       fetchData();
     } catch (err) {
-      console.error('Error replacing file:', err);
-      alert('Error al reemplazar archivo: ' + (err.response?.data?.error || err.message));
+      logError('Error replacing file:', err);
+      showToast('Error al reemplazar archivo: ' + (err.response?.data?.error || err.message), 'error');
     } finally {
       setUploading(false);
     }
@@ -171,7 +178,7 @@ const handleReplaceDraftDocument = async (docId) => {
     await api.post(`api/documents/${docId}/replace_file/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
-    alert('Documento reemplazado exitosamente');
+    showToast('Documento reemplazado exitosamente', 'success');
     setDraftUploadFile(null);
     setReplacingDraftDocId(null);
     
@@ -182,8 +189,8 @@ const handleReplaceDraftDocument = async (docId) => {
     }
     setDraftDocuments(Array.isArray(docs) ? docs : []);
   } catch (err) {
-    console.error('Error replacing document:', err);
-    alert('Error al reemplazar documento: ' + (err.response?.data?.error || err.message));
+    logError('Error replacing document:', err);
+    showToast('Error al reemplazar documento: ' + (err.response?.data?.error || err.message), 'error');
   } finally {
     setDraftUploading(false);
   }
@@ -202,7 +209,7 @@ const handleSendToReview = async () => {
 
   const missingTypes = checklist.filter(t => !t.uploaded);
   if (missingTypes.length > 0 && !confirmSendToReview) {
-    alert(`Faltan documentos obligatorios:\n${missingTypes.map(t => `- ${t.name}`).join('\n')}`);
+    showToast(`Faltan documentos obligatorios:\n${missingTypes.map(t => `- ${t.name}`).join('\n')}`, 'warning');
     return;
   }
 
@@ -218,12 +225,12 @@ const handleSendToReview = async () => {
     setShowDraftModal(false);
     navigate('/employee/mis-expedientes');
   } catch (err) {
-    console.error('Error sending to review:', err);
+    logError('Error sending to review:', err);
     if (err.response?.data?.missing_documents) {
       const missing = err.response.data.missing_documents;
-      alert(`Faltan documentos obligatorios:\n${missing.map(m => `- ${m.name}`).join('\n')}`);
+      showToast(`Faltan documentos obligatorios:\n${missing.map(m => `- ${m.name}`).join('\n')}`, 'warning');
     } else {
-      alert('Error al enviar a revisión');
+      showToast('Error al enviar a revisión', 'error');
     }
   } finally {
     setSendingToReview(false);
@@ -265,7 +272,7 @@ const handleSendToReview = async () => {
           const blob = response.data;
           setDocxBlob(blob);
         } catch (err) {
-          console.error('Error loading DOCX:', err);
+          logError('Error loading DOCX:', err);
         }
       } else if (getFileType(doc) !== 'image') {
         window.open(fileUrl, '_blank', 'noopener,noreferrer');

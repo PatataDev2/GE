@@ -5,8 +5,11 @@ import PreviewModal from '../../components/PreviewModal';
 import ManejoDocumentos from './ManejoDocumentos'; 
 import DocxPreview from './DocxPreview';
 import api from '../../api/axios';
+import { useToast } from '../../context/ToastContext';
+import { logError } from '../../utils/logger';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 export default function Expedientes() {
+  const { showToast } = useToast();
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -38,37 +41,45 @@ export default function Expedientes() {
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [reassignSubmitting, setReassignSubmitting] = useState(false);
   const [reassignEmployeeId, setReassignEmployeeId] = useState('');
-  const fetchExpedientes = async () => {
+  const fetchExpedientes = async (signal) => {
     setLoading(true);
     try {
-      const response = await api.get('api/expedients/');
+      const response = await api.get('api/expedients/', { signal });
       setExpedientes(response.data);
     } catch (err) {
-      console.error("Error:", err);
+      if (err.name !== 'CanceledError') {
+        logError("Error:", err);
+      }
     } finally {
       setLoading(false);
     }
   };
-  const fetchWorkers = async () => {
+  const fetchWorkers = async (signal) => {
     try {
-      const res = await api.get('api/users/api/v1/');
+      const res = await api.get('api/users/api/v1/', { signal });
       setWorkers(res.data.filter(u => u.rol === 'employee' && u.is_active));
     } catch (err) {
-      console.error("Error fetching workers:", err);
+      if (err.name !== 'CanceledError') {
+        logError("Error fetching workers:", err);
+      }
     }
   };
-  const fetchDepartments = async () => {
+  const fetchDepartments = async (signal) => {
     try {
-      const res = await api.get('api/departments/');
+      const res = await api.get('api/departments/', { signal });
       setDepartments(res.data);
     } catch (err) {
-      console.error("Error fetching departments:", err);
+      if (err.name !== 'CanceledError') {
+        logError("Error fetching departments:", err);
+      }
     }
   };
   useEffect(() => { 
-    fetchExpedientes(); 
-    fetchWorkers();
-    fetchDepartments();
+    const ac = new AbortController();
+    fetchExpedientes(ac.signal); 
+    fetchWorkers(ac.signal);
+    fetchDepartments(ac.signal);
+    return () => ac.abort();
   }, []);
 
   useEffect(() => {
@@ -89,7 +100,7 @@ export default function Expedientes() {
       const filteredDocs = Array.isArray(docs) ? docs : [];
       setDocuments(filteredDocs);
     } catch (err) {
-      console.error("Error fetching docs:", err);
+      logError("Error fetching docs:", err);
       setDocuments([]);
     } finally {
       setDocLoading(false);
@@ -138,7 +149,7 @@ export default function Expedientes() {
           const blob = response.data;
           setDocxBlob(blob);
         } catch (err) {
-          console.error('Error loading DOCX:', err);
+          logError('Error loading DOCX:', err);
         }
       } else if (getFileType(doc) !== 'image') {
         window.open(fileUrl, '_blank', 'noopener,noreferrer');
@@ -197,9 +208,9 @@ export default function Expedientes() {
       setShowReviewModal(false);
       await fetchDocuments(selectedExpediente.id);
     } catch (err) {
-      console.error("Error:", err);
-      console.error("Response:", err.response);
-      alert('Error al procesar la revisión');
+      logError("Error:", err);
+      logError("Response:", err.response);
+      showToast('Error al procesar la revisión', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -223,8 +234,8 @@ export default function Expedientes() {
       setShowEditModal(false);
       fetchExpedientes();
     } catch (err) {
-      console.error("Error updating:", err);
-      alert('Error al actualizar el expediente');
+      logError("Error updating:", err);
+      showToast('Error al actualizar el expediente', 'error');
     } finally {
       setEditSubmitting(false);
     }
@@ -244,8 +255,8 @@ export default function Expedientes() {
       setShowReassignModal(false);
       fetchExpedientes();
     } catch (err) {
-      console.error("Error reassigning:", err);
-      alert('Error al reasignar el expediente');
+      logError("Error reassigning:", err);
+      showToast('Error al reasignar el expediente', 'error');
     } finally {
       setReassignSubmitting(false);
     }
@@ -746,7 +757,7 @@ export default function Expedientes() {
     if (reassignEmployeeId) {
       handleReassignSubmit(Number(reassignEmployeeId));
     } else {
-      alert('Selecciona un trabajador');
+      showToast('Selecciona un trabajador', 'error');
     }
   }}
   disabled={reassignSubmitting}

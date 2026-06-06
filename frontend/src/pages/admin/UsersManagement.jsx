@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import { getUsers, createFuncionario, updateFuncionario, toggleActivo, resetPassword } from '../../api/users.api';
+import api from '../../api/axios';
+import { useToast } from '../../context/ToastContext';
+import { logError } from '../../utils/logger';
 
 const rolLabels = {
   admin: 'Administrador',
@@ -9,6 +12,7 @@ const rolLabels = {
 };
 
 export default function UsersManagement() {
+  const { showToast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -29,15 +33,17 @@ export default function UsersManagement() {
     rol: 'employee',
   });
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { const ac = new AbortController(); fetchUsers(ac.signal); return () => ac.abort(); }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (signal) => {
     try {
       setLoading(true);
-      const response = await getUsers();
+      const response = await api.get('users/api/v1/', { signal });
       setUsers(response.data);
-    } catch (error) {
-      console.error('Error fetching users:', error);
+    } catch (err) {
+      if (err.name !== 'CanceledError') {
+        logError('Error fetching users:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -98,8 +104,8 @@ export default function UsersManagement() {
         await fetchUsers();
       }
     } catch (error) {
-      console.error('Error saving user:', error);
-      alert(error.response?.data?.cedula?.[0] || 'Error al guardar usuario');
+      logError('Error saving user:', error);
+      showToast(error.response?.data?.cedula?.[0] || 'Error al guardar usuario', 'error');
     }
   };
 
@@ -110,8 +116,8 @@ export default function UsersManagement() {
         u.id === userId ? { ...u, cuenta_activa: res.data.cuenta_activa } : u
       ));
     } catch (error) {
-      console.error('Error toggling user status:', error);
-      alert('Error al cambiar estado del usuario');
+      logError('Error toggling user status:', error);
+      showToast('Error al cambiar estado del usuario', 'error');
     }
   };
 
@@ -122,8 +128,8 @@ export default function UsersManagement() {
       setEditGeneratedPassword(res.data.password);
       setShowEditPassword(true);
     } catch (error) {
-      console.error('Error generating password:', error);
-      alert('Error al generar contraseña');
+      logError('Error generating password:', error);
+      showToast('Error al generar contraseña', 'error');
     }
   };
 
@@ -134,8 +140,8 @@ export default function UsersManagement() {
       setIsPasswordReset(true);
       setIsPasswordModalOpen(true);
     } catch (error) {
-      console.error('Error resetting password:', error);
-      alert('Error al restablecer contraseña');
+      logError('Error resetting password:', error);
+      showToast('Error al restablecer contraseña', 'error');
     }
   };
 

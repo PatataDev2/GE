@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification } from '../../api/notifications.api';
+import api from '../../api/axios';
+import { logError } from '../../utils/logger';
 
 const tipoConfig = {
   asignado: { 
@@ -86,19 +88,23 @@ export default function Notificaciones() {
   const [filtro, setFiltro] = useState('todas');
   const [loading, setLoading] = useState(true);
 
-  const cargarNotificaciones = useCallback(async () => {
+  const cargarNotificaciones = useCallback(async (signal) => {
     try {
-      const res = await getNotifications();
+      const res = await api.get('/api/notifications/', { signal });
       setNotificaciones(res.data);
     } catch (err) {
-      console.error('Error cargando notificaciones:', err);
+      if (err.name !== 'CanceledError') {
+        logError('Error cargando notificaciones:', err);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    cargarNotificaciones();
+    const ac = new AbortController();
+    cargarNotificaciones(ac.signal);
+    return () => ac.abort();
   }, [cargarNotificaciones]);
 
   const noLeidas = notificaciones.filter(n => !n.read).length;
@@ -116,7 +122,7 @@ export default function Notificaciones() {
         prev.map(n => n.id === id ? { ...n, read: true } : n)
       );
     } catch (err) {
-      console.error('Error marcando como leida:', err);
+      logError('Error marcando como leida:', err);
     }
   };
 
@@ -125,7 +131,7 @@ export default function Notificaciones() {
       await markAllAsRead();
       setNotificaciones(prev => prev.map(n => ({ ...n, read: true })));
     } catch (err) {
-      console.error('Error marcando todas como leidas:', err);
+      logError('Error marcando todas como leidas:', err);
     }
   };
 
@@ -134,7 +140,7 @@ export default function Notificaciones() {
       await deleteNotification(id);
       setNotificaciones(prev => prev.filter(n => n.id !== id));
     } catch (err) {
-      console.error('Error eliminando notificacion:', err);
+      logError('Error eliminando notificacion:', err);
     }
   };
 

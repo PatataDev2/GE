@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import api from '../api/axios';
+import { logError } from '../utils/logger';
 
 // Admin Dashboard imports
 import UsersManagement from './admin/UsersManagement';
@@ -26,8 +27,8 @@ const roleMap = {
   'Usuario Normal': 'employee',
 };
 
-const fetchUserRole = async () => {
-  const res = await api.get('users/api/v1/me/');
+const fetchUserRole = async (signal) => {
+  const res = await api.get('users/api/v1/me/', { signal });
   const role = roleMap[res.data.rol] || 'employee';
   return { role };
 };
@@ -60,18 +61,22 @@ const AdminDashboardContent = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const ac = new AbortController();
     const fetchStats = async () => {
       try {
-        const res = await api.get('api/admin/dashboard/');
+        const res = await api.get('api/admin/dashboard/', { signal: ac.signal });
         setStats(res.data);
       } catch (err) {
-        setError('Error al cargar estadísticas');
-        console.error('Error fetching dashboard stats:', err);
+        if (err.name !== 'CanceledError') {
+          setError('Error al cargar estadísticas');
+          logError('Error fetching dashboard stats:', err);
+        }
       } finally {
         setLoading(false);
       }
     };
     fetchStats();
+    return () => ac.abort();
   }, []);
 
   if (loading) return <div className="p-8 text-center text-gray-400">Cargando dashboard...</div>;
@@ -192,17 +197,21 @@ const AnalystDashboardContent = () => {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
+    const ac = new AbortController();
     const fetchData = async () => {
       try {
-        const res = await api.get('api/expedients/');
+        const res = await api.get('api/expedients/', { signal: ac.signal });
         setExpedientes(res.data);
       } catch (err) {
-        console.error('Error fetching expedientes:', err);
+        if (err.name !== 'CanceledError') {
+          logError('Error fetching expedientes:', err);
+        }
       } finally {
         setLoading(false);
       }
     };
     fetchData();
+    return () => ac.abort();
   }, []);
   const getExpedienteStatus = (exp) => {
     const s = exp?.status;
@@ -333,21 +342,25 @@ const EmployeeDashboardContent = () => {
   const [notificacionesCount, setNotificacionesCount] = useState(0);
   
   useEffect(() => {
+    const ac = new AbortController();
     const fetchData = async () => {
       try {
-        const expRes = await api.get('api/expedients/my/');
+        const expRes = await api.get('api/expedients/my/', { signal: ac.signal });
         let expData = expRes.data;
         if (expData && typeof expData === 'object' && !Array.isArray(expData)) {
           expData = expData.results || [];
         }
         setExpedientes(Array.isArray(expData) ? expData : []);
       } catch (err) {
-        console.error('Error fetching expedients:', err);
+        if (err.name !== 'CanceledError') {
+          logError('Error fetching expedients:', err);
+        }
       } finally {
         setLoading(false);
       }
     };
     fetchData();
+    return () => ac.abort();
   }, []);
 
   const totalExpedientes = expedientes.length;
@@ -476,7 +489,9 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-  fetchUserRole().then(setUser);
+    const ac = new AbortController();
+    fetchUserRole(ac.signal).then(setUser).catch(() => {});
+    return () => ac.abort();
 }, []);
 
   return (

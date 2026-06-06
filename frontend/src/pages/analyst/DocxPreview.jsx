@@ -1,6 +1,7 @@
 ﻿'use client';
 import { useEffect, useRef, useState } from 'react';
 import { renderAsync } from 'docx-preview';
+import { logError } from '../../utils/logger';
 
 export default function DocxPreview({ blob }) {
   const containerRef = useRef(null);
@@ -29,7 +30,7 @@ export default function DocxPreview({ blob }) {
       })
       .catch((err) => {
         if (!cancelled) {
-          console.error('Error rendering DOCX:', err);
+          logError('Error rendering DOCX:', err);
           setError(err.message || 'Error desconocido');
           setLoading(false);
         }
