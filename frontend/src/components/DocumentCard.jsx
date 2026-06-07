@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import FileThumbnail from './FileThumbnail';
 
 const DocumentCard = ({ doc, onStatusUpdate, onDelete }) => {
@@ -54,3 +55,11 @@ const DocumentCard = ({ doc, onStatusUpdate, onDelete }) => {
     </div>
   );
 };
+
+DocumentCard.propTypes = {
+  doc: PropTypes.object.isRequired,
+  onStatusUpdate: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+};
+
+export default DocumentCard;

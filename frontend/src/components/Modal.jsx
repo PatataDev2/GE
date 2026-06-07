@@ -1,4 +1,5 @@
 'use client';
+import PropTypes from 'prop-types';
 
 export default function Modal({ isOpen, onClose, title, children, footer, size = 'sm' }) {
   if (!isOpen) return null;
@@ -34,3 +35,12 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
     </div>
   );
 }
+
+Modal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.string,
+  children: PropTypes.node,
+  footer: PropTypes.node,
+  size: PropTypes.oneOf(['sm', 'md', 'lg', 'xl']),
+};

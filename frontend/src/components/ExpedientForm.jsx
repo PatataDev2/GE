@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import api from '../api/axios';
 import { useToast } from '../context/ToastContext';
 import { logError } from '../utils/logger';
@@ -127,3 +128,8 @@ export default function DocumentForm({ expedientId, onSuccess }) {
     </form>
   );
 }
+
+DocumentForm.propTypes = {
+  expedientId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  onSuccess: PropTypes.func,
+};

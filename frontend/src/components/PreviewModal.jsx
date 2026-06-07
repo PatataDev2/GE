@@ -1,4 +1,5 @@
 'use client';
+import PropTypes from 'prop-types';
 
 export default function PreviewModal({ isOpen, onClose, title, children, footer }) {
   if (!isOpen) return null;
@@ -30,3 +31,11 @@ export default function PreviewModal({ isOpen, onClose, title, children, footer 
     </div>
   );
 }
+
+PreviewModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.string,
+  children: PropTypes.node,
+  footer: PropTypes.node,
+};

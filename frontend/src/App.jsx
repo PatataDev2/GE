@@ -34,24 +34,10 @@ import LayoutWrapper from './components/LayoutWrapper';
 
    if (loading) {
      return (
-       <div style={{
-         height: '100vh',
-         display: 'flex',
-         alignItems: 'center',
-         justifyContent: 'center',
-         background: '#f1f5f9'
-       }}>
-         <div style={{ textAlign: 'center' }}>
-           <div style={{
-             width: '48px',
-             height: '48px',
-             border: '4px solid #e2e8f0',
-             borderTopColor: '#2563eb',
-             borderRadius: '50%',
-             animation: 'spin 1s linear infinite',
-             margin: '0 auto 1rem'
-           }}></div>
-           <p style={{ color: '#64748b' }}>Cargando...</p>
+        <div className="h-screen flex items-center justify-center bg-slate-100">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-slate-200 rounded-full mx-auto mb-4" style={{ borderTopColor: '#2563eb', animation: 'spin 1s linear infinite' }}></div>
+            <p className="text-slate-500">Cargando...</p>
          </div>
        </div>
      );

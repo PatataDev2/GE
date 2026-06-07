@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import api from '../api/axios';
 
 const DocumentForm = ({ expedientId, onSuccess }) => {
@@ -69,8 +70,13 @@ const DocumentForm = ({ expedientId, onSuccess }) => {
             >
                 {loading ? 'Subiendo...' : 'Subir Documento'}
             </button>
-        </form>
-    );
+    </form>
+  );
+}
+
+DocumentForm.propTypes = {
+  expedientId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  onSuccess: PropTypes.func,
 };
 
 export default DocumentForm;

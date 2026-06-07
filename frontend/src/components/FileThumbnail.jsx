@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import PropTypes from 'prop-types';
 
 const FILE_ICONS = {
   pdf:    { bg: '#fee2e2', color: '#ef4444', label: 'PDF' },
@@ -45,3 +46,8 @@ export default function FileThumbnail({ fileUrl, title }) {
     </div>
   );
 }
+
+FileThumbnail.propTypes = {
+  fileUrl: PropTypes.string,
+  title: PropTypes.string,
+};

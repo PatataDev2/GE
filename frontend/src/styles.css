@@ -1,6 +1,5 @@
-@import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
 @keyframes stemGrow {
   0%   { stroke-dashoffset: 120; }
@@ -440,16 +439,6 @@ tr:hover {
   font-size: 0.75rem;
   font-weight: 500;
   transition: all 0.2s;
-}
-
-.badge-success {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.badge-warning {
-  background: #fef3c7;
-  color: #92400e;
 }
 
 .badge-success {

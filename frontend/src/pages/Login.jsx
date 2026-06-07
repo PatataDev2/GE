@@ -53,17 +53,8 @@ export default function Login() {
   return (
     <div className="h-screen bg-green-300 flex flex-col items-center justify-center">
       {loading && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'rgba(22, 163, 74, 0.95)',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          animation: 'fadeIn 0.25s ease-out',
-        }}>
-          <div style={{
-            position: 'relative', width: 100, height: 120,
-            animation: 'sway 2.5s ease-in-out 1.2s infinite',
-          }}>
+        <div className="fixed inset-0 z-[9999] bg-green-600/95 flex flex-col items-center justify-center" style={{ animation: 'fadeIn 0.25s ease-out' }}>
+          <div className="relative w-[100px] h-[120px]" style={{ animation: 'sway 2.5s ease-in-out 1.2s infinite' }}>
             <svg width="100" height="120" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M50 125 Q48 80 50 45"
                 stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none"
@@ -80,7 +71,7 @@ export default function Login() {
               </g>
             </svg>
           </div>
-          <p style={{ color: 'white', marginTop: '0.75rem', fontSize: '1.125rem', fontWeight: 500, animation: 'fadeIn 0.5s 0.6s both' }}>
+          <p className="text-white mt-3 text-lg font-medium" style={{ animation: 'fadeIn 0.5s 0.6s both' }}>
             Cargando...
           </p>
         </div>

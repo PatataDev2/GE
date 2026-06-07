@@ -212,23 +212,21 @@ export default function UsersManagement() {
 
       <div className="card">
         <div className="filter-bar">
-          <div className="search-input" style={{ flex: 1 }}>
+          <div className="search-input flex-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/>
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input
               type="text"
-              className="form-input"
+              className="form-input pl-10"
               placeholder="Buscar por nombre, email o cédula..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: '2.5rem' }}
             />
           </div>
           <select
-            className="form-select"
-            style={{ width: 'auto', minWidth: '150px' }}
+            className="form-select w-auto min-w-[150px]"
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
           >
@@ -248,7 +246,7 @@ export default function UsersManagement() {
 
         <div className="table-container">
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando funcionarios...</div>
+            <div className="text-center p-8">Cargando funcionarios...</div>
           ) : (
             <table>
               <thead>
@@ -264,7 +262,7 @@ export default function UsersManagement() {
               </thead>
               <tbody>
                 {filteredUsers.map(user => (
-                  <tr key={user.id} style={user.cuenta_activa ? {} : { opacity: 0.45, backgroundColor: '#f1f5f9' }}>
+                  <tr key={user.id} className={!user.cuenta_activa ? 'opacity-[0.45] bg-slate-100' : ''}>
                     <td><strong>{user.cedula}</strong></td>
                     <td>{user.first_name || '-'}</td>
                     <td>{user.last_name || '-'}</td>
@@ -340,14 +338,13 @@ export default function UsersManagement() {
           <label className="form-label">Cédula</label>
           <input
             type="text"
-            className="form-input"
+            className={editing ? 'form-input bg-slate-200 cursor-not-allowed' : 'form-input'}
             value={formData.cedula}
             disabled={editing}
             maxLength={8}
-            style={editing ? { backgroundColor: '#e2e8f0', cursor: 'not-allowed' } : {}}
             onChange={(e) => setFormData({ ...formData, cedula: e.target.value.replace(/\D/g, '').slice(0, 8) })}
           />
-          {editing && <small style={{ color: '#94a3b8' }}>La cédula no se puede modificar</small>}
+          {editing && <small className="text-slate-400">La cédula no se puede modificar</small>}
         </div>
         <div className="form-group">
           <label className="form-label">Nombre</label>
@@ -389,29 +386,17 @@ export default function UsersManagement() {
           </select>
         </div>
         {editing && (
-          <div className="form-group" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+          <div className="form-group border-t border-slate-200 pt-4">
             <label className="form-label">Contraseña</label>
             <button
               type="button"
-              className="btn btn-secondary"
-              style={{ width: '100%' }}
+              className="btn btn-secondary w-full"
               onClick={handleGeneratePasswordInEdit}
             >
               Generar Contraseña Aleatoria
             </button>
             {showEditPassword && (
-              <div style={{
-                marginTop: '0.75rem',
-                textAlign: 'center',
-                fontSize: '1.25rem',
-                fontWeight: '700',
-                fontFamily: 'monospace',
-                background: '#f0fdf4',
-                color: '#16a34a',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                letterSpacing: '0.1em',
-              }}>
+              <div className="mt-3 text-center text-xl font-bold font-mono bg-green-50 text-green-600 px-4 py-2 rounded-lg tracking-widest">
                 {editGeneratedPassword}
               </div>
             )}
@@ -429,24 +414,13 @@ export default function UsersManagement() {
           </button>
         }
       >
-        <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+        <div className="text-center py-4">
           <p>El funcionario se ha registrado correctamente.</p>
-          <p style={{ marginTop: '1rem', fontWeight: 600 }}>Clave temporal generada:</p>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            fontFamily: 'monospace',
-            background: '#f0fdf4',
-            color: '#16a34a',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '0.5rem',
-            marginTop: '0.5rem',
-            display: 'inline-block',
-            letterSpacing: '0.1em',
-          }}>
+          <p className="mt-4 font-semibold">Clave temporal generada:</p>
+          <div className="text-2xl font-bold font-mono bg-green-50 text-green-600 px-6 py-3 rounded-lg mt-2 inline-block tracking-widest">
             {generatedPassword}
           </div>
-          <p style={{ marginTop: '1rem', color: '#64748b', fontSize: '0.875rem' }}>
+          <p className="mt-4 text-slate-500 text-sm">
             Entrégale esta clave al funcionario. Deberá cambiarla al iniciar sesión.
           </p>
         </div>

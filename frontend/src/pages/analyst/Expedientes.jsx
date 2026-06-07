@@ -438,20 +438,20 @@ export default function Expedientes() {
       >
         {selectedExpediente && (
           <div>
-            <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+            <div className="mb-4 p-4 bg-slate-50 rounded-lg">
               <p><strong>Departamento:</strong> {selectedExpediente.department_name}</p>
               <p><strong>Asignado a:</strong> {selectedExpediente.asinged_to_username || 'No asignado'}</p>
               <p><strong>Descripción:</strong> {selectedExpediente.description || 'Sin descripción'}</p>
             </div>
             
-            <h4 style={{ marginBottom: '1rem', fontWeight: '600' }}>Documentos</h4>
+            <h4 className="mb-4 font-semibold">Documentos</h4>
             
             {docLoading ? (
               <div className="p-4 text-center">Cargando documentos...</div>
             ) : documents.length === 0 ? (
               <div className="p-4 text-center text-gray-400">No hay documentos</div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="flex flex-col gap-3">
                 {documents.map(doc => {
                   const status = getDocStatus(doc);
                   const bgColor = status === 'aprobado' ? '#d1fae5' : status === 'rechazado' ? '#fee2e2' : 'white';
@@ -624,7 +624,7 @@ export default function Expedientes() {
                   document.body.removeChild(link);
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
                   <line x1="12" y1="15" x2="12" y2="3"/>
@@ -639,8 +639,7 @@ export default function Expedientes() {
           {previewUrl && getFileType(previewDoc) === 'pdf' && (
             <iframe
               src={previewUrl}
-              className="w-full rounded-lg border border-gray-200"
-              style={{ height: '80vh' }}
+              className="w-full h-[80vh] rounded-lg border border-gray-200"
               title="Vista previa del documento"
             />
           )}
@@ -711,7 +710,7 @@ export default function Expedientes() {
               onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
             />
           </div>
-          <div className="form-group" style={{ marginTop: '1rem' }}>
+          <div className="form-group mt-4">
             <label className="form-label">Descripción</label>
             <textarea
               className="form-input"
@@ -776,38 +775,38 @@ export default function Expedientes() {
         }
       >
         <div className="p-2">
-          <div className="timeline" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#2563eb', marginTop: '0.35rem', flexShrink: 0 }}></div>
+          <div className="timeline flex flex-col gap-5">
+            <div className="flex gap-4 items-start">
+              <div className="w-[10px] h-[10px] rounded-full bg-blue-600 mt-1 shrink-0"></div>
               <div>
-                <p style={{ fontWeight: '600', fontSize: '0.875rem' }}>Expediente creado</p>
-                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{formatDate(selectedExpediente?.created_at)}</p>
-                <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Estado inicial: Pendiente</p>
+                <p className="font-semibold text-sm">Expediente creado</p>
+                <p className="text-xs text-slate-500">{formatDate(selectedExpediente?.created_at)}</p>
+                <p className="text-xs text-slate-400">Estado inicial: Pendiente</p>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: selectedExpediente?.status === 'Aprobado' ? '#10b981' : '#f59e0b', marginTop: '0.35rem', flexShrink: 0 }}></div>
+            <div className="flex gap-4 items-start">
+              <div className="w-[10px] h-[10px] rounded-full mt-1 shrink-0" style={{ background: selectedExpediente?.status === 'Aprobado' ? '#10b981' : '#f59e0b' }}></div>
               <div>
-                <p style={{ fontWeight: '600', fontSize: '0.875rem' }}>Estado actual: {selectedExpediente?.status || 'Pendiente'}</p>
-                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>Última actualización: {formatDate(selectedExpediente?.updated_at)}</p>
+                <p className="font-semibold text-sm">Estado actual: {selectedExpediente?.status || 'Pendiente'}</p>
+                <p className="text-xs text-slate-500">Última actualización: {formatDate(selectedExpediente?.updated_at)}</p>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#8b5cf6', marginTop: '0.35rem', flexShrink: 0 }}></div>
+            <div className="flex gap-4 items-start">
+              <div className="w-[10px] h-[10px] rounded-full bg-purple-500 mt-1 shrink-0"></div>
               <div>
-                <p style={{ fontWeight: '600', fontSize: '0.875rem' }}>Asignado a</p>
-                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{selectedExpediente?.asinged_to_username || 'Sin asignar'}</p>
+                <p className="font-semibold text-sm">Asignado a</p>
+                <p className="text-xs text-slate-500">{selectedExpediente?.asinged_to_username || 'Sin asignar'}</p>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#64748b', marginTop: '0.35rem', flexShrink: 0 }}></div>
+            <div className="flex gap-4 items-start">
+              <div className="w-[10px] h-[10px] rounded-full bg-slate-500 mt-1 shrink-0"></div>
               <div>
-                <p style={{ fontWeight: '600', fontSize: '0.875rem' }}>Departamento</p>
-                <p style={{ fontSize: '0.8rem', color: '#64748b' }}>{selectedExpediente?.department_name || 'Sin departamento'}</p>
+                <p className="font-semibold text-sm">Departamento</p>
+                <p className="text-xs text-slate-500">{selectedExpediente?.department_name || 'Sin departamento'}</p>
               </div>
             </div>
           </div>
-          <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '1rem', fontStyle: 'italic' }}>
+          <p className="text-xs text-slate-400 mt-4 italic">
             Nota: El registro detallado de cambios estará disponible próximamente.
           </p>
         </div>

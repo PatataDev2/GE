@@ -178,23 +178,21 @@ export default function ActivityLogs() {
       {/* Filter Bar */}
       <div className="card">
         <div className="filter-bar">
-          <div className="search-input" style={{ flex: 1 }}>
+          <div className="search-input flex-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/>
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input 
               type="text" 
-              className="form-input" 
+              className="form-input pl-10" 
               placeholder="Buscar por usuario, acción o objetivo..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: '2.5rem' }}
             />
           </div>
           <select 
-            className="form-select" 
-            style={{ width: 'auto', minWidth: '150px' }}
+            className="form-select w-auto min-w-[150px]"
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
           >
@@ -210,16 +208,14 @@ export default function ActivityLogs() {
           </select>
           <input
             type="date"
-            className="form-input"
-            style={{ width: 'auto' }}
+            className="form-input w-auto"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
             placeholder="Desde"
           />
           <input
             type="date"
-            className="form-input"
-            style={{ width: 'auto' }}
+            className="form-input w-auto"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
             placeholder="Hasta"
@@ -250,7 +246,7 @@ export default function ActivityLogs() {
             <tbody>
               {filteredLogs.map(log => (
                 <tr key={log.id}>
-                  <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                  <td className="font-mono text-xs">
                     {log.timestamp ? new Date(log.timestamp).toLocaleString('es-ES', { 
                       year: 'numeric', month: '2-digit', day: '2-digit',
                       hour: '2-digit', minute: '2-digit', second: '2-digit',
@@ -258,36 +254,26 @@ export default function ActivityLogs() {
                     }).replace(',', '') : '-'}
                   </td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ 
-                        width: '28px', 
-                        height: '28px', 
-                        borderRadius: '50%', 
-                        background: '#e2e8f0', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        fontSize: '0.75rem',
-                        fontWeight: '600'
-                      }}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold">
                         {log.user ? log.user.charAt(0).toUpperCase() : '?'}
                       </div>
                       {log.user || 'Sistema'}
                     </div>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ color: '#64748b' }}>{getActionIcon(log.type)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">{getActionIcon(log.type)}</span>
                       {log.action}
                     </div>
                   </td>
-                  <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{log.target}</td>
+                  <td className="font-mono text-xs">{log.target}</td>
                   <td>
                     <span className={`badge ${actionTypes[log.type]?.color || 'badge-secondary'}`}>
                       {actionTypes[log.type]?.label || log.type}
                     </span>
                   </td>
-                  <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#64748b' }}>{log.ip}</td>
+                  <td className="font-mono text-xs text-slate-500">{log.ip}</td>
                 </tr>
               ))}
             </tbody>

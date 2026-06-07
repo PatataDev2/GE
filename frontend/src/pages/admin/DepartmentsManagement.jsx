@@ -166,23 +166,21 @@ export default function DepartmentsManagement() {
       {/* Filter Bar */}
       <div className="card">
         <div className="filter-bar">
-          <div className="search-input" style={{ flex: 1 }}>
+          <div className="search-input flex-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/>
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input 
               type="text" 
-              className="form-input" 
+              className="form-input pl-10" 
               placeholder="Buscar por nombre o descripción..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: '2.5rem' }}
             />
           </div>
           <select 
-            className="form-select" 
-            style={{ width: 'auto', minWidth: '150px' }}
+            className="form-select w-auto min-w-[150px]"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >

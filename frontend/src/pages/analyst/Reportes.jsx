@@ -219,11 +219,10 @@ export default function Reportes() {
         </div>
       </div>
       {/* Filter and Export */}
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
+      <div className="card mb-6">
         <div className="filter-bar">
           <select 
-            className="form-select" 
-            style={{ width: 'auto', minWidth: '200px' }}
+            className="form-select w-auto min-w-[200px]"
             value={tipoReporte}
             onChange={(e) => setTipoReporte(e.target.value)}
           >
@@ -234,20 +233,18 @@ export default function Reportes() {
           </select>
           <input
             type="date"
-            className="form-input"
-            style={{ width: 'auto' }}
+            className="form-input w-auto"
             value={fechaDesde}
             onChange={(e) => setFechaDesde(e.target.value)}
           />
           <input
             type="date"
-            className="form-input"
-            style={{ width: 'auto' }}
+            className="form-input w-auto"
             value={fechaHasta}
             onChange={(e) => setFechaHasta(e.target.value)}
           />
           {filterFeedback && (
-            <span style={{ color: '#16a34a', fontSize: '0.875rem', alignSelf: 'center' }}>{filterFeedback}</span>
+            <span className="text-green-600 text-sm self-center">{filterFeedback}</span>
           )}
           <button className="btn btn-primary" onClick={handleFilter}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -280,54 +277,53 @@ export default function Reportes() {
             <h3 className="card-title">Expedientes por Estado</h3>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="flex flex-col gap-6">
             {expedientesPorEstado.map((item, idx) => (
               <div key={idx}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ fontWeight: '500' }}>{item.estado}</span>
-                  <span style={{ color: '#64748b' }}>{item.cantidad} ({item.porcentaje}%)</span>
+                <div className="flex justify-between mb-2">
+                  <span className="font-medium">{item.estado}</span>
+                  <span className="text-slate-500">{item.cantidad} ({item.porcentaje}%)</span>
                 </div>
-                <div className="progress-bar" style={{ height: '12px' }}>
+                <div className="progress-bar h-3">
                   <div 
-                    className="progress-fill" 
-                    style={{ 
-                      width: item.porcentaje + '%',
-                      background: idx === 0 ? '#10b981' : idx === 1 ? '#f59e0b' : '#64748b'
-                    }}
+                    style={{ width: item.porcentaje + '%' }}
+                    className={`progress-fill ${
+                      idx === 0 ? 'bg-emerald-500' : idx === 1 ? 'bg-amber-500' : 'bg-slate-500'
+                    }`}
                   ></div>
                 </div>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
-            <h4 style={{ fontWeight: '600', marginBottom: '1rem', fontSize: '0.875rem' }}>Documentos</h4>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '12px', height: '12px', background: '#10b981', borderRadius: '2px' }}></div>
-                <span style={{ fontSize: '0.875rem' }}>Aprobados: {docsAprobados}</span>
+          <div className="mt-8 pt-4 border-t border-slate-200">
+            <h4 className="font-semibold mb-4 text-sm">Documentos</h4>
+            <div className="flex gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-emerald-500 rounded-sm"></div>
+                <span className="text-sm">Aprobados: {docsAprobados}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '12px', height: '12px', background: '#f59e0b', borderRadius: '2px' }}></div>
-                <span style={{ fontSize: '0.875rem' }}>Pendientes: {docsPendientes}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-amber-500 rounded-sm"></div>
+                <span className="text-sm">Pendientes: {docsPendientes}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '12px', height: '12px', background: '#ef4444', borderRadius: '2px' }}></div>
-                <span style={{ fontSize: '0.875rem' }}>Rechazados: {docsRechazados}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+                <span className="text-sm">Rechazados: {docsRechazados}</span>
               </div>
             </div>
           </div>
-          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: '12px', height: '12px', background: '#10b981', borderRadius: '2px' }}></div>
-              <span style={{ fontSize: '0.875rem' }}>Activos</span>
+          <div className="mt-6 flex justify-center gap-8 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-emerald-500 rounded-sm"></div>
+              <span className="text-sm">Activos</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: '12px', height: '12px', background: '#f59e0b', borderRadius: '2px' }}></div>
-              <span style={{ fontSize: '0.875rem' }}>En Revisi\u00f3n</span>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-amber-500 rounded-sm"></div>
+              <span className="text-sm">En Revisi\u00f3n</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: '12px', height: '12px', background: '#64748b', borderRadius: '2px' }}></div>
-              <span style={{ fontSize: '0.875rem' }}>Cerrados</span>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-slate-500 rounded-sm"></div>
+              <span className="text-sm">Cerrados</span>
             </div>
           </div>
         </div>
@@ -337,21 +333,20 @@ export default function Reportes() {
             <h3 className="card-title">Expedientes por Departamento</h3>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="flex flex-col gap-4">
             {expedientesPorDepartamento.map((item, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <span style={{ width: '140px', fontSize: '0.875rem', flexShrink: 0 }}>{item.departamento}</span>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div className="progress-bar" style={{ flex: 1, height: '20px' }}>
+              <div key={idx} className="flex items-center gap-4">
+                <span className="w-35 text-sm shrink-0">{item.departamento}</span>
+                <div className="flex-1 flex items-center gap-3">
+                  <div className="progress-bar flex-1 h-5">
                     <div 
-                      className="progress-fill" 
+                      className="progress-fill bg-blue-600" 
                       style={{ 
-                        width: (item.cantidad / maxDepartamento) * 100 + '%',
-                        background: '#2563eb'
+                        width: (item.cantidad / maxDepartamento) * 100 + '%'
                       }}
                     ></div>
                   </div>
-                  <span style={{ fontWeight: '600', width: '30px', textAlign: 'right' }}>{item.cantidad}</span>
+                  <span className="font-semibold text-right w-8">{item.cantidad}</span>
                 </div>
               </div>
             ))}
@@ -359,7 +354,7 @@ export default function Reportes() {
         </div>
       </div>
       {/* Actividad Mensual */}
-      <div className="card" style={{ marginTop: '1.5rem' }}>
+      <div className="card mt-6">
         <div className="card-header">
           <h3 className="card-title">Actividad Mensual</h3>
         </div>
@@ -380,25 +375,25 @@ export default function Reportes() {
                 const tasaAprobacion = item.creados > 0 ? Math.round((item.aprobados / item.creados) * 100) : 0;
                 return (
                   <tr key={idx}>
-                    <td style={{ fontWeight: '500' }}>{item.mes}</td>
+                    <td className="font-medium">{item.mes}</td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="flex items-center gap-2">
                         <span className="badge badge-info">{item.creados}</span>
                       </div>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="flex items-center gap-2">
                         <span className="badge badge-success">{item.aprobados}</span>
                       </div>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div className="flex items-center gap-2">
                         <span className="badge badge-danger">{item.rechazados}</span>
                       </div>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div className="progress-bar" style={{ width: '100px', height: '8px' }}>
+                      <div className="flex items-center gap-3">
+                        <div className="progress-bar w-24 h-2">
                           <div 
                             className="progress-fill" 
                             style={{ 
@@ -407,7 +402,7 @@ export default function Reportes() {
                             }}
                           ></div>
                         </div>
-                        <span style={{ fontWeight: '500' }}>{tasaAprobacion}%</span>
+                        <span className="font-medium">{tasaAprobacion}%</span>
                       </div>
                     </td>
                   </tr>
@@ -417,39 +412,30 @@ export default function Reportes() {
           </table>
         </div>
         {/* Summary */}
-        <div style={{ 
-          marginTop: '1.5rem', 
-          padding: '1rem', 
-          background: '#f8fafc', 
-          borderRadius: '0.5rem',
-          display: 'flex',
-          justifyContent: 'space-around',
-          flexWrap: 'wrap',
-          gap: '1rem'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#2563eb' }}>
+        <div className="mt-6 p-4 bg-slate-50 rounded-lg flex justify-around flex-wrap gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">
               {actividadReciente.reduce((acc, i) => acc + i.creados, 0)}
             </div>
-            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Total Creados</div>
+            <div className="text-sm text-slate-500">Total Creados</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#10b981' }}>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-emerald-500">
               {actividadReciente.reduce((acc, i) => acc + i.aprobados, 0)}
             </div>
-            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Total Aprobados</div>
+            <div className="text-sm text-slate-500">Total Aprobados</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ef4444' }}>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-500">
               {actividadReciente.reduce((acc, i) => acc + i.rechazados, 0)}
             </div>
-            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Total Rechazados</div>
+            <div className="text-sm text-slate-500">Total Rechazados</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#f59e0b' }}>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-amber-500">
               {docTasaAprobacion}%
             </div>
-            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Tasa Documentos</div>
+            <div className="text-sm text-slate-500">Tasa Documentos</div>
           </div>
         </div>
       </div>

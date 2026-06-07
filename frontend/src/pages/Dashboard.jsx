@@ -80,7 +80,7 @@ const AdminDashboardContent = () => {
   }, []);
 
   if (loading) return <div className="p-8 text-center text-gray-400">Cargando dashboard...</div>;
-  if (error) return <div className="p-8 text-center text-red-400">{error}</div>;
+  if (error || !stats) return <div className="p-8 text-center text-red-400">{error || 'No se pudieron cargar las estadísticas'}</div>;
 
   return (
     <div>
@@ -142,20 +142,20 @@ const AdminDashboardContent = () => {
           <div className="card-header">
             <h3 className="card-title">Actividad Reciente</h3>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div className="flex flex-col gap-2">
             {stats.recent_activity.length === 0 ? (
               <div className="text-center text-gray-400 p-4">Sin actividad reciente</div>
             ) : (
               stats.recent_activity.map((item) => (
                 <div key={item.id} className="activity-item">
                   <div className="activity-icon">
-                    <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>{item.actor_username.charAt(0).toUpperCase()}</span>
+                    <span className="text-xs font-semibold">{item.actor_username.charAt(0).toUpperCase()}</span>
                   </div>
                   <div className="activity-content">
                     <div className="activity-text">
                       <strong>{item.actor_username}</strong>{' '}
                       {typeLabels[item.notification_type] || item.notification_type}{' '}
-                      {item.expedient_id && <span style={{ fontFamily: 'monospace', color: '#2563eb' }}>#{item.expedient_id}</span>}
+                      {item.expedient_id && <span className="font-mono text-blue-600">#{item.expedient_id}</span>}
                       {item.message && !item.expedient_id && item.message}
                     </div>
                     <div className="activity-time">{timeAgo(item.created_at)}</div>
@@ -170,20 +170,20 @@ const AdminDashboardContent = () => {
           <div className="card-header">
             <h3 className="card-title">Estado del Sistema</h3>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between items-center">
               <span>Base de Datos</span>
               <span className="badge badge-success">Operativo</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="flex justify-between items-center">
               <span>Total Usuarios</span>
               <span className="badge badge-info">{stats.total_users}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="flex justify-between items-center">
               <span>Aprobados</span>
               <span className="badge badge-success">{stats.expedients_summary.approved}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="flex justify-between items-center">
               <span>Rechazados</span>
               <span className="badge badge-danger">{stats.expedients_summary.rejected}</span>
             </div>
@@ -297,7 +297,7 @@ const AnalystDashboardContent = () => {
                 ) : (
                   recientes.map((exp) => (
                     <tr key={exp.id}>
-                      <td style={{ fontFamily: 'monospace', color: '#2563eb' }}>#{exp.id}</td>
+                      <td className="font-mono text-blue-600">#{exp.id}</td>
                       <td>{exp.asinged_to_username || 'Sin asignar'}</td>
                       <td>
                         <span className={`badge ${
@@ -320,14 +320,14 @@ const AnalystDashboardContent = () => {
           <div className="card-header">
             <h3 className="card-title">Acciones Rápidas</h3>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <a href="/analyst/validar" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+          <div className="flex flex-col gap-3">
+            <a href="/analyst/validar" className="btn btn-primary no-underline">
               Validar Expedientes Pendientes ({pendientes})
             </a>
-            <a href="/analyst/expedientes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+            <a href="/analyst/expedientes" className="btn btn-secondary no-underline">
               Ver Todos los Expedientes
             </a>
-            <a href="/analyst/reportes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+            <a href="/analyst/reportes" className="btn btn-secondary no-underline">
               Generar Reporte
             </a>
           </div>
@@ -432,22 +432,15 @@ const EmployeeDashboardContent = () => {
           <div className="card-header">
             <h3 className="card-title">Mis Expedientes Recientes</h3>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="flex flex-col gap-3">
             {recientes.length === 0 ? (
               <div className="text-center text-gray-400 p-4">No hay expedientes</div>
             ) : (
               recientes.map((exp, idx) => (
-                <div key={idx} style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  padding: '0.75rem',
-                  background: '#f8fafc',
-                  borderRadius: '0.5rem'
-                }}>
+                <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                   <div>
-                    <span style={{ fontFamily: 'monospace', color: '#2563eb', fontWeight: '500' }}>#{exp.id}</span>
-                    <span style={{ marginLeft: '0.5rem', color: '#64748b' }}>{exp.title}</span>
+                    <span className="font-mono text-blue-600 font-medium">#{exp.id}</span>
+                    <span className="ml-2 text-slate-500">{exp.title}</span>
                   </div>
                   <span className={`badge ${
                     exp.status === 'Aprobado' ? 'badge-success' : 
@@ -465,17 +458,17 @@ const EmployeeDashboardContent = () => {
           <div className="card-header">
             <h3 className="card-title">Acciones Rápidas</h3>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <a href="/employee/mis-expedientes" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+          <div className="flex flex-col gap-3">
+            <a href="/employee/mis-expedientes" className="btn btn-primary no-underline">
               Mis Expedientes
             </a>
-            <a href="/employee/mis-expedientes" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+            <a href="/employee/mis-expedientes" className="btn btn-secondary no-underline">
               Ver Mis Expedientes
             </a>
-            <a href="/employee/notificaciones" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+            <a href="/employee/notificaciones" className="btn btn-secondary no-underline">
               Ver Notificaciones
             </a>
-            <a href="/employee/gestion-correcciones" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+            <a href="/employee/gestion-correcciones" className="btn btn-secondary no-underline">
               Gestión de Correcciones
             </a>
           </div>

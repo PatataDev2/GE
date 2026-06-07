@@ -225,7 +225,7 @@ export default function ValidarExpedientes() {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="flex flex-col gap-4">
           {filtered.map(exp => {
             const status = getExpedienteStatus(exp);
             const badgeClass = status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : status === 'pre_aprobado' ? 'badge-info' : 'badge-warning';
@@ -233,18 +233,18 @@ export default function ValidarExpedientes() {
             return (
               <div key={exp.id} className="card" style={{ borderLeft: `4px solid ${borderColor}` }}>
                 <div className="card-body">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                        <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '1rem', color: '#2563eb' }}>#{exp.id}</span>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-mono font-bold text-base text-blue-600">#{exp.id}</span>
                         <span className={`badge ${badgeClass}`}>{statusLabels[status] || status}</span>
                       </div>
-                      <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
-                      <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                      <h4 className="text-lg font-semibold mb-1">{exp.title}</h4>
+                      <p className="text-slate-500 text-sm">
                         {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
                       </p>
                       {exp.description && (
-                        <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '0.25rem' }}>{exp.description}</p>
+                        <p className="text-slate-400 text-xs mt-1">{exp.description}</p>
                       )}
                     </div>
                     <button
@@ -288,19 +288,19 @@ export default function ValidarExpedientes() {
       >
         {selectedExpediente && (
           <div>
-            <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+            <div className="mb-4 p-4 bg-slate-50 rounded-lg">
               <p><strong>Título:</strong> {selectedExpediente.title}</p>
               <p><strong>Departamento:</strong> {selectedExpediente.department_name}</p>
               <p><strong>Asignado a:</strong> {selectedExpediente.asinged_to_username || 'Sin asignar'}</p>
               {selectedExpediente.description && <p><strong>Descripción:</strong> {selectedExpediente.description}</p>}
-              <p style={{ marginTop: '0.5rem' }}>
+              <p className="mt-2">
                 <strong>Estado:</strong>{' '}
                 <span className={`badge ${getExpedienteStatus(selectedExpediente) === 'aprobado' ? 'badge-success' : getExpedienteStatus(selectedExpediente) === 'rechazado' ? 'badge-danger' : getExpedienteStatus(selectedExpediente) === 'pre_aprobado' ? 'badge-info' : 'badge-warning'}`}>
                   {statusLabels[getExpedienteStatus(selectedExpediente)] || getExpedienteStatus(selectedExpediente)}
                 </span>
               </p>
             </div>
-            <h4 style={{ marginBottom: '1rem', fontWeight: '600', fontSize: '1rem' }}>
+            <h4 className="mb-4 font-semibold text-base">
               Documentos ({documents.length})
             </h4>
             {docLoading ? (
@@ -308,24 +308,24 @@ export default function ValidarExpedientes() {
             ) : documents.length === 0 ? (
               <div className="p-4 text-center text-gray-400">No hay documentos en este expediente</div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="flex flex-col gap-3">
                 {documents.map(doc => {
                   const status = getDocStatus(doc);
                   const bgColor = status === 'aprobado' ? '#f0fdf4' : status === 'rechazado' ? '#fef2f2' : '#fffbeb';
                   const FileUrl = doc.file ? (doc.file.startsWith('http') ? doc.file : `${BASE_API_URL}${doc.file.startsWith('/') ? '' : '/media/'}${doc.file}`) : null;
                   return (
-                    <div key={doc.id} className="document-item" style={{ background: bgColor, display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                      <div className="document-icon" style={{ flexShrink: 0 }}>
+                    <div key={doc.id} className="document-item flex items-center gap-3 p-3 rounded-lg border border-slate-200" style={{ background: bgColor }}>
+                      <div className="document-icon shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                           <polyline points="14 2 14 8 20 8"/>
                         </svg>
                       </div>
-                      <div className="document-info" style={{ flex: 1, minWidth: 0 }}>
-                        <div className="document-name" style={{ fontWeight: '600', fontSize: '0.875rem' }}>{doc.title}</div>
-                        <div className="document-size" style={{ fontSize: '0.75rem', color: '#64748b' }}>{doc.document_type_name || 'Sin tipo'}</div>
+                      <div className="document-info flex-1 min-w-0">
+                        <div className="document-name font-semibold text-sm">{doc.title}</div>
+                        <div className="document-size text-xs text-slate-500">{doc.document_type_name || 'Sin tipo'}</div>
                       </div>
-                      <span className={`badge ${status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : 'badge-warning'}`} style={{ fontSize: '0.7rem' }}>
+                      <span className={`badge ${status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : 'badge-warning'} text-[0.7rem]`}>
                         {status}
                       </span>
                       {FileUrl && (
@@ -351,7 +351,7 @@ export default function ValidarExpedientes() {
               </div>
             )}
             {getExpedienteStatus(selectedExpediente) === 'pendiente' && (
-              <div className="form-group" style={{ marginTop: '1rem' }}>
+              <div className="form-group mt-4">
                 <label className="form-label">Comentario (opcional)</label>
                 <textarea
                   className="form-input"
@@ -382,14 +382,14 @@ export default function ValidarExpedientes() {
         }
       >
         <div>
-          <p style={{ marginBottom: '0.5rem', fontSize: '0.875rem', color: '#64748b' }}>
+          <p className="mb-2 text-sm text-slate-500">
             Expediente: <strong>{selectedExpediente?.title}</strong>
           </p>
-          <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#64748b' }}>
+          <p className="mb-4 text-sm text-slate-500">
             Trabajador: <strong>{selectedExpediente?.asinged_to_username}</strong>
           </p>
           <div className="form-group">
-            <label className="form-label" style={{ color: '#ef4444', fontWeight: '600' }}>
+            <label className="form-label text-red-500 font-semibold">
               Correcciones requeridas *
             </label>
             <textarea
@@ -438,7 +438,7 @@ export default function ValidarExpedientes() {
                   document.body.removeChild(link);
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
                   <line x1="12" y1="15" x2="12" y2="3"/>
@@ -453,8 +453,7 @@ export default function ValidarExpedientes() {
           {previewUrl && getFileType(previewDoc) === 'pdf' && (
             <iframe
               src={previewUrl}
-              className="w-full rounded-lg border border-gray-200"
-              style={{ height: '80vh' }}
+              className="w-full h-[80vh] rounded-lg border border-gray-200"
               title="Vista previa del documento"
             />
           )}

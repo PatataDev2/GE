@@ -2,6 +2,7 @@
 
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { getNotifications, getUnreadCount, markAllAsRead } from '../api/notifications.api';
 import { logError } from '../utils/logger';
 
@@ -270,7 +271,7 @@ export default function Layout({ children, user }) {
   };
 
   return (
-    <div style={{ display: 'flex' }}>
+    <div className="flex">
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-logo flex justify-center">
@@ -280,7 +281,7 @@ export default function Layout({ children, user }) {
             className="w-16 h-16 rounded-lg mb-2"
           />
           <div className="text-center">
-            <span style={{ marginLeft: '0.5rem' }}>ExpedientesApp</span>
+            <span className="ml-2">ExpedientesApp</span>
           </div>
         </div>
         
@@ -309,8 +310,8 @@ export default function Layout({ children, user }) {
           </div>
           <button 
             onClick={handleLogout}
-            className="sidebar-link" 
-            style={{ marginTop: '1rem', width: '100%', border: 'none', background: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}
+            className="sidebar-link mt-4 w-full border-0 cursor-pointer"
+            style={{ background: 'rgba(255,255,255,0.1)' }}
           >
             <Icons.LogOut />
             Cerrar Sesión
@@ -325,7 +326,7 @@ export default function Layout({ children, user }) {
             {menuItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
           </h1>
           <div className="header-actions">
-            <div style={{ position: 'relative' }} ref={notifRef}>
+            <div className="relative" ref={notifRef}>
               <button 
                 className="notification-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -340,21 +341,20 @@ export default function Layout({ children, user }) {
               
               {showNotifications && (
                 <div className="dropdown-panel">
-                  <div className="dropdown-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="dropdown-header flex justify-between items-center">
                     <span>Notificaciones</span>
                     {unreadCount > 0 && (
                       <button
                         onClick={handleMarkAllRead}
-                        style={{ fontSize: '0.75rem', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer' }}
-                      >
+                        className="text-xs text-blue-600 bg-transparent border-0 cursor-pointer">
                         Marcar todas como leidas
                       </button>
                     )}
                   </div>
                   {notifLoading ? (
-                    <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>Cargando...</div>
+                    <div className="p-4 text-center text-slate-400">Cargando...</div>
                   ) : notifications.length === 0 ? (
-                    <div style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8' }}>
+                    <div className="p-6 text-center text-slate-400">
                       No hay notificaciones
                     </div>
                   ) : (
@@ -365,36 +365,27 @@ export default function Layout({ children, user }) {
                         <Link
                           key={notif.id}
                           to={notifRoute}
-                          className={`notification-item ${!notif.read ? 'unread' : ''}`}
                           onClick={() => setShowNotifications(false)}
-                          style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', borderBottom: '1px solid #f1f5f9', background: !notif.read ? '#eff6ff' : 'white' }}
+                          className={`notification-item ${!notif.read ? 'unread' : ''} flex gap-3 p-3 border-b border-slate-100`}
+                          style={{ background: !notif.read ? '#eff6ff' : 'white' }}
                         >
-                          <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            background: config.color + '20',
-                            color: config.color,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                          }}>
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                            style={{ background: config.color + '20', color: config.color }}>
                             <NotifIcon />
                           </div>
-                          <div className="notification-content" style={{ flex: 1, minWidth: 0 }}>
-                            <div className="notification-title" style={{ fontWeight: !notif.read ? '700' : '600', fontSize: '0.8rem', color: '#1e293b' }}>{notif.title}</div>
-                            <div className="notification-text" style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{notif.message}</div>
-                            <div className="notification-time" style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.25rem' }}>{formatTime(notif.created_at)}</div>
+                          <div className="notification-content flex-1 min-w-0">
+                            <div className="notification-title text-xs text-slate-800" style={{ fontWeight: !notif.read ? '700' : '600' }}>{notif.title}</div>
+                            <div className="notification-text text-xs text-slate-500 mt-0.5 truncate">{notif.message}</div>
+                            <div className="notification-time text-xs text-slate-400 mt-1">{formatTime(notif.created_at)}</div>
                           </div>
                         </Link>
                       );
                     })
                   )}
-                  <div style={{ padding: '0.5rem', textAlign: 'center', borderTop: '1px solid #e2e8f0' }}>
+                  <div className="p-2 text-center border-t border-slate-200">
                     <Link
                       to={notifRoute}
-                      style={{ fontSize: '0.8rem', color: '#2563eb', textDecoration: 'none' }}
+                      className="text-xs text-blue-600 no-underline"
                       onClick={() => setShowNotifications(false)}
                     >
                       Ver todas las notificaciones
@@ -413,3 +404,13 @@ export default function Layout({ children, user }) {
     </div>
   );
 }
+
+Layout.propTypes = {
+  children: PropTypes.node.isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.number,
+    username: PropTypes.string,
+    email: PropTypes.string,
+    role: PropTypes.string,
+  }),
+};

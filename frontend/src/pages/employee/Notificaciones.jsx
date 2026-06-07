@@ -202,8 +202,8 @@ export default function Notificaciones() {
 
       {/* Filter & Actions */}
       <div className="card">
-        <div className="filter-bar" style={{ marginBottom: '0' }}>
-          <div className="tabs" style={{ borderBottom: 'none', marginBottom: '0' }}>
+          <div className="filter-bar mb-0">
+          <div className="tabs border-b-0 mb-0">
             <button 
               className={`tab ${filtro === 'todas' ? 'active' : ''}`}
               onClick={() => setFiltro('todas')}
@@ -242,7 +242,7 @@ export default function Notificaciones() {
       </div>
 
       {/* Notifications List */}
-      <div className="card" style={{ marginTop: '1rem' }}>
+      <div className="card mt-4">
         {loading ? (
           <div className="empty-state">
             <p>Cargando notificaciones...</p>
@@ -257,84 +257,55 @@ export default function Notificaciones() {
             <p>No tienes notificaciones que coincidan con el filtro seleccionado</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="flex flex-col">
             {filteredNotificaciones.map(notif => {
               const config = tipoConfig[notif.notification_type] || tipoConfig.info;
               return (
-                <div 
-                  key={notif.id} 
-                  style={{ 
-                    display: 'flex', 
-                    gap: '1rem', 
-                    padding: '1.25rem',
-                    borderBottom: '1px solid #e2e8f0',
-                    background: notif.read ? 'white' : '#eff6ff',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s'
-                  }}
-                  onClick={() => handleMarcarComoLeida(notif.id)}
-                >
-                  <div style={{ 
-                    width: '48px', 
-                    height: '48px', 
-                    background: config.bgColor,
-                    color: config.color,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}>
-                    {config.icon}
-                  </div>
-                  
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem' }}>
-                      <h4 style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {notif.title}
-                        {!notif.read && (
-                          <span style={{ 
-                            width: '8px', 
-                            height: '8px', 
-                            background: '#2563eb', 
-                            borderRadius: '50%' 
-                          }}></span>
-                        )}
-                      </h4>
-                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{formatFecha(notif.created_at)}</span>
-                    </div>
-                    <p style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.5rem' }}>
-                      {notif.message}
-                    </p>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                      {notif.expedient_id && (
-                        <span style={{ 
-                          fontSize: '0.75rem', 
-                          fontFamily: 'monospace', 
-                          color: '#2563eb',
-                          background: '#dbeafe',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '0.25rem'
-                        }}>
-                          EXP-#{notif.expedient_id}
-                        </span>
-                      )}
-                      {notif.actor_username && (
-                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                          Por: {notif.actor_username}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <button 
-                    className="btn-icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEliminar(notif.id);
-                    }}
-                    style={{ color: '#64748b' }}
+                  <div 
+                    key={notif.id} 
+                    className="flex gap-4 p-5 border-b border-slate-200 cursor-pointer transition-colors duration-200"
+                    style={{ background: notif.read ? 'white' : '#eff6ff' }}
+                    onClick={() => handleMarcarComoLeida(notif.id)}
                   >
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: config.bgColor, color: config.color }}>
+                      {config.icon}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          {notif.title}
+                          {!notif.read && (
+                            <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                          )}
+                        </h4>
+                        <span className="text-xs text-slate-500">{formatFecha(notif.created_at)}</span>
+                      </div>
+                      <p className="text-sm text-slate-600 mb-2">
+                        {notif.message}
+                      </p>
+                      <div className="flex gap-2 items-center flex-wrap">
+                        {notif.expedient_id && (
+                          <span className="text-xs font-mono text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                            EXP-#{notif.expedient_id}
+                          </span>
+                        )}
+                        {notif.actor_username && (
+                          <span className="text-xs text-slate-500">
+                            Por: {notif.actor_username}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <button 
+                      className="btn-icon text-slate-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEliminar(notif.id);
+                      }}
+                    >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <polyline points="3 6 5 6 21 6"/>
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>

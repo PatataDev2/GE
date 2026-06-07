@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import PropTypes from 'prop-types';
 import { logError } from '../utils/logger';
 
 export default class ErrorBoundary extends Component {
@@ -18,44 +19,22 @@ export default class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#f1f5f9',
-          padding: '20px'
-        }}>
-          <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-            <h1 style={{ fontSize: '1.5rem', color: '#dc2626', marginBottom: '1rem' }}>
+        <div className="min-h-screen flex items-center justify-center bg-slate-100 p-5">
+          <div className="text-center max-w-[500px]">
+            <h1 className="text-2xl text-red-600 mb-4">
               Algo salió mal
             </h1>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
+            <p className="text-slate-500 mb-6">
               Ocurrió un error inesperado. Recarga la página o contacta al administrador.
             </p>
             <button
               onClick={() => window.location.reload()}
-              style={{
-                padding: '0.5rem 1rem',
-                background: '#2563eb',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer'
-              }}
+              className="px-4 py-2 bg-blue-600 text-white border-none rounded-md cursor-pointer"
             >
               Recargar página
             </button>
             {this.props.showError && (
-              <pre style={{
-                marginTop: '1rem',
-                padding: '1rem',
-                background: '#fee2e2',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                textAlign: 'left',
-                overflowX: 'auto'
-              }}>
+              <pre className="mt-4 p-4 bg-red-50 rounded-md text-xs text-left overflow-x-auto">
                 {this.state.error?.message}
               </pre>
             )}
@@ -67,3 +46,8 @@ export default class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired,
+  showError: PropTypes.bool,
+};

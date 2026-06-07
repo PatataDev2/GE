@@ -334,47 +334,35 @@ const handleSendToReview = async () => {
           {correctionsCount > 0 && (
             <div className="card mb-6">
               <div className="card-header">
-                <h3 className="card-title" style={{ color: '#ef4444' }}>
+                <h3 className="card-title text-red-500">
                   Atención Requerida
                 </h3>
                 <span className="badge badge-danger">{correctionsCount} documentos</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="flex flex-col gap-3">
                 {corrections.map(doc => (
-                  <div key={doc.id} style={{
-                    padding: '1rem',
-                    background: '#fef2f2',
-                    border: '1px solid #fecaca',
-                    borderRadius: '0.75rem',
-                    borderLeft: '4px solid #ef4444'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <span style={{ fontFamily: 'monospace', fontWeight: '600', color: '#2563eb' }}>#{doc.expedient_id}</span>
+                  <div key={doc.id} className="p-4 bg-red-50 border border-red-200 rounded-xl border-l-4 border-l-red-500">
+                    <div className="flex justify-between items-start flex-wrap gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-mono font-semibold text-blue-600">#{doc.expedient_id}</span>
                           <span className="badge badge-danger">Rechazado</span>
                         </div>
-                        <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.25rem' }}>{doc.title}</h4>
-                        <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+                        <h4 className="text-base font-semibold mb-1">{doc.title}</h4>
+                        <p className="text-slate-500 text-sm mb-1">
                           Expediente: {doc.expedient_title} | Tipo: {doc.document_type}
                         </p>
                         {doc.corrections && (
-                          <div style={{
-                            marginTop: '0.5rem',
-                            padding: '0.75rem',
-                            background: 'white',
-                            borderRadius: '0.5rem',
-                            border: '1px solid #fecaca'
-                          }}>
-                            <strong style={{ color: '#ef4444', fontSize: '0.875rem' }}>Correcciones requeridas:</strong>
-                            <p style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: '#374151' }}>{doc.corrections}</p>
+                          <div className="mt-2 p-3 bg-white rounded-lg border border-red-200">
+                            <strong className="text-red-500 text-sm">Correcciones requeridas:</strong>
+                            <p className="mt-1 text-sm text-gray-700">{doc.corrections}</p>
                           </div>
                         )}
-                        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+                        <p className="text-xs text-gray-400 mt-2">
                           Subido: {formatDate(doc.uploaded_at)}
                         </p>
                       </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div className="flex gap-2">
                           <button
                             className="btn btn-secondary"
                             onClick={() => handlePreviewDoc(doc)}
@@ -408,47 +396,34 @@ const handleSendToReview = async () => {
           {draftsCount > 0 ? (
             <div className="card">
               <div className="card-header">
-                <h3 className="card-title" style={{ color: '#f59e0b' }}>
+                <h3 className="card-title text-amber-500">
                   Borradores
                 </h3>
                 <span className="badge badge-warning">{draftsCount} borradores</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="flex flex-col gap-3">
                 {drafts.map(draft => (
-                  <div key={draft.id} style={{
-                    padding: '1rem',
-                    background: '#fffbeb',
-                    border: '1px solid #fde68a',
-                    borderRadius: '0.75rem',
-                    borderLeft: '4px solid #f59e0b'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <span style={{ fontFamily: 'monospace', fontWeight: '600', color: '#2563eb' }}>#{draft.id}</span>
+                  <div key={draft.id} className="p-4 bg-amber-50 border border-amber-200 rounded-xl border-l-4 border-l-amber-500">
+                    <div className="flex justify-between items-start flex-wrap gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-mono font-semibold text-blue-600">#{draft.id}</span>
                           <span className="badge badge-warning">Borrador</span>
                         </div>
-                        <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.25rem' }}>{draft.title}</h4>
-                        <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                        <h4 className="text-base font-semibold mb-1">{draft.title}</h4>
+                        <p className="text-slate-500 text-sm">
                           Departamento: {draft.department_name || 'No especificado'}
                         </p>
                         {draft.description && (
-                          <p style={{ color: '#9ca3af', fontSize: '0.8rem', marginTop: '0.25rem' }}>{draft.description}</p>
+                          <p className="text-gray-400 text-xs mt-1">{draft.description}</p>
                         )}
                       </div>
-                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', paddingTop: '0.5rem' }}>
+                      <div className="flex gap-3 items-center pt-2">
                         <button 
-                          className="btn btn-primary" 
+                          className="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-lg font-medium shadow-sm" 
                           onClick={() => handleOpenDraftModal(draft)}
                           style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '0.5rem',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '0.5rem',
-                            fontWeight: '500',
-                            transition: 'all 0.2s ease',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                            transition: 'all 0.2s ease'
                           }}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -493,13 +468,13 @@ const handleSendToReview = async () => {
       >
         {selectedCorrection && (
           <div>
-            <div style={{ padding: '1rem', background: '#fef2f2', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+            <div className="p-4 bg-red-50 rounded-lg mb-4">
               <p><strong>Documento:</strong> {selectedCorrection.title}</p>
               <p><strong>Expediente:</strong> #{selectedCorrection.expedient_id} - {selectedCorrection.expedient_title}</p>
               {selectedCorrection.corrections && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <strong style={{ color: '#ef4444' }}>Correcciones del analista:</strong>
-                  <p style={{ marginTop: '0.25rem' }}>{selectedCorrection.corrections}</p>
+                <div className="mt-2">
+                  <strong className="text-red-500">Correcciones del analista:</strong>
+                  <p className="mt-1">{selectedCorrection.corrections}</p>
                 </div>
               )}
             </div>
@@ -512,7 +487,7 @@ const handleSendToReview = async () => {
                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               />
             </div>
-            <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
+            <p className="text-xs text-slate-500 mt-2">
               Al reemplazar el archivo, el documento volverá a estado <strong>Pendiente</strong> para revision.
             </p>
           </div>
@@ -525,23 +500,21 @@ const handleSendToReview = async () => {
   title={`Borrador #${selectedDraft?.id} - ${selectedDraft?.title}`}
   footer={
     confirmSendToReview ? (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%' }}>
-        <span style={{ fontSize: '0.875rem', color: '#475569', flex: 1 }}>
+      <div className="flex items-center gap-3 w-full">
+        <span className="text-sm text-slate-600 flex-1">
           ¿Enviar a revisión? Una vez enviado no podrás modificarlo hasta que un analista lo revise.
         </span>
         <button
-          className="btn btn-success"
+          className="btn btn-success flex items-center gap-2 px-4 py-2 rounded-lg font-medium"
           onClick={handleSendToReview}
           disabled={sendingToReview}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: '500' }}
         >
           {sendingToReview ? 'Enviando...' : 'Sí, Enviar'}
         </button>
         <button
-          className="btn btn-secondary"
+          className="btn btn-secondary flex items-center gap-2 px-4 py-2 rounded-lg font-medium"
           onClick={() => setConfirmSendToReview(false)}
           disabled={sendingToReview}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: '500' }}
         >
           Cancelar
         </button>
@@ -549,16 +522,8 @@ const handleSendToReview = async () => {
     ) : (
       <>
         <button 
-          className="btn btn-secondary" 
+          className="btn btn-secondary flex items-center gap-2 px-4 py-2 rounded-lg font-medium" 
           onClick={() => setShowDraftModal(false)}
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem',
-            padding: '0.5rem 1rem',
-            borderRadius: '0.5rem',
-            fontWeight: '500'
-          }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -567,17 +532,9 @@ const handleSendToReview = async () => {
           Cerrar
         </button>
         <button
-          className="btn btn-success"
+          className="btn btn-success flex items-center gap-2 px-4 py-2 rounded-lg font-medium"
           onClick={handleSendToReview}
           disabled={sendingToReview}
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem',
-            padding: '0.5rem 1rem',
-            borderRadius: '0.5rem',
-            fontWeight: '500'
-          }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M22 2L11 13"/>
@@ -591,30 +548,30 @@ const handleSendToReview = async () => {
 >
   {selectedDraft && (
     <div>
-      <div style={{ marginBottom: '1rem' }}>
+      <div className="mb-4">
         <span className="badge badge-warning">Borrador</span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-        <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+      <div className="flex flex-col gap-2 mb-4">
+        <div className="p-2 bg-slate-50 rounded-lg">
           <strong>Departamento:</strong> {selectedDraft.department_name || 'No especificado'}
         </div>
-        <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+        <div className="p-2 bg-slate-50 rounded-lg">
           <strong>Descripcion:</strong> {selectedDraft.description || 'Sin descripcion'}
         </div>
-        <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+        <div className="p-2 bg-slate-50 rounded-lg">
           <strong>Creado:</strong> {formatDate(selectedDraft.created_at)}
         </div>
       </div>
 
       {requiredTypes.length > 0 && (
-        <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-          <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: '0.5rem' }}>Documentos Requeridos</strong>
+        <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+          <strong className="text-sm block mb-2">Documentos Requeridos</strong>
           {checklist.map(t => (
-            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', padding: '0.25rem 0' }}>
-              <span style={{ color: t.uploaded ? '#22c55e' : '#ef4444', fontSize: '1rem' }}>
+            <div key={t.id} className="flex items-center gap-2 text-sm py-1">
+              <span className={t.uploaded ? 'text-green-500 text-base' : 'text-red-500 text-base'}>
                 {t.uploaded ? '✅' : '❌'}
               </span>
-              <span style={{ color: t.uploaded ? '#166534' : '#991b1b', fontWeight: t.uploaded ? '400' : '500' }}>
+              <span className={t.uploaded ? 'text-green-800 font-normal' : 'text-red-800 font-medium'}>
                 {t.name}
               </span>
             </div>
@@ -622,31 +579,17 @@ const handleSendToReview = async () => {
         </div>
       )}
 
-      <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>Documentos Subidos</h4>
+      <h4 className="text-sm font-semibold mb-2">Documentos Subidos</h4>
       {draftDocuments.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="flex flex-col gap-2">
           {draftDocuments.map(doc => (
-            <div key={doc.id} style={{
-              padding: '0.75rem',
-              background: '#f8fafc',
-              borderRadius: '0.5rem',
-              border: '1px solid #e2e8f0',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ flex: 1 }}>
-                  <strong style={{ fontSize: '0.875rem' }}>{doc.document_type_name || 'Documento'}</strong>
+            <div key={doc.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex justify-between items-center">
+                <div className="flex-1">
+                  <strong className="text-sm">{doc.document_type_name || 'Documento'}</strong>
                   {doc.file && (
                     <button
-                      className="btn btn-secondary"
-                      style={{
-                        marginLeft: '0.5rem',
-                        padding: '0.25rem 0.5rem',
-                        fontSize: '0.75rem',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        borderRadius: '0.375rem',
-                      }}
+                      className="btn btn-secondary ml-2 px-2 py-1 text-xs inline-flex items-center gap-1 rounded-md"
                       onClick={() => handlePreviewDoc(doc)}
                       title="Ver documento"
                     >
@@ -660,15 +603,7 @@ const handleSendToReview = async () => {
                 </div>
                 {replacingDraftDocId !== doc.id && (
                   <button
-                    className="btn btn-secondary"
-                    style={{ 
-                      padding: '0.375rem 0.75rem', 
-                      fontSize: '0.75rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.375rem',
-                      borderRadius: '0.375rem'
-                    }}
+                    className="btn btn-secondary px-3 py-1.5 text-xs flex items-center gap-1.5 rounded-md"
                     onClick={() => setReplacingDraftDocId(doc.id)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -681,24 +616,15 @@ const handleSendToReview = async () => {
                 )}
               </div>
               {replacingDraftDocId === doc.id && (
-                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', padding: '0.75rem', background: '#f1f5f9', borderRadius: '0.5rem', marginTop: '0.75rem' }}>
+                <div className="flex gap-3 items-center p-3 bg-slate-100 rounded-lg mt-3">
                   <input
                     type="file"
                     onChange={(e) => setDraftUploadFile(e.target.files[0])}
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    style={{ fontSize: '0.75rem', flex: 1 }}
+                    className="text-xs flex-1"
                   />
                   <button
-                    className="btn btn-primary"
-                    style={{ 
-                      padding: '0.375rem 0.75rem', 
-                      fontSize: '0.75rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.375rem',
-                      borderRadius: '0.375rem',
-                      whiteSpace: 'nowrap'
-                    }}
+                    className="btn btn-primary px-3 py-1.5 text-xs flex items-center gap-1.5 rounded-md whitespace-nowrap"
                     onClick={() => handleReplaceDraftDocument(doc.id)}
                     disabled={!draftUploadFile || draftUploading}
                   >
@@ -710,13 +636,7 @@ const handleSendToReview = async () => {
                     {draftUploading ? 'Subiendo...' : 'Confirmar'}
                   </button>
                   <button
-                    className="btn btn-secondary"
-                    style={{ 
-                      padding: '0.375rem 0.75rem', 
-                      fontSize: '0.75rem',
-                      borderRadius: '0.375rem',
-                      whiteSpace: 'nowrap'
-                    }}
+                    className="btn btn-secondary px-3 py-1.5 text-xs rounded-md whitespace-nowrap"
                     onClick={() => { setReplacingDraftDocId(null); setDraftUploadFile(null); }}
                   >
                     Cancelar
@@ -727,26 +647,25 @@ const handleSendToReview = async () => {
           ))}
         </div>
       ) : (
-        <p style={{ fontSize: '0.875rem', color: '#64748b' }}>No hay documentos subidos aún.</p>
+        <p className="text-sm text-slate-500">No hay documentos subidos aún.</p>
       )}
 
-      <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '2px dashed #e2e8f0' }}>
-        <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '1rem', color: '#f59e0b' }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: 'inline', marginRight: '0.375rem', verticalAlign: 'middle' }}>
+      <div className="mt-6 pt-6 border-t-2 border-dashed border-slate-200">
+        <h4 className="text-sm font-semibold mb-4 text-amber-500">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1.5 align-middle">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
           Subir Nuevo Documento
         </h4>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <div className="form-group" style={{ flex: '1 1 200px', marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: '0.75rem' }}>Tipo de documento *</label>
+        <div className="flex gap-3 items-end flex-wrap">
+                          <div className="form-group mb-0" style={{ flex: '1 1 200px' }}>
+                            <label className="form-label text-xs">Tipo de documento *</label>
             <select
-              className="form-input"
               value={newDocType}
               onChange={(e) => setNewDocType(e.target.value)}
-              style={{ fontSize: '0.8rem', padding: '0.5rem' }}
+              className="form-input text-xs p-2"
             >
               <option value="">Seleccionar tipo...</option>
               {docTypes.map(t => (
@@ -754,29 +673,19 @@ const handleSendToReview = async () => {
               ))}
             </select>
           </div>
-          <div className="form-group" style={{ flex: '1 1 250px', marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: '0.75rem' }}>Archivo *</label>
+                          <div className="form-group mb-0" style={{ flex: '1 1 250px' }}>
+                            <label className="form-label text-xs">Archivo *</label>
             <input
               type="file"
-              className="form-input"
               onChange={(e) => setNewDocFile(e.target.files[0])}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              style={{ fontSize: '0.8rem', padding: '0.375rem' }}
+              className="form-input text-xs p-1.5"
             />
           </div>
           <button
-            className="btn btn-primary"
+            className="btn btn-primary px-4 py-2 text-xs flex items-center gap-1.5 rounded-lg whitespace-nowrap"
             onClick={handleUploadNewDocument}
             disabled={!newDocFile || !newDocType || newDocUploading}
-            style={{
-              padding: '0.5rem 1rem',
-              fontSize: '0.8rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.375rem',
-              borderRadius: '0.5rem',
-              whiteSpace: 'nowrap'
-            }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -825,7 +734,7 @@ const handleSendToReview = async () => {
                   document.body.removeChild(link);
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
                   <line x1="12" y1="15" x2="12" y2="3"/>

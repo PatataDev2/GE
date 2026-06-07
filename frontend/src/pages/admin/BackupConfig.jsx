@@ -138,45 +138,44 @@ export default function BackupConfig() {
             <h3 className="card-title">Gestión de Respaldos</h3>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <span style={{ color: '#64748b' }}>Respaldos Automáticos</span>
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between p-3 bg-slate-50 rounded-lg">
+              <span className="text-slate-500">Respaldos Automáticos</span>
               <span className={`badge ${config.enabled ? 'badge-success' : 'badge-danger'}`}>
                 {config.enabled ? 'Activado' : 'Desactivado'}
               </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <span style={{ color: '#64748b' }}>Frecuencia</span>
-              <span style={{ fontWeight: '500' }}>
+            <div className="flex justify-between p-3 bg-slate-50 rounded-lg">
+              <span className="text-slate-500">Frecuencia</span>
+              <span className="font-medium">
                 {config.frequency === 'daily' ? 'Diario' : config.frequency === 'weekly' ? 'Semanal' : 'Mensual'}
               </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <span style={{ color: '#64748b' }}>Hora Programada</span>
-              <span style={{ fontWeight: '500' }}>{config.time}</span>
+            <div className="flex justify-between p-3 bg-slate-50 rounded-lg">
+              <span className="text-slate-500">Hora Programada</span>
+              <span className="font-medium">{config.time}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <span style={{ color: '#64748b' }}>Retención</span>
-              <span style={{ fontWeight: '500' }}>{config.retention} días</span>
+            <div className="flex justify-between p-3 bg-slate-50 rounded-lg">
+              <span className="text-slate-500">Retención</span>
+              <span className="font-medium">{config.retention} días</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
-              <span style={{ color: '#64748b' }}>Incluir Archivos</span>
+            <div className="flex justify-between p-3 bg-slate-50 rounded-lg">
+              <span className="text-slate-500">Incluir Archivos</span>
               <span className={`badge ${config.includeFiles ? 'badge-success' : 'badge-secondary'}`}>
                 {config.includeFiles ? 'Sí' : 'No'}
               </span>
             </div>
           </div>
 
-          <div style={{ marginTop: '1.5rem' }}>
+          <div className="mt-6">
             <button
-              className="btn btn-primary"
-              style={{ width: '100%' }}
+              className="btn btn-primary w-full"
               onClick={handleRunBackup}
               disabled={isBackupRunning}
             >
               {isBackupRunning ? (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
                     <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
                     <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
                     <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
@@ -205,7 +204,7 @@ export default function BackupConfig() {
           ) : backups.length === 0 ? (
             <div className="p-4 text-center text-gray-400">No hay respaldos aún</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div className="flex flex-col gap-2">
               {backups.slice(0, 10).map(backup => (
                 <div key={backup.id} className="document-item">
                   <div className="document-icon">
@@ -217,7 +216,7 @@ export default function BackupConfig() {
                     <div className="document-name">{backup.name}</div>
                     <div className="document-size">
                       {backup.size} · {backup.date} ·
-                      <span className={`badge ${backup.type === 'auto' ? 'badge-info' : 'badge-secondary'}`} style={{ marginLeft: '0.5rem' }}>
+                      <span className={`badge ${backup.type === 'auto' ? 'badge-info' : 'badge-secondary'} ml-2`}>
                         {backup.type === 'auto' ? 'Automático' : 'Manual'}
                       </span>
                     </div>
@@ -231,12 +230,12 @@ export default function BackupConfig() {
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                       </svg>
                     </button>
-                    <button className="btn-icon" title="Restaurar" onClick={() => handleRestoreBackup(backup)} disabled={restoring === backup.name} style={{ color: '#f59e0b' }}>
+                    <button className="btn-icon text-amber-500" title="Restaurar" onClick={() => handleRestoreBackup(backup)} disabled={restoring === backup.name}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                       </svg>
                     </button>
-                    <button className="btn-icon" title="Eliminar" onClick={() => handleDeleteBackup(backup)} style={{ color: '#ef4444' }}>
+                    <button className="btn-icon text-red-500" title="Eliminar" onClick={() => handleDeleteBackup(backup)}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                       </svg>

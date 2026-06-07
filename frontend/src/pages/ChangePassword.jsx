@@ -61,12 +61,7 @@ export default function ChangePassword() {
     <div className="h-screen bg-green-300 flex flex-col items-center justify-center">
       <div className="w-full max-w-xs bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col items-center mb-6">
-          <div style={{
-            width: 64, height: 64,
-            background: '#dcfce7', borderRadius: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 8
-          }}>
+          <div className="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -77,12 +72,7 @@ export default function ChangePassword() {
         </div>
         <form className="flex flex-col" onSubmit={handleSubmit}>
           {error && (
-            <div style={{
-              background: '#fef2f2', color: '#dc2626',
-              padding: '0.5rem 0.75rem', borderRadius: 6,
-              fontSize: '0.875rem', marginBottom: 12,
-              textAlign: 'center'
-            }}>
+            <div className="bg-red-50 text-red-600 px-3 py-2 rounded-md text-sm mb-3 text-center">
               {error}
             </div>
           )}

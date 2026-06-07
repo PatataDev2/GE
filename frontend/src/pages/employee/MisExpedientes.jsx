@@ -228,22 +228,16 @@ export default function MisExpedientes() {
     const bgColor = exp.status === 'Rechazado' ? '#fef2f2' : (exp.status === 'Pendiente' || exp.status === 'Proceso') ? '#fefce8' : 'white';
 
     return (
-      <div style={{ 
-        border: '1px solid #e2e8f0', 
-        borderRadius: '0.75rem', 
-        padding: '1.5rem',
-        background: bgColor,
-        marginBottom: '1rem'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-              <span style={{ fontFamily: 'monospace', fontWeight: '600', color: '#2563eb' }}>#{exp.id}</span>
-              {exp.is_draft && <span className="badge" style={{ background: '#fde68a', color: '#92400e' }}>Borrador</span>}
+      <div className="border border-slate-200 rounded-xl p-6 mb-4" style={{ background: bgColor }}>
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="font-mono font-semibold text-blue-600">#{exp.id}</span>
+              {exp.is_draft && <span className="badge bg-amber-200 text-amber-800">Borrador</span>}
               {!exp.is_draft && <span className={`badge ${statusClass}`}>{statusText}</span>}
             </div>
-            <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.25rem' }}>{exp.title}</h4>
-            <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+            <h4 className="text-lg font-semibold mb-1">{exp.title}</h4>
+            <p className="text-slate-500 text-sm">
               Departamento: {exp.department_name || 'No especificado'}
             </p>
           </div>
@@ -295,19 +289,18 @@ export default function MisExpedientes() {
             <polyline points="14 2 14 8 20 8"/>
           </svg>
         </div>
-        <div className="document-info" style={{ flex: 1 }}>
+        <div className="document-info flex-1">
           <div className="document-name">{doc.title}</div>
           <div className="document-size">{doc.document_type_name || 'Sin tipo'}</div>
           {showComment && doc.description_content && (
-            <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'white', borderRadius: '0.25rem', fontSize: '0.875rem' }}>
+            <div className="mt-2 p-2 bg-white rounded text-sm">
               <strong>Comentario:</strong> {doc.description_content}
             </div>
           )}
         </div>
         {fileUrl && (
           <button 
-            className="btn btn-secondary btn-sm"
-            style={{ marginRight: '0.5rem' }}
+            className="btn btn-secondary btn-sm mr-2"
             onClick={() => handlePreviewDoc(doc)}
           >
             Ver
@@ -315,8 +308,8 @@ export default function MisExpedientes() {
         )}
         {!isPending && doc.description_content && (
           <button 
-            className="btn btn-sm"
-            style={{ marginRight: '0.5rem', background: hasRejected ? '#fecaca' : '#bbf7d0' }}
+            className="btn btn-sm mr-2"
+            style={{ background: hasRejected ? '#fecaca' : '#bbf7d0' }}
             onClick={() => setShowCommentDocId(showComment ? null : doc.id)}
           >
             {showComment ? 'Ocultar' : 'Comentario'} 
@@ -383,8 +376,8 @@ export default function MisExpedientes() {
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Mis expedientes</h3>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <div className="filter-tabs" style={{ display: 'flex', gap: '0.25rem' }}>
+          <div className="flex gap-2 items-center">
+            <div className="filter-tabs flex gap-1">
               {['all', 'Aprobado', 'Pendiente', 'Proceso', 'Rechazado'].map(status => {
                 const labels = { all: 'Todos', Aprobado: 'Aprobados', Pendiente: 'Pendientes', Proceso: 'En Proceso', Rechazado: 'Rechazados' };
                 const isActive = filterStatus === status;
@@ -392,14 +385,12 @@ export default function MisExpedientes() {
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
+                    className="px-3 py-1.5 rounded-md cursor-pointer"
                     style={{
-                      padding: '0.375rem 0.75rem',
                       fontSize: '0.8125rem',
                       border: `1px solid ${isActive ? '#2563eb' : '#e2e8f0'}`,
-                      borderRadius: '0.375rem',
                       background: isActive ? '#2563eb' : 'white',
                       color: isActive ? 'white' : '#475569',
-                      cursor: 'pointer',
                       fontWeight: isActive ? '600' : '400',
                       transition: 'all 0.15s',
                     }}
@@ -409,7 +400,7 @@ export default function MisExpedientes() {
                 );
               })}
             </div>
-            <a href="/employee/gestion-correcciones" style={{ fontSize: '0.875rem', color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
+            <a href="/employee/gestion-correcciones" className="text-sm text-blue-600 no-underline font-medium">
               Ver Gestión de Correcciones →
             </a>
           </div>
@@ -464,63 +455,52 @@ export default function MisExpedientes() {
       >
         {selectedExpediente && (
           <div>
-            <div style={{ marginBottom: '1rem' }}>
+            <div className="mb-4">
               <span className={`badge ${selectedExpediente.status === 'Aprobado' ? 'badge-success' : selectedExpediente.status === 'Rechazado' ? 'badge-danger' : 'badge-warning'}`}>
                 {selectedExpediente.status === 'Aprobado' ? 'Aprobado' : selectedExpediente.status === 'Rechazado' ? 'Rechazado' : 'En Revision'}
               </span>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-              <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+            <div className="flex flex-col gap-2 mb-4">
+              <div className="p-2 bg-slate-50 rounded-lg">
                 <strong>Departamento:</strong> {selectedExpediente.department_name || 'No especificado'}
               </div>
-              <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '0.5rem' }}>
+              <div className="p-2 bg-slate-50 rounded-lg">
                 <strong>Descripcion:</strong> {selectedExpediente.description || 'Sin descripcion'}
               </div>
             </div>
 
-            <h5 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Documentos ({documents.length})</h5>
+            <h5 className="font-semibold mb-3">Documentos ({documents.length})</h5>
             
             {docLoading ? (
               <div className="p-4 text-center text-gray-400">Cargando documentos...</div>
             ) : documents.length === 0 ? (
-              <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem', textAlign: 'center', marginBottom: '1rem' }}>
-                <p style={{ color: '#64748b' }}>No hay documentos subidos aun.</p>
+              <div className="p-4 bg-slate-50 rounded-lg text-center mb-4">
+                <p className="text-slate-500">No hay documentos subidos aun.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div className="flex flex-col gap-2 mb-4">
                 {documents.map(doc => (
                   <DocumentCard key={doc.id} doc={doc} />
                 ))}
               </div>
             )}
 
-            <form onSubmit={handleUploadDocument} style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem', marginTop: '1rem' }}>
-              <h5 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Subir Nuevo Documento</h5>
+            <form onSubmit={handleUploadDocument} className="border-t border-slate-200 pt-4 mt-4">
+              <h5 className="font-semibold mb-3">Subir Nuevo Documento</h5>
               
               <div className="form-group">
                 <label className="form-label">Archivo *</label>
                 <label 
-                  className="file-upload-input"
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '2rem',
-                    border: '2px dashed #cbd5e1',
-                    borderRadius: '0.75rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    background: '#f8fafc',
-                  }}
+                  className="file-upload-input flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50"
+                  style={{ transition: 'all 0.2s' }}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input 
                     type="file" 
                     ref={fileInputRef}
                     required
-                    style={{ display: 'none' }}
+                    className="hidden"
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.pptx,.ppt"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
@@ -530,15 +510,15 @@ export default function MisExpedientes() {
                       }
                     }}
                   />
-                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" style={{ marginBottom: '0.5rem' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" className="mb-2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="17 8 12 3 7 8"/>
                     <line x1="12" y1="3" x2="12" y2="15"/>
                   </svg>
-                  <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                    <span style={{ color: '#2563eb', fontWeight: '500' }}>Haz click</span> o arrastra archivos aquí
+                  <span className="text-slate-500 text-sm">
+                    <span className="text-blue-600 font-medium">Haz click</span> o arrastra archivos aquí
                   </span>
-                  <span id="file-name-display" style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#2563eb', fontWeight: '500' }}></span>
+                  <span id="file-name-display" className="mt-1 text-xs text-blue-600 font-medium"></span>
                 </label>
               </div>
 
@@ -578,8 +558,7 @@ export default function MisExpedientes() {
 
               <button 
                 type="submit" 
-                className="btn btn-primary" 
-                style={{ width: '100%' }}
+                className="btn btn-primary w-full"
                 disabled={uploading}
               >
                 {uploading ? 'Subiendo...' : 'Subir Documento'}
@@ -623,7 +602,7 @@ export default function MisExpedientes() {
                   document.body.removeChild(link);
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
                   <line x1="12" y1="15" x2="12" y2="3"/>
