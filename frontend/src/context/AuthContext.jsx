@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
         id: data.id,
         username: data.username,
         email: data.email,
-        role: data.rol || 'employee',
+        role: data.rol || 'recepcionista',
         claveTemporal: data.clave_temporal || false,
       });
     } catch (err) {

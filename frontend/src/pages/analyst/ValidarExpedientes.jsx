@@ -195,7 +195,7 @@ export default function ValidarExpedientes() {
     <div>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Validar Expedientes</h2>
-        <p className="text-gray-500 mt-1">Revisa y valida los expedientes enviados por los trabajadores</p>
+        <p className="text-gray-500 mt-1">Revisa y valida los expedientes enviados por los recepcionistas</p>
       </div>
       <div className="flex items-center gap-4 mb-6">
         <div className="flex bg-gray-100 p-1 rounded-xl">
@@ -386,7 +386,7 @@ export default function ValidarExpedientes() {
             Expediente: <strong>{selectedExpediente?.title}</strong>
           </p>
           <p className="mb-4 text-sm text-slate-500">
-            Trabajador: <strong>{selectedExpediente?.asinged_to_username}</strong>
+            Recepcionista: <strong>{selectedExpediente?.asinged_to_username}</strong>
           </p>
           <div className="form-group">
             <label className="form-label text-red-500 font-semibold">
@@ -397,7 +397,7 @@ export default function ValidarExpedientes() {
               rows="5"
               value={correcciones}
               onChange={(e) => setCorrecciones(e.target.value)}
-              placeholder="Describe las correcciones que el trabajador debe realizar..."
+              placeholder="Describe las correcciones que el recepcionista debe realizar..."
             />
           </div>
         </div>

@@ -39,8 +39,8 @@ class ExpedientSerializer(serializers.ModelSerializer):
     def validate_asinged_to(self, value):
         role_name = value.rol
 
-        if role_name != 'employee':
+        if role_name != 'recepcionista':
             raise serializers.ValidationError(
-                f"Este usuario tiene el rol '{role_name}'. Solo se pueden asignar expedientes a 'trabajador'."
+                f"Este usuario tiene el rol '{role_name}'. Solo se pueden asignar expedientes a 'recepcionista'."
             )
         return value

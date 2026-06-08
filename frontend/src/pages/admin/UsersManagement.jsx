@@ -8,7 +8,7 @@ import { logError } from '../../utils/logger';
 const rolLabels = {
   admin: 'Administrador',
   analyst: 'Analista',
-  employee: 'Empleado',
+  recepcionista: 'Recepcionista',
 };
 
 export default function UsersManagement() {
@@ -30,7 +30,7 @@ export default function UsersManagement() {
     first_name: '',
     last_name: '',
     email: '',
-    rol: 'employee',
+    rol: 'recepcionista',
   });
 
   useEffect(() => { const ac = new AbortController(); fetchUsers(ac.signal); return () => ac.abort(); }, []);
@@ -63,7 +63,7 @@ export default function UsersManagement() {
   const handleOpenCreate = () => {
     setSelectedUser(null);
     setEditing(false);
-    setFormData({ cedula: '', first_name: '', last_name: '', email: '', rol: 'employee' });
+    setFormData({ cedula: '', first_name: '', last_name: '', email: '', rol: 'recepcionista' });
     setIsModalOpen(true);
   };
 
@@ -149,7 +149,7 @@ export default function UsersManagement() {
     total: users.length,
     activos: users.filter(u => u.cuenta_activa).length,
     analysts: users.filter(u => u.rol === 'analyst').length,
-    employees: users.filter(u => u.rol === 'employee').length,
+    employees: users.filter(u => u.rol === 'recepcionista').length,
   };
 
   return (
@@ -205,7 +205,7 @@ export default function UsersManagement() {
           </div>
           <div>
             <div className="stat-value">{stats.employees}</div>
-            <div className="stat-label">Empleados</div>
+            <div className="stat-label">Recepcionistas</div>
           </div>
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function UsersManagement() {
             <option value="">Todos los roles</option>
             <option value="admin">Administrador</option>
             <option value="analyst">Analista</option>
-            <option value="employee">Empleado</option>
+            <option value="recepcionista">Recepcionista</option>
           </select>
           <button className="btn btn-primary" onClick={handleOpenCreate}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -380,7 +380,7 @@ export default function UsersManagement() {
             value={formData.rol}
             onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
           >
-            <option value="employee">Empleado</option>
+            <option value="recepcionista">Recepcionista</option>
             <option value="analyst">Analista</option>
             <option value="admin">Administrador</option>
           </select>

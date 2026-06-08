@@ -41,7 +41,7 @@ export default function LayoutWrapper() {
           id: response.data.id,
           username: response.data.username,
           email: response.data.email,
-          role: response.data.rol || 'employee'
+          role: response.data.rol || 'recepcionista'
         };
         setUser(userData);
       } catch (error) {

@@ -402,7 +402,7 @@ export default function AprobarExpedientes() {
             Expediente: <strong>{selectedExp?.title}</strong>
           </p>
           <p className="mb-4 text-sm text-slate-500">
-            Trabajador: <strong>{selectedExp?.asinged_to_username}</strong>
+            Recepcionista: <strong>{selectedExp?.asinged_to_username}</strong>
           </p>
           <div className="form-group">
             <label className="form-label text-red-500 font-semibold">
@@ -413,7 +413,7 @@ export default function AprobarExpedientes() {
               rows="5"
               value={correcciones}
               onChange={(e) => setCorrecciones(e.target.value)}
-              placeholder="Describe las correcciones que el trabajador debe realizar..."
+              placeholder="Describe las correcciones que el recepcionista debe realizar..."
             />
           </div>
         </div>

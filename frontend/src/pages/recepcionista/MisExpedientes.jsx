@@ -162,7 +162,7 @@ export default function MisExpedientes() {
     try {
       const res = await api.post(`api/expedients/${selectedExpediente.id}/save_draft/`);
       handleCloseModal();
-      navigate('/employee/gestion-correcciones');
+      navigate('/recepcionista/gestion-correcciones');
     } catch (err) {
       logError('Error saving as draft:', err);
       showToast('Error al guardar como borrador: ' + (err.response?.data?.error || err.message), 'error');
@@ -400,7 +400,7 @@ export default function MisExpedientes() {
                 );
               })}
             </div>
-            <a href="/employee/gestion-correcciones" className="text-sm text-blue-600 no-underline font-medium">
+            <a href="/recepcionista/gestion-correcciones" className="text-sm text-blue-600 no-underline font-medium">
               Ver Gestión de Correcciones →
             </a>
           </div>

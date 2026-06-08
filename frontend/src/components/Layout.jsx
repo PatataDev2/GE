@@ -143,12 +143,12 @@ const getMenuItems = (role) => {
           { path: '/analyst/reportes', label: 'Reportes', icon: Icons.BarChart },
           { path: '/analyst/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
         ];
-    case 'employee':
+    case 'recepcionista':
       return [
         ...commonItems,
-        { path: '/employee/mis-expedientes', label: 'Mis Expedientes', icon: Icons.Folder },
-        { path: '/employee/gestion-correcciones', label: 'Gestión de Correcciones', icon: Icons.Activity },
-        { path: '/employee/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
+        { path: '/recepcionista/mis-expedientes', label: 'Mis Expedientes', icon: Icons.Folder },
+        { path: '/recepcionista/gestion-correcciones', label: 'Gestión de Correcciones', icon: Icons.Activity },
+        { path: '/recepcionista/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
       ];
     case 'user':
       return [
@@ -165,7 +165,7 @@ const getRoleName = (role) => {
   switch (role) {
     case 'admin': return 'Administrador';
     case 'analyst': return 'Analista';
-    case 'employee': return 'Trabajador';
+    case 'recepcionista': return 'Recepcionista';
     case 'user': return 'Usuario Normal';
     default: return 'Usuario';
   }
@@ -180,7 +180,7 @@ export default function Layout({ children, user }) {
   const [notifLoading, setNotifLoading] = useState(false);
   const notifRef = useRef(null);
   
-  const notifRoute = user?.role === 'admin' ? '/admin/notificaciones' : user?.role === 'analyst' ? '/analyst/notificaciones' : '/employee/notificaciones';
+  const notifRoute = user?.role === 'admin' ? '/admin/notificaciones' : user?.role === 'analyst' ? '/analyst/notificaciones' : '/recepcionista/notificaciones';
   const menuItems = getMenuItems(user?.role);
   
   const handleLogout = () => {

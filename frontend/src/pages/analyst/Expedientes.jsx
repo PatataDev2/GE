@@ -57,7 +57,7 @@ export default function Expedientes() {
   const fetchWorkers = async (signal) => {
     try {
       const res = await api.get('api/users/api/v1/', { signal });
-      setWorkers(res.data.filter(u => u.rol === 'employee' && u.is_active));
+      setWorkers(res.data.filter(u => (u.rol === 'recepcionista' || u.rol === 'employee') && u.is_active));
     } catch (err) {
       if (err.name !== 'CanceledError') {
         logError("Error fetching workers:", err);
@@ -400,7 +400,7 @@ export default function Expedientes() {
                       <button onClick={() => handleReassignClick(exp)} className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m0 0l-4 4m4 6H4m0 0l4 4m0-4l-4-4"/></svg>
                         <div>
-                          <p className="font-semibold">Reasignar trabajador</p>
+                          <p className="font-semibold">Reasignar recepcionista</p>
                           <p className="text-xs text-gray-400">Cambiar responsable</p>
                         </div>
                       </button>
@@ -585,7 +585,7 @@ export default function Expedientes() {
             rows="4"
             value={reviewMessage}
             onChange={(e) => setReviewMessage(e.target.value)}
-            placeholder={reviewAction === 'reject' ? 'Describe las correcciones que debe hacer el trabajador...' : 'Agregue un comentario (opcional)...'}
+            placeholder={reviewAction === 'reject' ? 'Describe las correcciones que debe hacer el recepcionista...' : 'Agregue un comentario (opcional)...'}
           />
         </div>
       </Modal>
@@ -721,7 +721,7 @@ export default function Expedientes() {
           </div>
         </div>
       </Modal>
-      {/* Modal Reasignar Trabajador */}
+      {/* Modal Reasignar Recepcionista */}
       <Modal
         isOpen={showReassignModal}
         onClose={() => setShowReassignModal(false)}
@@ -742,7 +742,7 @@ export default function Expedientes() {
   value={reassignEmployeeId}
   onChange={(e) => setReassignEmployeeId(e.target.value)}
 >
-              <option value="">Seleccionar trabajador...</option>
+              <option value="">Seleccionar recepcionista...</option>
               {workers.filter(e => e.is_active).map(emp => (
                 <option key={emp.id} value={emp.id}>
                   {emp.username} ({emp.email})
@@ -756,7 +756,7 @@ export default function Expedientes() {
     if (reassignEmployeeId) {
       handleReassignSubmit(Number(reassignEmployeeId));
     } else {
-      showToast('Selecciona un trabajador', 'error');
+      showToast('Selecciona un recepcionista', 'error');
     }
   }}
   disabled={reassignSubmitting}

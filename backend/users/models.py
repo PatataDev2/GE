@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 ROL_CHOICES = [
     ('admin', 'Administrador'),
     ('analyst', 'Analista'),
-    ('employee', 'Empleado'),
+    ('recepcionista', 'Recepcionista'),
 ]
 
 
@@ -12,7 +12,7 @@ class UsersCustom(AbstractUser):
     cedula = models.CharField(max_length=20, unique=True, blank=False, null=False)
     phone = models.CharField(max_length=15, unique=True, blank=True, null=True)
 
-    rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='employee')
+    rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='recepcionista')
     clave_temporal = models.BooleanField(default=True)
     cuenta_activa = models.BooleanField(default=True)
 
@@ -28,8 +28,8 @@ class UsersCustom(AbstractUser):
         return self.rol == 'analyst'
 
     @property
-    def is_employee(self):
-        return self.rol == 'employee'
+    def is_recepcionista(self):
+        return self.rol == 'recepcionista'
 
     @property
     def rol_display(self):

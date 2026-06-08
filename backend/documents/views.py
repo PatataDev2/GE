@@ -40,7 +40,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             actor=self.request.user,
             notification_type='revision',
             title='Nuevo Documento Subido',
-            message=f'El trabajador {self.request.user.username} ha subido el documento "{document.title}" del expediente "{document.expedient.title}".',
+            message=f'El recepcionista {self.request.user.username} ha subido el documento "{document.title}" del expediente "{document.expedient.title}".',
             expedient_id=document.expedient.id,
             document_id=document.id,
         )
@@ -57,9 +57,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         
-        if 'approval_status' in request.data and request.user.rol == 'employee':
+        if 'approval_status' in request.data and request.user.rol == 'recepcionista':
             return Response(
-                {"error": "Los trabajadores no pueden aprobar documentos."},
+                {"error": "Los recepcionistas no pueden aprobar documentos."},
                 status=status.HTTP_403_FORBIDDEN
             )
             
@@ -83,7 +83,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document = self.get_object()
         user = request.user
         
-        if user.rol != 'employee':
+        if user.rol != 'recepcionista':
             return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
         
         if document.expedient.asinged_to != user:
@@ -115,7 +115,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             actor=user,
             notification_type='revision',
             title='Documento Corregido',
-            message=f'El trabajador {user.username} ha corregido el documento "{document.title}" del expediente "{document.expedient.title}".',
+            message=f'El recepcionista {user.username} ha corregido el documento "{document.title}" del expediente "{document.expedient.title}".',
             expedient_id=document.expedient.id,
             document_id=document.id,
         )
@@ -200,7 +200,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def review(self, request, pk=None):
         document = self.get_object()
         
-        if request.user.rol == 'employee':
+        if request.user.rol == 'recepcionista':
             return Response(
                 {"error": "No tienes permiso para revisar documentos."},
                 status=status.HTTP_403_FORBIDDEN

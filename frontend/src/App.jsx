@@ -23,10 +23,10 @@ import LayoutWrapper from './components/LayoutWrapper';
  import ValidarExpedientes from './pages/analyst/ValidarExpedientes';
  import Reportes from './pages/analyst/Reportes';
 
- //Employee Pages
- import MisExpedientes from './pages/employee/MisExpedientes';
- import Notificaciones from './pages/employee/Notificaciones';
- import GestionCorrecciones from './pages/employee/GestionCorrecciones';
+ //Recepcionista Pages
+ import MisExpedientes from './pages/recepcionista/MisExpedientes';
+ import Notificaciones from './pages/recepcionista/Notificaciones';
+ import GestionCorrecciones from './pages/recepcionista/GestionCorrecciones';
 
 
  function ProtectedRoute({ children, allowedRoles }) {
@@ -67,15 +67,15 @@ import LayoutWrapper from './components/LayoutWrapper';
              <Route path="admin/logs" element={<ProtectedRoute allowedRoles={['admin']}><ActivityLogs /></ProtectedRoute>} />
              <Route path="admin/departments" element={<ProtectedRoute allowedRoles={['admin']}><DepartmentsManagement /></ProtectedRoute>} />
              <Route path="admin/document-types" element={<ProtectedRoute allowedRoles={['admin']}><DocumentTypesManagement /></ProtectedRoute>} />
-             <Route path="admin/notificaciones" element={<ProtectedRoute allowedRoles={['admin', 'analyst', 'employee']}><Notificaciones /></ProtectedRoute>} />
+             <Route path="admin/notificaciones" element={<ProtectedRoute allowedRoles={['admin', 'analyst', 'recepcionista']}><Notificaciones /></ProtectedRoute>} />
              <Route path="admin/aprobar-expedientes" element={<ProtectedRoute allowedRoles={['admin']}><AprobarExpedientes /></ProtectedRoute>} />
              <Route path="analyst/expedientes" element={<ProtectedRoute allowedRoles={['admin', 'analyst']}><Expedientes /></ProtectedRoute>} />
              <Route path="analyst/validar" element={<ProtectedRoute allowedRoles={['admin', 'analyst']}><ValidarExpedientes /></ProtectedRoute>} />
              <Route path="analyst/reportes" element={<ProtectedRoute allowedRoles={['admin', 'analyst']}><Reportes /></ProtectedRoute>} />
-             <Route path="analyst/notificaciones" element={<ProtectedRoute allowedRoles={['admin', 'analyst', 'employee']}><Notificaciones /></ProtectedRoute>} />
-             <Route path="employee/mis-expedientes" element={<ProtectedRoute allowedRoles={['admin', 'employee']}><MisExpedientes /></ProtectedRoute>} />
-             <Route path="employee/gestion-correcciones" element={<ProtectedRoute allowedRoles={['admin', 'employee']}><GestionCorrecciones /></ProtectedRoute>} />
-             <Route path="employee/notificaciones" element={<ProtectedRoute allowedRoles={['admin', 'analyst', 'employee']}><Notificaciones /></ProtectedRoute>} />
+             <Route path="analyst/notificaciones" element={<ProtectedRoute allowedRoles={['admin', 'analyst', 'recepcionista']}><Notificaciones /></ProtectedRoute>} />
+             <Route path="recepcionista/mis-expedientes" element={<ProtectedRoute allowedRoles={['admin', 'recepcionista']}><MisExpedientes /></ProtectedRoute>} />
+             <Route path="recepcionista/gestion-correcciones" element={<ProtectedRoute allowedRoles={['admin', 'recepcionista']}><GestionCorrecciones /></ProtectedRoute>} />
+             <Route path="recepcionista/notificaciones" element={<ProtectedRoute allowedRoles={['admin', 'analyst', 'recepcionista']}><Notificaciones /></ProtectedRoute>} />
            </Route>
            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

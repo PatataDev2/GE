@@ -28,7 +28,7 @@ const ExpedientForm = ({ onSuccess }) => {
           api.get('api/users/api/v1/', { signal: ac.signal })        
         ]);
         setDepartments(resDep.data);
-        setWorkers(resUsers.data.filter(u => u.rol === 'employee' && u.is_active));
+        setWorkers(resUsers.data.filter(u => (u.rol === 'recepcionista' || u.rol === 'employee') && u.is_active));
       } catch (err) {
         if (err.name !== 'CanceledError') {
           logError("Error cargando datos:", err);
@@ -86,7 +86,7 @@ const ExpedientForm = ({ onSuccess }) => {
 
         {/* Select Analista */}
         <div>
-          <label className="text-sm font-bold text-indigo-900 mb-2 block">Asignar Trabajador</label>
+          <label className="text-sm font-bold text-indigo-900 mb-2 block">Asignar Recepcionista</label>
           <select 
             required
             className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-emerald-500 rounded-2xl outline-none cursor-pointer text-gray-700"

@@ -223,7 +223,7 @@ const handleSendToReview = async () => {
   try {
     await api.post(`api/expedients/${selectedDraft.id}/send_to_review/`);
     setShowDraftModal(false);
-    navigate('/employee/mis-expedientes');
+    navigate('/recepcionista/mis-expedientes');
   } catch (err) {
     logError('Error sending to review:', err);
     if (err.response?.data?.missing_documents) {

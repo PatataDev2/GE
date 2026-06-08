@@ -16,20 +16,20 @@ import Expedientes from './analyst/Expedientes';
 import ValidarExpedientes from './analyst/ValidarExpedientes';
 import Reportes from './analyst/Reportes';
 
-// Employee Dashboard imports
-import MisExpedientes from './employee/MisExpedientes';
-import Notificaciones from './employee/Notificaciones';
+// Recepcionista Dashboard imports
+import MisExpedientes from './recepcionista/MisExpedientes';
+import Notificaciones from './recepcionista/Notificaciones';
 // Real user data from API
 const roleMap = {
-  admin: 'admin', analyst: 'analyst', employee: 'employee',
+  admin: 'admin', analyst: 'analyst', recepcionista: 'recepcionista',
   Administrador: 'admin', Analista: 'analyst',
-  Trabajador: 'employee', Empleado: 'employee',
-  'Usuario Normal': 'employee',
+  employee: 'recepcionista', Trabajador: 'recepcionista', Empleado: 'recepcionista',
+  'Usuario Normal': 'recepcionista',
 };
 
 const fetchUserRole = async (signal) => {
   const res = await api.get('users/api/v1/me/', { signal });
-  const role = roleMap[res.data.rol] || 'employee';
+  const role = roleMap[res.data.rol] || 'recepcionista';
   return { role };
 };
 const timeAgo = (isoString) => {
@@ -287,7 +287,7 @@ const AnalystDashboardContent = () => {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Trabajador</th>
+                  <th>Recepcionista</th>
                   <th>Estado</th>
                 </tr>
               </thead>
@@ -336,7 +336,7 @@ const AnalystDashboardContent = () => {
     </div>
   );
 };
-const EmployeeDashboardContent = () => {
+const RecepcionistaDashboardContent = () => {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notificacionesCount, setNotificacionesCount] = useState(0);
@@ -459,16 +459,16 @@ const EmployeeDashboardContent = () => {
             <h3 className="card-title">Acciones Rápidas</h3>
           </div>
           <div className="flex flex-col gap-3">
-            <a href="/employee/mis-expedientes" className="btn btn-primary no-underline">
+            <a href="/recepcionista/mis-expedientes" className="btn btn-primary no-underline">
               Mis Expedientes
             </a>
-            <a href="/employee/mis-expedientes" className="btn btn-secondary no-underline">
+            <a href="/recepcionista/mis-expedientes" className="btn btn-secondary no-underline">
               Ver Mis Expedientes
             </a>
-            <a href="/employee/notificaciones" className="btn btn-secondary no-underline">
+            <a href="/recepcionista/notificaciones" className="btn btn-secondary no-underline">
               Ver Notificaciones
             </a>
-            <a href="/employee/gestion-correcciones" className="btn btn-secondary no-underline">
+            <a href="/recepcionista/gestion-correcciones" className="btn btn-secondary no-underline">
               Gestión de Correcciones
             </a>
           </div>
@@ -491,7 +491,7 @@ export default function Dashboard() {
     <>
       {user?.role === 'admin' && <AdminDashboardContent />}
       {user?.role === 'analyst' && <AnalystDashboardContent />}
-      {user?.role === 'employee' && <EmployeeDashboardContent />}
+      {user?.role === 'recepcionista' && <RecepcionistaDashboardContent />}
     </>
   );
 }

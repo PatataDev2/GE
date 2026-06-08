@@ -26,7 +26,7 @@ class Expedient(models.Model):
         on_delete=models.CASCADE,
         related_name="expedientes_asignados",
         # NOTA: Filtramos por el campo 'name' del modelo 'Role' relacionado
-        limit_choices_to={'rol': 'employee'}, 
+        limit_choices_to={'rol': 'recepcionista'}, 
         verbose_name="Asignado a"
     )
     created_by = models.ForeignKey(

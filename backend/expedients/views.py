@@ -19,7 +19,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     def my(self, request):
         """Obtiene los expedients asignados al usuario actual (incluye borradores)"""
         user = request.user
-        if user.rol == 'employee':
+        if user.rol == 'recepcionista':
             expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(asinged_to=user)
         else:
             expedients = Expedient.objects.none()
@@ -30,7 +30,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     def my_drafts(self, request):
         """Obtiene los borradores del usuario actual"""
         user = request.user
-        if user.rol == 'employee':
+        if user.rol == 'recepcionista':
             drafts = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(asinged_to=user, is_draft=True)
         else:
             drafts = Expedient.objects.none()
@@ -41,7 +41,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
     def corrections_needed(self, request):
         """Obtiene documentos rechazados con correcciones pendientes para el usuario"""
         user = request.user
-        if user.rol != 'employee':
+        if user.rol != 'recepcionista':
             return Response([])
         
         docs = Document.objects.filter(
@@ -68,7 +68,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         expedient = self.get_object()
         user = request.user
         
-        if user.rol != 'employee':
+        if user.rol != 'recepcionista':
             return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
         
         if expedient.asinged_to != user:
@@ -109,7 +109,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             actor=user,
             notification_type='revision',
             title='Expediente en Revision',
-            message=f'El trabajador {user.username} ha enviado el expediente "{expedient.title}" para revisión.',
+            message=f'El recepcionista {user.username} ha enviado el expediente "{expedient.title}" para revisión.',
             expedient_id=expedient.id,
         )
 
@@ -133,7 +133,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         expedient = self.get_object()
         user = request.user
         
-        if user.rol != 'employee':
+        if user.rol != 'recepcionista':
             return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
         
         if expedient.asinged_to != user:
@@ -181,15 +181,15 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             return qs.all()
         if role_name == 'analyst':
             return qs.filter(Q(created_by=user) | Q(is_draft=False))
-        if role_name == 'employee':
+        if role_name == 'recepcionista':
             return qs.filter(asinged_to=user)
         return Expedient.objects.none()
 
     def perform_create(self, serializer):
         expedient = serializer.save(created_by=self.request.user)
-        employee = expedient.asinged_to
+        recepcionista = expedient.asinged_to
         create_notification(
-            recipient=employee,
+            recipient=recepcionista,
             actor=self.request.user,
             notification_type='asignado',
             title='Expediente Asignado',

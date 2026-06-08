@@ -29,7 +29,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             data['uploaded_by'] = request.user
             user = request.user
             
-            if user.rol == 'employee':
+            if user.rol == 'recepcionista':
                 expedient_obj = data.get('expedient')
                 if expedient_obj and expedient_obj.asinged_to_id != user.id:
                     raise serializers.ValidationError(
