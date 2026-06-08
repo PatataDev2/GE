@@ -10,12 +10,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const fetchUser = useCallback(async (signal) => {
-    const token = localStorage.getItem('access');
-    if (!token) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     try {
       const response = await api.get('users/api/v1/me/', { signal });
@@ -29,9 +23,6 @@ export function AuthProvider({ children }) {
       });
     } catch (err) {
       if (err.name !== 'CanceledError') {
-        localStorage.removeItem('access');
-        localStorage.removeItem('refresh');
-        localStorage.removeItem('userRole');
         setUser(null);
       }
     } finally {
@@ -45,10 +36,12 @@ export function AuthProvider({ children }) {
     return () => ac.abort();
   }, [fetchUser]);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
-    localStorage.removeItem('userRole');
+  const logout = useCallback(async () => {
+    try {
+      await api.post('users/api/v1/logout/');
+    } catch {
+      // Always clear local state even if API call fails
+    }
     setUser(null);
   }, []);
 

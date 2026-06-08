@@ -91,7 +91,7 @@ export default function Notificaciones() {
   const cargarNotificaciones = useCallback(async (signal) => {
     try {
       const res = await api.get('/api/notifications/', { signal });
-      setNotificaciones(res.data);
+      setNotificaciones(res.data.results || res.data);
     } catch (err) {
       if (err.name !== 'CanceledError') {
         logError('Error cargando notificaciones:', err);

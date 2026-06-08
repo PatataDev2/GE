@@ -1,8 +1,11 @@
 import os
-from django.db import models
+
 from django.conf import settings
-from expedients.models import Expedient 
+from django.db import models
+
 from document_types.models import DocumentType
+from expedients.models import Expedient
+
 
 def document_upload_path(instance, filename):
     """
@@ -12,19 +15,19 @@ def document_upload_path(instance, filename):
 
 class Document(models.Model):
     title = models.CharField(max_length=255)
-    
+
     # El archivo físico ahora usa la función dinámica
     file = models.FileField(upload_to=document_upload_path)
-    
+
     # Estos campos se llenarán automáticamente en el método save()
     path = models.CharField(
-        max_length=500, 
-        blank=True, 
+        max_length=500,
+        blank=True,
         help_text="Ruta relativa del archivo en el servidor"
     )
     docname = models.CharField(
-        max_length=255, 
-        blank=True, 
+        max_length=255,
+        blank=True,
         help_text="Nombre original del archivo"
     )
 
@@ -33,17 +36,17 @@ class Document(models.Model):
     description_corrections = models.TextField(blank=True, null=True)
 
     expedient = models.ForeignKey(
-        Expedient, 
-        on_delete=models.CASCADE, 
+        Expedient,
+        on_delete=models.CASCADE,
         related_name='documents'
     )
     document_type = models.ForeignKey(
-        DocumentType, 
-        on_delete=models.SET_NULL, 
+        DocumentType,
+        on_delete=models.SET_NULL,
         null=True
     )
     uploaded_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
 

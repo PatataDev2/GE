@@ -1,7 +1,9 @@
 from rest_framework import serializers
+
+from users.models import UsersCustom  # Importante para el queryset
+
 from .models import Expedient
-from users.models import UsersCustom # Importante para el queryset
-from users.serializers import UserSerializer
+
 
 class ExpedientSerializer(serializers.ModelSerializer):
     # Esto muestra la info detallada en los GET
@@ -19,19 +21,20 @@ class ExpedientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expedient
         fields = [
-        'id', 
-        'title', 
-        'description', 
+        'id',
+        'title',
+        'description',
         'department',
-        'status', 
+        'status',
         'is_draft',
+        'has_pending_updates',
         'asinged_to',
         'department_name',
         'asinged_to_username',
         'approved_by_username',
         'created_by',
         'created_by_username',
-        'created_at', 
+        'created_at',
         'updated_at'
             ]
         read_only_fields = ['created_at', 'updated_at', 'approved_by', 'rejected_by', 'created_by']

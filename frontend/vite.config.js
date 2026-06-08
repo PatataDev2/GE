@@ -13,5 +13,15 @@ export default defineConfig({
      watch: {
       usePolling: true,   // necesario para hot reload en Docker
     }
-  }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          axios: ['axios'],
+        },
+      },
+    },
+  },
 })

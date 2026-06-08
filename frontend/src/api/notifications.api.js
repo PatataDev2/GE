@@ -1,6 +1,6 @@
 import api from './axios';
 
-export const getNotifications = () => api.get('/api/notifications/');
+export const getNotifications = (config) => api.get('/api/notifications/', config);
 
 export const getUnreadCount = () => api.get('/api/notifications/unread_count/');
 

@@ -1,12 +1,27 @@
-from django.shortcuts import render
+from datetime import timedelta
+
+from django.conf import settings
 from django.utils import timezone
-from rest_framework import viewsets, generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .serializers import UserSerializer, RegisterSerializer, AdminCreateFuncionarioSerializer, AdminUpdateFuncionarioSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 from .models import UsersCustom
 from .permissions import IsAdminUser
+from .serializers import (
+    AdminCreateFuncionarioSerializer,
+    AdminUpdateFuncionarioSerializer,
+    RegisterSerializer,
+    UserSerializer,
+)
+
+
+class UserPagination(PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 500
 
 
 class RegisterView(generics.CreateAPIView):
@@ -36,10 +51,59 @@ class Custom_token_obtain_pair_view(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
+class CookieTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            access = response.data.get('access')
+            refresh = response.data.get('refresh')
+            secure = not settings.DEBUG
+            response.set_cookie(
+                'access_token', access,
+                max_age=timedelta(hours=1).total_seconds(),
+                httponly=True, secure=secure, samesite='Lax', path='/',
+            )
+            response.set_cookie(
+                'refresh_token', refresh,
+                max_age=timedelta(days=1).total_seconds(),
+                httponly=True, secure=secure, samesite='Lax', path='/',
+            )
+        return response
+
+
+class CookieTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        if not request.data.get('refresh'):
+            refresh = request.COOKIES.get('refresh_token')
+            if refresh:
+                request.data['refresh'] = refresh
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200 and 'access' in response.data:
+            secure = not settings.DEBUG
+            response.set_cookie(
+                'access_token', response.data['access'],
+                max_age=timedelta(hours=1).total_seconds(),
+                httponly=True, secure=secure, samesite='Lax', path='/',
+            )
+        return response
+
+
+class LogoutView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        response = Response({'message': 'Sesión cerrada exitosamente'})
+        response.delete_cookie('access_token', path='/')
+        response.delete_cookie('refresh_token', path='/')
+        return response
+
+
 class UserView(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
-    pagination_class = None
+    pagination_class = UserPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -132,8 +196,8 @@ class AdminDashboardView(generics.GenericAPIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        from notifications.models import Notification
         from expedients.models import Expedient
+        from notifications.models import Notification
 
         total_users = UsersCustom.objects.count()
         active_users = UsersCustom.objects.filter(cuenta_activa=True).count()

@@ -11,11 +11,6 @@ export default function ChangePassword() {
 
   useEffect(() => {
     const ac = new AbortController();
-    const token = localStorage.getItem('access');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
     const checkUser = async () => {
       try {
         const res = await api.get('users/api/v1/me/', { signal: ac.signal });
@@ -24,8 +19,6 @@ export default function ChangePassword() {
         }
       } catch (err) {
         if (err.name !== 'CanceledError') {
-          localStorage.removeItem('access');
-          localStorage.removeItem('refresh');
           navigate('/login');
         }
       }

@@ -1,14 +1,21 @@
-from rest_framework import viewsets, permissions, status
+from django.db.models import Q
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Q
-from .models import Expedient
-from .serializers import ExpedientSerializer
-from .permissions import IsAdminRole
-from documents.models import Document
+
 from document_types.models import DocumentType
+from documents.models import Document
+from notifications.utils import (
+    bulk_create_notifications,
+    create_activity_log,
+    create_notification,
+)
 from users.models import UsersCustom
-from notifications.utils import create_notification, bulk_create_notifications, create_activity_log
+
+from .models import Expedient
+from .permissions import IsAdminRole
+from .serializers import ExpedientSerializer
+
 
 class ExpedientViewSet(viewsets.ModelViewSet):
     queryset = Expedient.objects.all()
@@ -17,10 +24,16 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def my(self, request):
-        """Obtiene los expedients asignados al usuario actual (incluye borradores)"""
+        """Obtiene los expedients asignados al usuario actual"""
         user = request.user
         if user.rol == 'recepcionista':
-            expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(asinged_to=user)
+            expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by', 'rejected_by').filter(asinged_to=user)
+        elif user.rol in ['admin', 'analyst']:
+            qs = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by', 'rejected_by')
+            if user.rol == 'analyst':
+                expedients = qs.filter(Q(created_by=user) | Q(is_draft=False))
+            else:
+                expedients = qs.all()
         else:
             expedients = Expedient.objects.none()
         serializer = self.get_serializer(expedients, many=True)
@@ -28,13 +41,95 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def my_drafts(self, request):
-        """Obtiene los borradores del usuario actual"""
+        """Obtiene los borradores del usuario actual o de su responsabilidad"""
         user = request.user
         if user.rol == 'recepcionista':
-            drafts = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(asinged_to=user, is_draft=True)
+            drafts = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by', 'rejected_by').filter(asinged_to=user, is_draft=True)
+        elif user.rol in ['admin', 'analyst']:
+            qs = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by', 'rejected_by').filter(is_draft=True)
+            if user.rol == 'analyst':
+                drafts = qs.filter(Q(created_by=user) | Q(asinged_to__isnull=False))
+            else:
+                drafts = qs.all()
         else:
             drafts = Expedient.objects.none()
         serializer = self.get_serializer(drafts, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def request_create(self, request):
+        """Admin solicita la creación de un expediente (notifica a analysts)"""
+        if request.user.rol != 'admin':
+            return Response({'error': 'Solo administradores pueden solicitar creación'}, status=status.HTTP_403_FORBIDDEN)
+        person_name = request.data.get('person_name', '')
+        description = request.data.get('description', '')
+        if not person_name:
+            return Response({'error': 'Debes indicar el nombre de la persona'}, status=status.HTTP_400_BAD_REQUEST)
+        analysts = UsersCustom.objects.filter(rol='analyst')
+        bulk_create_notifications(
+            recipients=analysts,
+            actor=request.user,
+            notification_type='revision',
+            title='Solicitud de Expediente',
+            message=f'El administrador solicita crear un expediente para {person_name}. Motivo: {description}',
+        )
+        admins = UsersCustom.objects.filter(rol='admin')
+        bulk_create_notifications(
+            recipients=admins,
+            actor=request.user,
+            notification_type='revision',
+            title='Solicitud de Expediente Enviada',
+            message=f'Se ha notificado a los analistas sobre la solicitud de expediente para {person_name}.',
+        )
+        create_activity_log(
+            user=request.user,
+            action='Solicitó creación de expediente',
+            action_type='create',
+            target=person_name,
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
+        return Response({'status': 'solicitud enviada a los analistas'})
+
+    @action(detail=True, methods=['post'])
+    def reassign(self, request, pk=None):
+        """Reasigna el recepcionista a cargo del expediente"""
+        if request.user.rol not in ['admin', 'analyst']:
+            return Response({'error': 'No tienes permiso para reasignar'}, status=status.HTTP_403_FORBIDDEN)
+        expedient = self.get_object()
+        new_user_id = request.data.get('asinged_to')
+        if not new_user_id:
+            return Response({'error': 'Debes especificar el nuevo recepcionista'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            new_user = UsersCustom.objects.get(id=new_user_id, rol='recepcionista')
+        except UsersCustom.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado o no es recepcionista'}, status=status.HTTP_400_BAD_REQUEST)
+        expedient.asinged_to = new_user
+        expedient.save(update_fields=['asinged_to', 'updated_at'])
+        create_notification(
+            recipient=new_user,
+            actor=request.user,
+            notification_type='asignado',
+            title='Expediente Reasignado',
+            message=f'Se te ha reasignado el expediente "{expedient.title}" para su gestión.',
+            expedient_id=expedient.id,
+        )
+        create_activity_log(
+            user=request.user,
+            action='Reasignó expediente',
+            action_type='edit',
+            target=f'#{expedient.id} - {expedient.title} → {new_user.username}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
+        return Response({'status': f'Expediente reasignado a {new_user.username}'})
+
+    @action(detail=False, methods=['get'])
+    def pending_docs(self, request):
+        """Lista documentos pendientes de revisión en expedientes aprobados"""
+        if request.user.rol not in ['admin', 'analyst']:
+            return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
+        docs = Document.objects.filter(approval_status=None, expedient__status='Aprobado').select_related('expedient', 'document_type', 'uploaded_by').order_by('-uploaded_at')
+        from documents.serializers import DocumentSerializer
+        serializer = DocumentSerializer(docs, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
@@ -43,12 +138,12 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.rol != 'recepcionista':
             return Response([])
-        
+
         docs = Document.objects.filter(
             expedient__asinged_to=user,
             approval_status=False
         ).select_related('expedient', 'document_type').order_by('-uploaded_at')
-        
+
         result = []
         for doc in docs:
             result.append({
@@ -64,25 +159,25 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def send_to_review(self, request, pk=None):
-        """Envia un borrador a revisión verificando el checklist de documentos"""
+        """Envia un expediente a revisión verificando el checklist de documentos"""
         expedient = self.get_object()
         user = request.user
-        
-        if user.rol != 'recepcionista':
+
+        if user.rol not in ['admin', 'analyst', 'recepcionista']:
             return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
-        
-        if expedient.asinged_to != user:
+
+        if user.rol == 'recepcionista' and expedient.asinged_to != user:
             return Response({'error': 'Este expediente no te pertenece'}, status=status.HTTP_403_FORBIDDEN)
-        
+
         if not expedient.is_draft:
             return Response({'error': 'Este expediente ya fue enviado a revisión'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         required_types = DocumentType.objects.filter(is_active=True, is_required=True)
         uploaded_type_ids = set(
             Document.objects.filter(expedient=expedient, document_type__isnull=False)
             .values_list('document_type_id', flat=True)
         )
-        
+
         missing_types = []
         for rt in required_types:
             if rt.id not in uploaded_type_ids:
@@ -91,18 +186,18 @@ class ExpedientViewSet(viewsets.ModelViewSet):
                     'name': rt.name,
                     'description': rt.description
                 })
-        
+
         if missing_types:
             return Response({
                 'success': False,
                 'message': 'Faltan documentos obligatorios',
                 'missing_documents': missing_types
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         expedient.is_draft = False
         expedient.status = 'Pendiente'
         expedient.save(update_fields=['is_draft', 'status', 'updated_at'])
-        
+
         analysts = UsersCustom.objects.filter(rol='analyst')
         bulk_create_notifications(
             recipients=analysts,
@@ -120,7 +215,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             target=f'#{expedient.id} - {expedient.title}',
             ip_address=self.request.META.get('REMOTE_ADDR'),
         )
-        
+
         return Response({
             'success': True,
             'message': 'Expediente enviado a revisión exitosamente',
@@ -132,13 +227,13 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         """Marca un expediente como borrador"""
         expedient = self.get_object()
         user = request.user
-        
-        if user.rol != 'recepcionista':
+
+        if user.rol not in ['admin', 'analyst', 'recepcionista']:
             return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
-        
-        if expedient.asinged_to != user:
+
+        if user.rol == 'recepcionista' and expedient.asinged_to != user:
             return Response({'error': 'Este expediente no te pertenece'}, status=status.HTTP_403_FORBIDDEN)
-        
+
         expedient.is_draft = True
         expedient.save(update_fields=['is_draft', 'updated_at'])
 
@@ -149,7 +244,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             target=f'#{expedient.id} - {expedient.title}',
             ip_address=self.request.META.get('REMOTE_ADDR'),
         )
-        
+
         return Response({
             'success': True,
             'message': 'Expediente guardado como borrador',
@@ -176,7 +271,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         role_name = user.rol
         if not user.is_authenticated or not role_name:
             return Expedient.objects.none()
-        qs = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by')
+        qs = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by', 'rejected_by')
         if role_name == 'admin':
             return qs.all()
         if role_name == 'analyst':
@@ -186,7 +281,11 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         return Expedient.objects.none()
 
     def perform_create(self, serializer):
+        if self.request.user.rol not in ['admin', 'analyst']:
+            raise permissions.PermissionDenied('Solo administradores o analistas pueden crear expedientes')
         expedient = serializer.save(created_by=self.request.user)
+        expedient.status = 'Pendiente'
+        expedient.save(update_fields=['status'])
         recepcionista = expedient.asinged_to
         create_notification(
             recipient=recepcionista,
@@ -267,7 +366,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         """Lista expedientes pre-aprobados pendientes de aprobación del admin"""
         if request.user.rol != 'admin':
             return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
-        expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(status='Pre_Aprobado', is_draft=False)
+        expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by', 'rejected_by').filter(status='Pre_Aprobado', is_draft=False)
         serializer = self.get_serializer(expedients, many=True)
         return Response(serializer.data)
 
@@ -276,7 +375,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         """Lista expedientes aprobados definitivamente"""
         if request.user.rol not in ['admin', 'analyst']:
             return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
-        expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by').filter(status='Aprobado', is_draft=False).order_by('-updated_at')
+        expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by', 'rejected_by').filter(status='Aprobado', is_draft=False).order_by('-updated_at')
         serializer = self.get_serializer(expedients, many=True)
         return Response(serializer.data)
 
@@ -322,6 +421,6 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         )
         self.perform_destroy(instance)
         return Response(
-            {"message": "Expediente eliminado correctamente"}, 
+            {"message": "Expediente eliminado correctamente"},
             status=status.HTTP_204_NO_CONTENT
         )

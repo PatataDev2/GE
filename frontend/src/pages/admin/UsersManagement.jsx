@@ -39,7 +39,7 @@ export default function UsersManagement() {
     try {
       setLoading(true);
       const response = await api.get('users/api/v1/', { signal });
-      setUsers(response.data);
+      setUsers(response.data.results || response.data);
     } catch (err) {
       if (err.name !== 'CanceledError') {
         logError('Error fetching users:', err);

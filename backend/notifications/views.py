@@ -1,9 +1,17 @@
 from django.db import models
-from rest_framework import viewsets, permissions, status
+from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from .models import Notification, ActivityLog
-from .serializers import NotificationSerializer, ActivityLogSerializer
+
+from .models import ActivityLog, Notification
+from .serializers import ActivityLogSerializer, NotificationSerializer
+
+
+class NotificationPagination(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 200
 
 
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
@@ -49,7 +57,7 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
-    pagination_class = None
+    pagination_class = NotificationPagination
 
     def get_queryset(self):
         return Notification.objects.select_related('actor').filter(recipient=self.request.user)

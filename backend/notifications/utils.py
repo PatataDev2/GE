@@ -1,5 +1,6 @@
 from django.utils.html import escape
-from notifications.models import Notification, ActivityLog
+
+from notifications.models import ActivityLog, Notification
 
 
 def create_notification(recipient, actor, notification_type, title, message, expedient_id=None, document_id=None):
@@ -27,7 +28,7 @@ def bulk_create_notifications(recipients, actor, notification_type, title, messa
         )
         for recipient in recipients
     ]
-    Notification.objects.bulk_create(notifications)
+    Notification.objects.bulk_create(notifications, batch_size=500)
 
 
 def create_activity_log(user, action, action_type, target='-', ip_address=None):

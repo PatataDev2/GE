@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { getNotifications, getUnreadCount, markAllAsRead } from '../api/notifications.api';
 import { logError } from '../utils/logger';
+import api from '../api/users.api';
 
 // Icon components
 const Icons = {
@@ -128,6 +129,8 @@ const getMenuItems = (role) => {
         return [
           ...commonItems,
           { path: '/admin/aprobar-expedientes', label: 'Aprobar Expedientes', icon: Icons.CheckCircle },
+          { path: '/admin/solicitar-expediente', label: 'Solicitar Expediente', icon: Icons.Upload },
+          { path: '/admin/pendientes', label: 'Documentos Pendientes', icon: Icons.ClipboardList },
           { path: '/admin/users', label: 'Gestión de Usuarios', icon: Icons.Users },
           { path: '/admin/departments', label: 'Gestión de Departamentos', icon: Icons.Folder },
           { path: '/admin/document-types', label: 'Gestión de Tipos de Documento', icon: Icons.FileText },
@@ -140,6 +143,7 @@ const getMenuItems = (role) => {
           ...commonItems,
           { path: '/analyst/expedientes', label: 'Expedientes', icon: Icons.Folder },
           { path: '/analyst/validar', label: 'Validar Expedientes', icon: Icons.CheckCircle },
+          { path: '/analyst/pendientes', label: 'Documentos Pendientes', icon: Icons.ClipboardList },
           { path: '/analyst/reportes', label: 'Reportes', icon: Icons.BarChart },
           { path: '/analyst/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
         ];
@@ -183,9 +187,12 @@ export default function Layout({ children, user }) {
   const notifRoute = user?.role === 'admin' ? '/admin/notificaciones' : user?.role === 'analyst' ? '/analyst/notificaciones' : '/recepcionista/notificaciones';
   const menuItems = getMenuItems(user?.role);
   
-  const handleLogout = () => {
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
+  const handleLogout = async () => {
+    try {
+      await api.post('users/api/v1/logout/');
+    } catch {
+      // Proceed with logout even if API call fails
+    }
     navigate('/login');
   };
 
@@ -220,20 +227,24 @@ export default function Layout({ children, user }) {
 
   useEffect(() => {
     if (!showNotifications) return;
+    const ac = new AbortController();
 
     const fetchNotifications = async () => {
       setNotifLoading(true);
       try {
-        const res = await getNotifications();
-        setNotifications(res.data.slice(0, 10));
+        const res = await getNotifications({ signal: ac.signal });
+        setNotifications((res.data.results || res.data).slice(0, 10));
       } catch (err) {
-        logError('Error fetching notifications:', err);
+        if (err.name !== 'CanceledError') {
+          logError('Error fetching notifications:', err);
+        }
       } finally {
         setNotifLoading(false);
       }
     };
 
     fetchNotifications();
+    return () => ac.abort();
   }, [showNotifications]);
 
   const handleMarkAllRead = async () => {
@@ -310,8 +321,7 @@ export default function Layout({ children, user }) {
           </div>
           <button 
             onClick={handleLogout}
-            className="sidebar-link mt-4 w-full border-0 cursor-pointer"
-            style={{ background: 'rgba(255,255,255,0.1)' }}
+            className="sidebar-link mt-4 w-full border-0 cursor-pointer bg-white/10"
           >
             <Icons.LogOut />
             Cerrar Sesión
@@ -374,7 +384,7 @@ export default function Layout({ children, user }) {
                             <NotifIcon />
                           </div>
                           <div className="notification-content flex-1 min-w-0">
-                            <div className="notification-title text-xs text-slate-800" style={{ fontWeight: !notif.read ? '700' : '600' }}>{notif.title}</div>
+                            <div className={"notification-title text-xs text-slate-800 " + (!notif.read ? 'font-bold' : 'font-semibold')}>{notif.title}</div>
                             <div className="notification-text text-xs text-slate-500 mt-0.5 truncate">{notif.message}</div>
                             <div className="notification-time text-xs text-slate-400 mt-1">{formatTime(notif.created_at)}</div>
                           </div>

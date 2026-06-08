@@ -1,11 +1,28 @@
 import os
+
 from rest_framework import serializers
+
 from .models import Document
-from expedients.serializers import ExpedientSerializer
-from document_types.serializers import DocumentTypeSerializer
 
 ALLOWED_EXTENSIONS = {'.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+MAGIC_BYTES = {
+    b'%PDF': '.pdf',
+    b'\xff\xd8\xff': '.jpg',
+    b'\x89PNG\r\n\x1a\n': '.png',
+    b'PK\x03\x04': '.docx',
+}
+
+
+def validate_file_magic(file_obj):
+    file_obj.seek(0)
+    header = file_obj.read(16)
+    file_obj.seek(0)
+    for magic, ext in MAGIC_BYTES.items():
+        if header.startswith(magic):
+            return ext
+    return None
 
 class DocumentSerializer(serializers.ModelSerializer):
     path = serializers.CharField(read_only=True)
@@ -28,7 +45,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         if request and request.user:
             data['uploaded_by'] = request.user
             user = request.user
-            
+
             if user.rol == 'recepcionista':
                 expedient_obj = data.get('expedient')
                 if expedient_obj and expedient_obj.asinged_to_id != user.id:
@@ -38,7 +55,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 
         file_obj = data.get('file')
         expedient_obj = data.get('expedient')
-        
+
         if file_obj and expedient_obj:
             ext = os.path.splitext(file_obj.name)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
@@ -47,11 +64,20 @@ class DocumentSerializer(serializers.ModelSerializer):
                 )
             if file_obj.size > MAX_FILE_SIZE:
                 raise serializers.ValidationError(
-                    f"El archivo excede el tamaño máximo de 10 MB."
+                    "El archivo excede el tamaño máximo de 10 MB."
+                )
+            detected_ext = validate_file_magic(file_obj)
+            if detected_ext is None:
+                raise serializers.ValidationError(
+                    "No se pudo verificar el tipo de archivo. El archivo podría estar corrupto o no ser válido."
+                )
+            if detected_ext != ext:
+                raise serializers.ValidationError(
+                    f"El contenido del archivo no coincide con la extensión ({ext}). Detectedo: {detected_ext}"
                 )
             data['docname'] = file_obj.name
             data['path'] = f"uploads/docs/{expedient_obj.id}/{file_obj.name}"
-            
+
         return data
 
     def create(self, validated_data):

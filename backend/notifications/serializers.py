@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Notification, ActivityLog
+
+from .models import ActivityLog, Notification
 
 
 class ActivityLogSerializer(serializers.ModelSerializer):

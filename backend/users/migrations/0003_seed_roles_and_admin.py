@@ -6,7 +6,7 @@ from django.db import migrations
 def create_roles_and_admin(apps, schema_editor):
     Role = apps.get_model('users', 'Role')
     UsersCustom = apps.get_model('users', 'UsersCustom')
-    
+
     # Create roles
     admin_role = Role.objects.create(
         name='admin',
@@ -24,7 +24,7 @@ def create_roles_and_admin(apps, schema_editor):
         name='user',
         description='Usuario normal con acceso básico'
     )
-    
+
     # Create admin user using create_user to properly hash password
     admin_user = UsersCustom.objects.create_user(
         username='admin',
@@ -42,7 +42,7 @@ def create_roles_and_admin(apps, schema_editor):
 def reverse_func(apps, schema_editor):
     Role = apps.get_model('users', 'Role')
     UsersCustom = apps.get_model('users', 'UsersCustom')
-    
+
     UsersCustom.objects.filter(username='admin').delete()
     Role.objects.all().delete()
 

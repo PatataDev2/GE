@@ -1,34 +1,32 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from users.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework import serializers
+
+from users.permissions import IsAdminUser
+
 from .models import Department
+from .serializers import DepartmentSerializer
 
 
-class DepartmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Department
-        fields = '__all__'
-        read_only_fields = ['created_at', 'updated_at']
+def _require_admin(request):
+    if not IsAdminUser().has_permission(request, None):
+        return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
+    return None
 
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def department_list(request):
-    """
-    List all departments or create a new department
-    """
     if request.method == 'GET':
         departments = Department.objects.all()
         serializer = DepartmentSerializer(departments, many=True)
         return Response(serializer.data)
 
     elif request.method == 'POST':
-        permission = IsAdminUser()
-        if not permission.has_permission(request, None):
-            return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
+        error = _require_admin(request)
+        if error:
+            return error
         serializer = DepartmentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -39,9 +37,6 @@ def department_list(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def department_detail(request, pk):
-    """
-    Retrieve, update or delete a department instance
-    """
     try:
         department = Department.objects.get(pk=pk)
     except Department.DoesNotExist:
@@ -52,9 +47,9 @@ def department_detail(request, pk):
         return Response(serializer.data)
 
     elif request.method in ('PUT', 'DELETE'):
-        permission = IsAdminUser()
-        if not permission.has_permission(request, None):
-            return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
+        error = _require_admin(request)
+        if error:
+            return error
         if request.method == 'PUT':
             serializer = DepartmentSerializer(department, data=request.data)
             if serializer.is_valid():

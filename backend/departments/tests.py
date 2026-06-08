@@ -7,12 +7,12 @@ class DepartmentModelTest(TestCase):
         Test that a department can be created with all fields
         """
         from departments.models import Department
-        
+
         department = Department.objects.create(
             name='Test Department',
             description='Test Description'
         )
-        
+
         self.assertEqual(department.name, 'Test Department')
         self.assertEqual(department.description, 'Test Description')
         self.assertTrue(department.is_active)
@@ -24,6 +24,6 @@ class DepartmentModelTest(TestCase):
         Test the __str__ method returns the department name
         """
         from departments.models import Department
-        
+
         department = Department.objects.create(name='Test Department')
         self.assertEqual(str(department), 'Test Department')

@@ -1,12 +1,12 @@
-from django.db import models
 from django.conf import settings
-from departments.models import Department #
+from django.db import models
 
+from departments.models import Department  #
 
-    
 
 class Expedient(models.Model):
     STATUS = [
+        ("Solicitado", "Solicitado"),
         ("Aprobado", "Aprobado"),
         ("Pendiente", "Pendiente"),
         ("Proceso", "Proceso"),
@@ -26,7 +26,7 @@ class Expedient(models.Model):
         on_delete=models.CASCADE,
         related_name="expedientes_asignados",
         # NOTA: Filtramos por el campo 'name' del modelo 'Role' relacionado
-        limit_choices_to={'rol': 'recepcionista'}, 
+        limit_choices_to={'rol': 'recepcionista'},
         verbose_name="Asignado a"
     )
     created_by = models.ForeignKey(
@@ -45,6 +45,8 @@ class Expedient(models.Model):
         related_name="expedientes_aprobados",
         verbose_name="Aprobado por"
     )
+    has_pending_updates = models.BooleanField(default=False, help_text="Indica si el expediente aprobado tiene documentos nuevos sin revisar")
+
     rejected_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

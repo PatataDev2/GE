@@ -14,15 +14,16 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path , include
 from django.conf import settings
 from django.conf.urls.static import static
-from users.views import AdminDashboardView
-from notifications.views import ActivityLogViewSet
+from django.contrib import admin
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from . import backup_views
 
+from notifications.views import ActivityLogViewSet
+from users.views import AdminDashboardView
+
+from . import backup_views
 
 router = DefaultRouter()
 router.register(r'activity-logs', ActivityLogViewSet, basename='activity-log')

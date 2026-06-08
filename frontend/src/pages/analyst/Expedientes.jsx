@@ -246,14 +246,15 @@ export default function Expedientes() {
   setShowReassignModal(true);
   setKebabMenuId(null);
 };
-  const handleReassignSubmit = async (newEmployeeId) => {
+   const handleReassignSubmit = async (newEmployeeId) => {
     setReassignSubmitting(true);
     try {
-      await api.patch(`api/expedients/${selectedExpediente.id}/`, {
+      await api.post(`api/expedients/${selectedExpediente.id}/reassign/`, {
         asinged_to: newEmployeeId
       });
       setShowReassignModal(false);
       fetchExpedientes();
+      showToast('Expediente reasignado exitosamente', 'success');
     } catch (err) {
       logError("Error reassigning:", err);
       showToast('Error al reasignar el expediente', 'error');
@@ -350,6 +351,7 @@ export default function Expedientes() {
   'bg-yellow-500'
 }`}></div>
               <div className="flex justify-between items-start mb-4">
+               <div className="flex gap-2 items-center">
                <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${
   getExpedienteStatus(exp) === 'activo' ? 'bg-green-50 text-green-600 border-green-100' :
   getExpedienteStatus(exp) === 'pre_aprobado' ? 'bg-purple-50 text-purple-600 border-purple-100' :
@@ -361,6 +363,12 @@ export default function Expedientes() {
    getExpedienteStatus(exp) === 'rechazado' ? '✗ RECHAZADO' :
    '⏳ REVISIÓN'}
 </span>
+{exp.has_pending_updates && (
+  <span className="text-[10px] font-bold px-3 py-1 rounded-full border bg-orange-50 text-orange-600 border-orange-100 animate-pulse">
+    ⚡ ACTUALIZACIONES
+  </span>
+)}
+</div>
    </div>     
               <h3 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">{exp.title}</h3>
               <p className="text-sm text-gray-500 mb-6 line-clamp-2">{exp.description || 'Sin descripción asignada.'}</p>

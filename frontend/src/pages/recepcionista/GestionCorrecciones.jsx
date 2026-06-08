@@ -660,7 +660,7 @@ const handleSendToReview = async () => {
           Subir Nuevo Documento
         </h4>
         <div className="flex gap-3 items-end flex-wrap">
-                          <div className="form-group mb-0" style={{ flex: '1 1 200px' }}>
+                          <div className="form-group mb-0 flex-[1_1_200px]">
                             <label className="form-label text-xs">Tipo de documento *</label>
             <select
               value={newDocType}
@@ -673,7 +673,7 @@ const handleSendToReview = async () => {
               ))}
             </select>
           </div>
-                          <div className="form-group mb-0" style={{ flex: '1 1 250px' }}>
+                          <div className="form-group mb-0 flex-[1_1_250px]">
                             <label className="form-label text-xs">Archivo *</label>
             <input
               type="file"
@@ -749,8 +749,7 @@ const handleSendToReview = async () => {
           {previewUrl && getFileType(previewDoc) === 'pdf' && (
             <iframe
               src={previewUrl}
-              className="w-full rounded-lg border border-gray-200"
-              style={{ height: '80vh' }}
+              className="w-full rounded-lg border border-gray-200 h-[80vh]"
               title="Vista previa del documento"
             />
           )}

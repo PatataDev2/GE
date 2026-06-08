@@ -235,6 +235,7 @@ export default function MisExpedientes() {
               <span className="font-mono font-semibold text-blue-600">#{exp.id}</span>
               {exp.is_draft && <span className="badge bg-amber-200 text-amber-800">Borrador</span>}
               {!exp.is_draft && <span className={`badge ${statusClass}`}>{statusText}</span>}
+              {exp.has_pending_updates && <span className="badge bg-orange-200 text-orange-800 animate-pulse">Actualizaciones</span>}
             </div>
             <h4 className="text-lg font-semibold mb-1">{exp.title}</h4>
             <p className="text-slate-500 text-sm">
@@ -492,8 +493,7 @@ export default function MisExpedientes() {
               <div className="form-group">
                 <label className="form-label">Archivo *</label>
                 <label 
-                  className="file-upload-input flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50"
-                  style={{ transition: 'all 0.2s' }}
+                  className="file-upload-input flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 transition-all duration-200"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input 
@@ -617,8 +617,7 @@ export default function MisExpedientes() {
           {previewUrl && getFileType(previewDoc) === 'pdf' && (
             <iframe
               src={previewUrl}
-              className="w-full rounded-lg border border-gray-200"
-              style={{ height: '80vh' }}
+              className="w-full rounded-lg border border-gray-200 h-[80vh]"
               title="Vista previa del documento"
             />
           )}

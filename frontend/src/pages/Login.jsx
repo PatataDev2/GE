@@ -1,28 +1,25 @@
-﻿import { useState, useEffect, useContext } from 'react';
+﻿import { useState, useEffect } from 'react';
 import api from '../api/users.api';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../api/users.api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function Login() {
   const [data, setData] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
+  const toast = useToast();
 
   useEffect(() => {
     const ac = new AbortController();
-    const token = localStorage.getItem('access');
-    if (!token) { return; }
     const fetchUser = async () => {
       try {
         await api.get('users/api/v1/me/', { signal: ac.signal });
         navigate('/dashboard');
       } catch (err) {
-        if (err.name !== 'CanceledError') {
-          localStorage.removeItem('access');
-          localStorage.removeItem('refresh');
-        }
+        if (err.name === 'CanceledError') return;
       }
     };
     fetchUser();
@@ -33,10 +30,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await api.post('users/api/v1/login/', data);
-      localStorage.setItem('access', res.data.access);
-      localStorage.setItem('refresh', res.data.refresh);
-      // Refresh auth context with the new token
+      await api.post('users/api/v1/login/cookie/', data);
       await refreshUser();
       const userRes = await getCurrentUser();
       if (userRes.data.clave_temporal) {
@@ -46,7 +40,7 @@ export default function Login() {
       }
     } catch {
       setLoading(false);
-      alert('Credenciales incorrectas');
+      toast.showToast('Credenciales incorrectas', 'error');
     }
   };
 
