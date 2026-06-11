@@ -265,20 +265,16 @@ const handleSendToReview = async () => {
       setPreviewDoc(doc);
       setPreviewUrl(fileUrl);
       setDocxBlob(null);
+      setShowPreviewModal(true);
       const ext = doc.file.split('.').pop().toLowerCase();
       if (ext === 'docx') {
         try {
-          setShowPreviewModal(true);
           const response = await api.get(fileUrl, { responseType: 'blob' });
-          const blob = response.data;
-          setDocxBlob(blob);
+          setDocxBlob(response.data);
         } catch (err) {
           logError('Error loading DOCX:', err);
+          showToast('Error al cargar la vista previa del documento', 'error');
         }
-      } else if (getFileType(doc) !== 'image') {
-        window.open(fileUrl, '_blank', 'noopener,noreferrer');
-      } else {
-        setShowPreviewModal(true);
       }
     }
   };

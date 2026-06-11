@@ -57,11 +57,13 @@ export default function Expedientes() {
   };
   const fetchWorkers = async (signal) => {
     try {
-      const res = await api.get('api/users/api/v1/', { signal });
-      setWorkers(res.data.filter(u => (u.rol === 'recepcionista' || u.rol === 'employee') && u.is_active));
+      const res = await api.get('users/api/v1/', { signal });
+      const users = Array.isArray(res.data) ? res.data : (res.data.results || []);
+      setWorkers(users.filter(u => u.rol === 'recepcionista' && u.is_active));
     } catch (err) {
       if (err.name !== 'CanceledError') {
         logError("Error fetching workers:", err);
+        showToast('Error al cargar lista de recepcionistas', 'error');
       }
     }
   };

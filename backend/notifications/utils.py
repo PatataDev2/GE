@@ -1,5 +1,3 @@
-from django.utils.html import escape
-
 from notifications.models import ActivityLog, Notification
 
 
@@ -8,8 +6,8 @@ def create_notification(recipient, actor, notification_type, title, message, exp
         recipient=recipient,
         actor=actor,
         notification_type=notification_type,
-        title=escape(title),
-        message=escape(message),
+        title=title,
+        message=message,
         expedient_id=expedient_id,
         document_id=document_id,
     )
@@ -21,8 +19,8 @@ def bulk_create_notifications(recipients, actor, notification_type, title, messa
             recipient=recipient,
             actor=actor,
             notification_type=notification_type,
-            title=escape(title),
-            message=escape(message),
+            title=title,
+            message=message,
             expedient_id=expedient_id,
             document_id=document_id,
         )

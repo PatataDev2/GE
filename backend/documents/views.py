@@ -147,7 +147,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document.save()
 
         if old_file_path:
-            import os
             if os.path.exists(old_file_path):
                 os.remove(old_file_path)
 
@@ -212,7 +211,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
                     logger.info('Converting DOCX to PDF: %s', os.path.basename(file_path))
                     result = subprocess.run(
                         ['libreoffice', '--headless', '--convert-to', 'pdf',
-                         '--outdir', tmpdir, file_path],
+                         '--outdir', tmpdir, '--', file_path],
                         capture_output=True, timeout=60,
                         env={**os.environ, 'HOME': home_dir}
                     )

@@ -19,7 +19,7 @@ const DocumentForm = ({ expedientId, onSuccess }) => {
         data.append('expedient', expedientId); // Relación con el expediente
 
         try {
-            await api.post('documents/', data, {
+            await api.post('api/documents/', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setMessage('✅ Documento subido con éxito');

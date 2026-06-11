@@ -209,8 +209,6 @@ export default function Layout({ children, user }) {
     };
 
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
   }, [user]);
 
   useEffect(() => {

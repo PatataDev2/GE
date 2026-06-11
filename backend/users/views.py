@@ -133,6 +133,7 @@ class AdminCreateFuncionarioView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         data = UserSerializer(user).data
+        data['password'] = getattr(serializer, '_generated_password', None)
         return Response(data, status=status.HTTP_201_CREATED)
 
 
@@ -165,7 +166,10 @@ class AdminResetPasswordView(generics.UpdateAPIView):
         user.set_password(password)
         user.clave_temporal = True
         user.save()
-        return Response({'message': 'Contraseña restablecida exitosamente. El usuario debe cambiar su contraseña en el próximo inicio de sesión.'})
+        return Response({
+            'message': 'Contraseña restablecida exitosamente. El usuario debe cambiar su contraseña en el próximo inicio de sesión.',
+            'password': password,
+        })
 
 
 class ChangePasswordView(generics.CreateAPIView):

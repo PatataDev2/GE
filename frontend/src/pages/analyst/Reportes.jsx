@@ -24,8 +24,8 @@ export default function Reportes() {
       setLoading(true);
       try {
         const [expRes, docRes, deptRes] = await Promise.all([
-          api.get('api/expedients/', { signal: ac.signal }),
-          api.get('api/documents/', { signal: ac.signal }),
+          api.get('api/expedients/', { params: { page_size: 1000 }, signal: ac.signal }),
+          api.get('api/documents/', { params: { page_size: 1000 }, signal: ac.signal }),
           api.get('api/departments/', { signal: ac.signal })
         ]);
         setExpedientes(expRes.data);
@@ -120,7 +120,7 @@ export default function Reportes() {
   const filteredExpedientes = expedientes.filter(exp => {
     const created = new Date(exp.created_at);
     if (fechaDesde && created < new Date(fechaDesde)) return false;
-    if (fechaHasta && created < new Date(fechaHasta + 'T23:59:59')) return false;
+    if (fechaHasta && created > new Date(fechaHasta + 'T23:59:59')) return false;
     return true;
   });
   const expedientesPorEstado = (() => {

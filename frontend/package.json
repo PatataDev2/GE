@@ -8,10 +8,11 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "lint-staged",
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{js,jsx}": "eslint --fix"
+    "src/**/*.{js,jsx}": "eslint --fix"
   },
   "dependencies": {
     "axios": "^1.10.0",

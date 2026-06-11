@@ -25,13 +25,15 @@ const ExpedientForm = ({ onSuccess }) => {
       try {
         const [resDep, resUsers] = await Promise.all([
           api.get('api/departments/', { signal: ac.signal }), 
-          api.get('api/users/api/v1/', { signal: ac.signal })        
+          api.get('users/api/v1/', { signal: ac.signal })        
         ]);
         setDepartments(resDep.data);
-        setWorkers(resUsers.data.filter(u => (u.rol === 'recepcionista' || u.rol === 'employee') && u.is_active));
+        const users = Array.isArray(resUsers.data) ? resUsers.data : (resUsers.data.results || []);
+        setWorkers(users.filter(u => u.rol === 'recepcionista' && u.is_active));
       } catch (err) {
         if (err.name !== 'CanceledError') {
           logError("Error cargando datos:", err);
+          showToast('Error al cargar datos del formulario', 'error');
         }
       }
     };
