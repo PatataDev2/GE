@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from document_types.models import DocumentType
@@ -13,7 +14,7 @@ from notifications.utils import (
 from users.models import UsersCustom
 
 from .models import Expedient
-from .permissions import IsAdminRole
+from users.permissions import IsAdminUser
 from .serializers import ExpedientSerializer
 
 
@@ -263,7 +264,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'destroy':
-            return [permissions.IsAuthenticated(), IsAdminRole()]
+            return [permissions.IsAuthenticated(), IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
@@ -282,7 +283,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         if self.request.user.rol not in ['admin', 'analyst']:
-            raise permissions.PermissionDenied('Solo administradores o analistas pueden crear expedientes')
+            raise PermissionDenied('Solo administradores o analistas pueden crear expedientes')
         expedient = serializer.save(created_by=self.request.user)
         expedient.status = 'Pendiente'
         expedient.save(update_fields=['status'])

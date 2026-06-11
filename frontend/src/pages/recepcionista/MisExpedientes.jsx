@@ -160,7 +160,7 @@ export default function MisExpedientes() {
     
     setSavingAsDraft(true);
     try {
-      const res = await api.post(`api/expedients/${selectedExpediente.id}/save_draft/`);
+      await api.post(`api/expedients/${selectedExpediente.id}/save_draft/`);
       handleCloseModal();
       navigate('/recepcionista/gestion-correcciones');
     } catch (err) {
@@ -256,7 +256,6 @@ export default function MisExpedientes() {
     const hasRejected = doc.approval_status === false;
     const isPending = !hasApproved && !hasRejected;
     
-    const status = hasApproved ? 'aprobado' : hasRejected ? 'rechazado' : 'pendiente';
     const bgColor = hasApproved ? '#d1fae5' : hasRejected ? '#fee2e2' : '#fef3c7';
     const textColor = hasApproved ? '#10b981' : hasRejected ? '#ef4444' : '#f59e0b';
     const badgeClass = hasApproved ? 'badge-success' : hasRejected ? 'badge-danger' : 'badge-warning';
@@ -276,12 +275,6 @@ export default function MisExpedientes() {
       }
     }
     
-    const handleClick = () => {
-      if (fileUrl) {
-        window.open(fileUrl, '_blank', 'noopener,noreferrer');
-      }
-    };
-
     return (
       <div className="document-item" style={{ background: bgColor }}>
         <div className="document-icon" style={{ background: bgColor, color: textColor }}>

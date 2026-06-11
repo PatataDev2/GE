@@ -22,25 +22,14 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={{ showToast, toasts }}>
       {children}
-      <div style={{
-        position: 'fixed', top: 20, right: 20, zIndex: 99999,
-        display: 'flex', flexDirection: 'column', gap: 8,
-        pointerEvents: 'none',
-      }}>
+      <div className="fixed top-5 right-5 z-[99999] flex flex-col gap-2" style={{ pointerEvents: 'none' }}>
         {toasts.map(toast => (
           <div key={toast.id}
             onClick={() => removeToast(toast.id)}
+            className="px-5 py-3 rounded-lg text-white text-sm font-medium shadow-lg cursor-pointer max-w-[380px]"
             style={{
               pointerEvents: 'auto',
-              padding: '12px 20px',
-              borderRadius: 8,
-              color: '#fff',
-              fontSize: 14,
-              fontWeight: 500,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              cursor: 'pointer',
               animation: 'toastIn 0.25s ease-out',
-              maxWidth: 380,
               background: toast.type === 'error' ? '#ef4444' :
                           toast.type === 'success' ? '#22c55e' :
                           toast.type === 'warning' ? '#f59e0b' : '#3b82f6',

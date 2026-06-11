@@ -19,6 +19,7 @@ export default function Expedientes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
   const [documents, setDocuments] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [currentExpedientId, setCurrentExpedientId] = useState(null);
   const [docLoading, setDocLoading] = useState(false);
   const [showNewExpedienteModal, setShowNewExpedienteModal] = useState(false);
@@ -200,7 +201,7 @@ export default function Expedientes() {
     if (!selectedDoc) return;
     setSubmitting(true);
     try {
-      const res = await api.post(`api/documents/${selectedDoc.id}/review/`, {
+      await api.post(`api/documents/${selectedDoc.id}/review/`, {
         action: reviewAction,
         message: reviewMessage,
         corrections: reviewAction === 'reject' ? reviewMessage : ''

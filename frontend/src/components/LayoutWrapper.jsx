@@ -7,7 +7,7 @@ import { logError } from '../utils/logger';
 
 export default function LayoutWrapper() {
   const navigate = useNavigate();
-  const { user: authUser, loading: authLoading, refreshUser } = useAuth();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +57,7 @@ export default function LayoutWrapper() {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-100">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-200 rounded-full mx-auto mb-4" style={{ borderTopColor: '#2563eb', animation: 'spin 1s linear infinite' }}></div>
+          <div className="w-12 h-12 border-4 border-slate-200 rounded-full mx-auto mb-4 border-t-blue-600 animate-spin"></div>
           <p className="text-slate-500">Cargando...</p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
-import { getUsers, createFuncionario, updateFuncionario, toggleActivo, resetPassword } from '../../api/users.api';
+import { createFuncionario, updateFuncionario, toggleActivo, resetPassword } from '../../api/users.api';
 import api from '../../api/axios';
 import { useToast } from '../../context/ToastContext';
 import { logError } from '../../utils/logger';
@@ -20,7 +20,7 @@ export default function UsersManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
-  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [, setIsPasswordReset] = useState(false);
   const [editGeneratedPassword, setEditGeneratedPassword] = useState('');
   const [showEditPassword, setShowEditPassword] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -130,18 +130,6 @@ export default function UsersManagement() {
     } catch (error) {
       logError('Error generating password:', error);
       showToast('Error al generar contraseña', 'error');
-    }
-  };
-
-  const handleResetPassword = async (user) => {
-    try {
-      const res = await resetPassword(user.id);
-      setGeneratedPassword(res.data.password);
-      setIsPasswordReset(true);
-      setIsPasswordModalOpen(true);
-    } catch (error) {
-      logError('Error resetting password:', error);
-      showToast('Error al restablecer contraseña', 'error');
     }
   };
 

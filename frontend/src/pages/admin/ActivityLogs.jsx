@@ -15,36 +15,36 @@ const actionTypes = {
 
 export default function ActivityLogs() {
   const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const fetchLogs = () => {
-    const params = {};
-    if (filterType) params.action_type = filterType;
-    if (dateFrom) params.date_from = dateFrom;
-    if (dateTo) params.date_to = dateTo;
-
-    api.get('api/activity-logs/', { params })
-      .then(res => {
-        const data = Array.isArray(res.data) ? res.data : res.data.results || [];
-        setLogs(data.map(log => ({
-          id: log.id,
-          user: log.user,
-          action: log.action,
-          target: log.target,
-          timestamp: log.created_at,
-          ip: log.ip_address,
-          type: log.action_type,
-        })));
-      })
-      .catch(() => setLogs([]))
-      .finally(() => setLoading(false));
-  };
-
   useEffect(() => {
+    const fetchLogs = () => {
+      const params = {};
+      if (filterType) params.action_type = filterType;
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo) params.date_to = dateTo;
+
+      api.get('api/activity-logs/', { params })
+        .then(res => {
+          const data = Array.isArray(res.data) ? res.data : res.data.results || [];
+          setLogs(data.map(log => ({
+            id: log.id,
+            user: log.user,
+            action: log.action,
+            target: log.target,
+            timestamp: log.created_at,
+            ip: log.ip_address,
+            type: log.action_type,
+          })));
+        })
+        .catch(() => setLogs([]))
+        .finally(() => setLoading(false));
+    };
+
     fetchLogs();
     const interval = setInterval(fetchLogs, 10000);
     return () => clearInterval(interval);

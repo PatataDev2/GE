@@ -1,6 +1,5 @@
 ﻿import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { getCurrentUser } from '../api/users.api';
 import api from '../api/users.api';
 
 const AuthContext = createContext(null);

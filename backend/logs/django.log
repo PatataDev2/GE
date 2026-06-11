@@ -18,3 +18,310 @@ WARNING 2026-06-07 03:53:10,765 log 41 129056049723072 Not Found: /api/users/api
 WARNING 2026-06-07 03:53:10,770 basehttp 41 129056049723072 "GET /api/users/api/v1/ HTTP/1.1" 404 4743
 WARNING 2026-06-07 18:41:11,398 log 41 129056049723072 Unauthorized: /api/notifications/unread_count/
 WARNING 2026-06-07 18:41:11,452 basehttp 41 129056049723072 "GET /api/notifications/unread_count/ HTTP/1.1" 401 172
+ERROR 2026-06-08 11:00:26,756 log 16088 19652 Internal Server Error: /api/departments/
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 422, in __getattr__
+    return getattr(_request, attr)
+AttributeError: 'WSGIRequest' object has no attribute 'split'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 232, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 385, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\Users\Epikg\Documents\GE\backend\users\authentication.py", line 7, in authenticate
+    raw_token = self.get_raw_token(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework_simplejwt\authentication.py", line 77, in get_raw_token
+    parts = header.split()
+            ^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 424, in __getattr__
+    raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+AttributeError: 'Request' object has no attribute 'split'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\views\generic\base.py", line 106, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 420, in initial
+    self.perform_authentication(request)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 330, in perform_authentication
+    request.user
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 231, in user
+    with wrap_attributeerrors():
+         ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Epikg\AppData\Local\Python\pythoncore-3.14-64\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 78, in wrap_attributeerrors
+    raise exc.with_traceback(info[2])
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 232, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 385, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\Users\Epikg\Documents\GE\backend\users\authentication.py", line 7, in authenticate
+    raw_token = self.get_raw_token(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework_simplejwt\authentication.py", line 77, in get_raw_token
+    parts = header.split()
+            ^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 424, in __getattr__
+    raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+rest_framework.request.WrappedAttributeError: 'Request' object has no attribute 'split'
+ERROR 2026-06-08 11:00:35,293 log 16088 19652 Internal Server Error: /api/document-types/
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 422, in __getattr__
+    return getattr(_request, attr)
+AttributeError: 'WSGIRequest' object has no attribute 'split'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 232, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 385, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\Users\Epikg\Documents\GE\backend\users\authentication.py", line 7, in authenticate
+    raw_token = self.get_raw_token(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework_simplejwt\authentication.py", line 77, in get_raw_token
+    parts = header.split()
+            ^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 424, in __getattr__
+    raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+AttributeError: 'Request' object has no attribute 'split'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 420, in initial
+    self.perform_authentication(request)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 330, in perform_authentication
+    request.user
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 231, in user
+    with wrap_attributeerrors():
+         ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Epikg\AppData\Local\Python\pythoncore-3.14-64\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 78, in wrap_attributeerrors
+    raise exc.with_traceback(info[2])
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 232, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 385, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\Users\Epikg\Documents\GE\backend\users\authentication.py", line 7, in authenticate
+    raw_token = self.get_raw_token(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework_simplejwt\authentication.py", line 77, in get_raw_token
+    parts = header.split()
+            ^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 424, in __getattr__
+    raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+rest_framework.request.WrappedAttributeError: 'Request' object has no attribute 'split'
+ERROR 2026-06-08 11:09:21,788 log 20232 18508 Internal Server Error: /api/expedients/
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 422, in __getattr__
+    return getattr(_request, attr)
+AttributeError: 'WSGIRequest' object has no attribute 'split'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 232, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 385, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\Users\Epikg\Documents\GE\backend\users\authentication.py", line 7, in authenticate
+    raw_token = self.get_raw_token(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework_simplejwt\authentication.py", line 77, in get_raw_token
+    parts = header.split()
+            ^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 424, in __getattr__
+    raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+AttributeError: 'Request' object has no attribute 'split'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 420, in initial
+    self.perform_authentication(request)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 330, in perform_authentication
+    request.user
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 231, in user
+    with wrap_attributeerrors():
+         ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Epikg\AppData\Local\Python\pythoncore-3.14-64\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 78, in wrap_attributeerrors
+    raise exc.with_traceback(info[2])
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 74, in wrap_attributeerrors
+    yield
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 232, in user
+    self._authenticate()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 385, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+  File "C:\Users\Epikg\Documents\GE\backend\users\authentication.py", line 7, in authenticate
+    raw_token = self.get_raw_token(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework_simplejwt\authentication.py", line 77, in get_raw_token
+    parts = header.split()
+            ^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\request.py", line 424, in __getattr__
+    raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+rest_framework.request.WrappedAttributeError: 'Request' object has no attribute 'split'
+WARNING 2026-06-08 11:10:52,166 log 19224 2432 Unauthorized: /api/expedients/
+ERROR 2026-06-08 11:11:52,063 log 11004 15064 Internal Server Error: /api/expedients/
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 19, in create
+    self.perform_create(serializer)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Epikg\Documents\GE\backend\expedients\views.py", line 285, in perform_create
+    raise permissions.PermissionDenied('Solo administradores o analistas pueden crear expedientes')
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'rest_framework.permissions' has no attribute 'PermissionDenied'
+WARNING 2026-06-08 11:13:42,437 log 11668 18576 Forbidden: /api/expedients/
+WARNING 2026-06-08 11:13:49,570 log 11668 18576 Unauthorized: /api/expedients/
+ERROR 2026-06-08 11:18:37,198 log 15276 7748 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 308, in __call__
+    response = self.process_request(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\http\request.py", line 206, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+ERROR 2026-06-08 11:18:59,657 log 7724 7248 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 308, in __call__
+    response = self.process_request(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\http\request.py", line 206, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+WARNING 2026-06-08 13:25:19,693 log 19992 17276 Forbidden: /api/expedients/
+WARNING 2026-06-08 13:25:32,222 log 19992 17276 Unauthorized: /api/expedients/
+WARNING 2026-06-08 13:25:47,412 log 19992 17276 Forbidden: /api/expedients/request_create/
+WARNING 2026-06-08 13:25:53,175 log 19992 17276 Bad Request: /api/expedients/request_create/
+WARNING 2026-06-08 13:27:34,832 log 18800 6316 Forbidden: /api/expedients/
+WARNING 2026-06-08 13:27:46,538 log 18800 6316 Unauthorized: /api/expedients/
+WARNING 2026-06-08 13:28:04,604 log 18800 6316 Forbidden: /api/expedients/request_create/
+WARNING 2026-06-08 13:28:10,237 log 18800 6316 Bad Request: /api/expedients/request_create/
+WARNING 2026-06-08 13:28:49,454 log 18800 6316 Not Found: /api/expedients/1/reassign/
+WARNING 2026-06-08 13:29:02,546 log 18800 6316 Forbidden: /api/expedients/1/reassign/
+WARNING 2026-06-08 13:29:13,412 log 18800 6316 Bad Request: /api/expedients/1/reassign/
+WARNING 2026-06-08 13:29:24,060 log 18800 6316 Bad Request: /api/expedients/1/reassign/
+WARNING 2026-06-08 13:29:40,227 log 18800 6316 Forbidden: /api/expedients/pending_docs/
+WARNING 2026-06-08 13:32:49,217 log 5492 20644 Not Found: /api/expedients/1/reassign/
+WARNING 2026-06-08 13:34:15,313 log 21224 4592 Not Found: /api/expedients/1/reassign/
+ERROR 2026-06-08 13:35:27,170 log 9840 17332 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\utils\deprecation.py", line 308, in __call__
+    response = self.process_request(request)
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\Epikg\Documents\GE\backend\venv\Lib\site-packages\django\http\request.py", line 206, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+WARNING 2026-06-09 22:03:50,980 log 1964 8336 Unauthorized: /api/departments/
+WARNING 2026-06-09 22:03:55,607 log 1964 8336 Unauthorized: /api/document-types/
+WARNING 2026-06-09 22:45:56,558 log 14920 5320 Unauthorized: /api/departments/
+WARNING 2026-06-09 22:46:01,245 log 14920 5320 Unauthorized: /api/document-types/

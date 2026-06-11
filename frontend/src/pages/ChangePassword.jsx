@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, changePassword } from '../api/users.api';
+import { changePassword } from '../api/users.api';
 import api from '../api/users.api';
 
 export default function ChangePassword() {

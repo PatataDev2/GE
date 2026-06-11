@@ -10,8 +10,7 @@ export default function BackupConfig() {
   const [loading, setLoading] = useState(true);
   const [isBackupRunning, setIsBackupRunning] = useState(false);
   const [restoring, setRestoring] = useState(null);
-  const [showConfigModal, setShowConfigModal] = useState(false);
-  const [config, setConfig] = useState({
+  const [config] = useState({
     enabled: true, frequency: 'daily', time: '23:00', retention: 30, includeFiles: true
   });
 

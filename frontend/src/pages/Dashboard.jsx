@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import api from '../api/axios';
 import { logError } from '../utils/logger';
@@ -339,7 +338,6 @@ const AnalystDashboardContent = () => {
 const RecepcionistaDashboardContent = () => {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notificacionesCount, setNotificacionesCount] = useState(0);
   
   useEffect(() => {
     const ac = new AbortController();

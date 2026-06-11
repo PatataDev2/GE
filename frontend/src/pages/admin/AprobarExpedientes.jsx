@@ -61,12 +61,6 @@ export default function AprobarExpedientes() {
     }
   };
 
-  const handleOpenReview = async (exp) => {
-    setSelectedExp(exp);
-    setIsModalOpen(true);
-    await fetchDocuments(exp.id);
-  };
-
   const handleOpenDetails = async (exp) => {
     setSelectedExp(exp);
     setIsModalOpen(true);

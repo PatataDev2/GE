@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import { 
-  getDocumentTypes, 
   createDocumentType, 
   updateDocumentType, 
   deleteDocumentType, 

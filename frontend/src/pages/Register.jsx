@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import api, { registerUser } from '../api/users.api';
+import { registerUser } from '../api/users.api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { logError } from '../utils/logger';

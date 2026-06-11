@@ -21,7 +21,8 @@ export default function GestionCorrecciones() {
   const [selectedDraft, setSelectedDraft] = useState(null);
 const [showReplaceModal, setShowReplaceModal] = useState(false);
 const [showDraftModal, setShowDraftModal] = useState(false);
-const [replacingFile, setReplacingFile] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  const [replacingFile, setReplacingFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [sendingToReview, setSendingToReview] = useState(false);
   const [draftUploading, setDraftUploading] = useState(false);
@@ -420,11 +421,8 @@ const handleSendToReview = async () => {
                       </div>
                       <div className="flex gap-3 items-center pt-2">
                         <button 
-                          className="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-lg font-medium shadow-sm" 
+                          className="btn btn-primary flex items-center gap-2 px-4 py-2 rounded-lg font-medium shadow-sm transition-all duration-200" 
                           onClick={() => handleOpenDraftModal(draft)}
-                          style={{ 
-                            transition: 'all 0.2s ease'
-                          }}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>

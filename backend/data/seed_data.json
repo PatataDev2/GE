@@ -1,45 +1,5 @@
 [
 {
-  "model": "users.role",
-  "pk": 1,
-  "fields": {
-    "name": "admin",
-    "description": "Administrador del sistema con acceso completo",
-    "created_at": "2026-05-28T03:51:35.707Z",
-    "updated_at": "2026-05-28T03:51:35.707Z"
-  }
-},
-{
-  "model": "users.role",
-  "pk": 2,
-  "fields": {
-    "name": "analyst",
-    "description": "Analista que puede revisar y validar expedientes",
-    "created_at": "2026-05-28T03:51:35.711Z",
-    "updated_at": "2026-05-28T03:51:35.711Z"
-  }
-},
-{
-  "model": "users.role",
-  "pk": 3,
-  "fields": {
-    "name": "employee",
-    "description": "Trabajador que puede subir y gestionar sus expedientes",
-    "created_at": "2026-05-28T03:51:35.712Z",
-    "updated_at": "2026-05-28T03:51:35.712Z"
-  }
-},
-{
-  "model": "users.role",
-  "pk": 4,
-  "fields": {
-    "name": "user",
-    "description": "Usuario normal con acceso básico",
-    "created_at": "2026-05-28T03:51:35.713Z",
-    "updated_at": "2026-05-28T03:51:35.713Z"
-  }
-},
-{
   "model": "users.userscustom",
   "pk": 1,
   "fields": {
@@ -55,7 +15,6 @@
     "date_joined": "2026-05-28T03:51:35.715Z",
     "cedula": "00000000",
     "phone": "00000000000",
-    "role": 1,
     "rol": "admin",
     "clave_temporal": true,
     "cuenta_activa": true,
@@ -79,7 +38,6 @@
     "date_joined": "2026-05-28T04:26:31.938Z",
     "cedula": "12560654",
     "phone": null,
-    "role": null,
     "rol": "employee",
     "clave_temporal": true,
     "cuenta_activa": true,
@@ -103,7 +61,6 @@
     "date_joined": "2026-05-28T04:27:23.883Z",
     "cedula": "2956654",
     "phone": null,
-    "role": null,
     "rol": "analyst",
     "clave_temporal": true,
     "cuenta_activa": true,

@@ -49,6 +49,15 @@ export default function Reportes() {
     setTimeout(function() { setFilterFeedback(''); }, 3000);
   };
 
+  const esc = (str) => String(str).replace(/[&<>"']/g, function (m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    if (m === '"') return '&quot;';
+    if (m === "'") return '&#39;';
+    return m;
+  });
+
   const handleExportPDF = () => {
     var html = '';
     html += '<!DOCTYPE html><html><head><title>Reporte</title>';
@@ -60,19 +69,19 @@ export default function Reportes() {
     html += 'h2{color:#1e293b}';
     html += '</style></head><body>';
     html += '<h2>Reporte de Expedientes</h2>';
-    html += '<p>Total: ' + totalExpedientes + ' | Aprobados: ' + aprobados + ' | Rechazados: ' + rechazados + ' | Tasa: ' + tasaAprobacion + '%</p>';
+    html += '<p>Total: ' + esc(totalExpedientes) + ' | Aprobados: ' + esc(aprobados) + ' | Rechazados: ' + esc(rechazados) + ' | Tasa: ' + esc(tasaAprobacion) + '%</p>';
     html += '<table><tr><th>Estado</th><th>Cantidad</th><th>Porcentaje</th></tr>';
     expedientesPorEstado.forEach(function(e) {
-      html += '<tr><td>' + e.estado + '</td><td>' + e.cantidad + '</td><td>' + e.porcentaje + '%</td></tr>';
+      html += '<tr><td>' + esc(e.estado) + '</td><td>' + esc(e.cantidad) + '</td><td>' + esc(e.porcentaje) + '%</td></tr>';
     });
     html += '</table>';
     html += '<h3 style="margin-top:20px">Por Departamento</h3>';
     html += '<table><tr><th>Departamento</th><th>Cantidad</th></tr>';
     expedientesPorDepartamento.forEach(function(d) {
-      html += '<tr><td>' + d.departamento + '</td><td>' + d.cantidad + '</td></tr>';
+      html += '<tr><td>' + esc(d.departamento) + '</td><td>' + esc(d.cantidad) + '</td></tr>';
     });
     html += '</table>';
-    html += '<p style="margin-top:20px;color:#64748b;font-size:12px">Generado el ' + new Date().toLocaleDateString() + '</p>';
+    html += '<p style="margin-top:20px;color:#64748b;font-size:12px">Generado el ' + esc(new Date().toLocaleDateString()) + '</p>';
     html += '</body></html>';
     var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     var url = URL.createObjectURL(blob);

@@ -26,7 +26,7 @@ const DocumentForm = ({ expedientId, onSuccess }) => {
             setSelectedFile(null);
             setTitle('');
             if (onSuccess) onSuccess();
-        } catch (err) {
+        } catch {
             setMessage('❌ Error al subir documento');
         } finally {
             setLoading(false);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification } from '../../api/notifications.api';
+import { markAsRead, markAllAsRead, deleteNotification } from '../../api/notifications.api';
 import api from '../../api/axios';
 import { logError } from '../../utils/logger';
 

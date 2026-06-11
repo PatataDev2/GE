@@ -11,8 +11,12 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error) => {
-  failedQueue.forEach(({ reject }) => {
-    if (error) reject(error);
+  failedQueue.forEach(({ resolve, reject, config }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(api(config));
+    }
   });
   failedQueue = [];
 };
@@ -25,7 +29,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
+          failedQueue.push({ resolve, reject, config: originalRequest });
         });
       }
 

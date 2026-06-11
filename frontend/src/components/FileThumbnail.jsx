@@ -26,20 +26,8 @@ export default function FileThumbnail({ fileUrl, title }) {
 
   return (
     <div
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: 8,
-        background: icon.bg,
-        color: icon.color,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 10,
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        flexShrink: 0,
-      }}
+      className="w-10 h-10 rounded-lg flex items-center justify-center text-[10px] font-bold uppercase shrink-0"
+      style={{ background: icon.bg, color: icon.color }}
       title={title || fileUrl || 'Documento'}
     >
       {icon.label}
