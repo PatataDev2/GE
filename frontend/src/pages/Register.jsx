@@ -18,6 +18,8 @@ export default function Register() {
   const handleBack = () => {
     window.history.back(); }
 
+  const [submitting, setSubmitting] = useState(false);
+
   const [errors, setErrors] = useState({
     username: '',
     email: '',
@@ -86,10 +88,12 @@ export default function Register() {
     }
 
     try {
+      setSubmitting(true);
       await registerUser(form);
       showToast('Registrado correctamente', 'success');
       navigate('/login');
     } catch (err) {
+      setSubmitting(false);
       logError(err.response?.data || err.message);
       showToast('Error en el registro: ' + (err.response?.data?.message || err.message), 'error');
     }
@@ -186,9 +190,9 @@ export default function Register() {
           />
           {errors.password2 && <p className="text-red-500 text-xs mb-3">{errors.password2}</p>}
 
-          <button 
-            className='bg-green-500 text-white border-0 rounded-md h-10 hover:bg-green-600 cursor-pointer transition duration-300 mt-4' 
-            type="submit"
+          <button
+            className='bg-green-500 text-white border-0 rounded-md h-10 hover:bg-green-600 cursor-pointer transition duration-300 mt-4'
+            type='submit' disabled={submitting}
           >
             Registrar
           </button>
@@ -197,3 +201,5 @@ export default function Register() {
     </div>
   );
 }
+
+

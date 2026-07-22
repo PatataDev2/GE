@@ -31,6 +31,8 @@ WORKDIR /app
 RUN addgroup -S appuser && adduser -S -G appuser -h /app appuser \
     && chown -R appuser:appuser /app
 
+ENV HOME=/app
+
 USER appuser
 
 COPY package.json package-lock.json ./

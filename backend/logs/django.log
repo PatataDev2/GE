@@ -3040,3 +3040,1095 @@ WARNING 2026-06-11 21:39:03,257 log 14 128610926490432 Unauthorized: /users/api/
 WARNING 2026-06-11 21:39:03,298 log 12 128610926490432 Bad Request: /users/api/v1/token/refresh/
 WARNING 2026-06-11 21:39:32,128 log 14 128610926490432 Unauthorized: /users/api/v1/me/
 WARNING 2026-06-11 21:39:32,170 log 14 128610926490432 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 07:16:15,298 log 14 124075096642368 Unauthorized: /api/activity-logs/
+WARNING 2026-06-12 07:39:26,371 log 14 124075096642368 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 07:39:26,412 log 14 124075096642368 Unauthorized: /api/notifications/unread_count/
+WARNING 2026-06-12 14:39:09,882 log 13 124075096642368 Unauthorized: /api/expedients/approved/
+WARNING 2026-06-12 14:39:09,887 log 12 124075096642368 Unauthorized: /api/expedients/pending_admin/
+WARNING 2026-06-12 15:04:10,393 log 12 124075096642368 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 15:04:10,455 log 11 124075096642368 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 15:04:10,773 log 13 124075096642368 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 15:04:10,802 log 13 124075096642368 Bad Request: /users/api/v1/token/refresh/
+ERROR 2026-06-12 15:04:47,409 log 13 124075096642368 Internal Server Error: /api/documents/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/mixins.py", line 19, in create
+    self.perform_create(serializer)
+  File "/app/documents/views.py", line 49, in perform_create
+    document = serializer.save(uploaded_by=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/documents/serializers.py", line 89, in create
+    return super().create(validated_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 991, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 658, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/documents/models.py", line 63, in save
+    super().save(*args, **kwargs)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1805, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1821, in execute_sql
+    for sql, params in self.as_sql():
+                       ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1747, in as_sql
+    self.prepare_value(field, self.pre_save_val(field, obj))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1695, in pre_save_val
+    return field.pre_save(obj, add=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 317, in pre_save
+    file.save(file.name, file.file, save=False)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 93, in save
+    self.name = self.storage.save(name, content, max_length=self.field.max_length)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/base.py", line 49, in save
+    name = self._save(name, content)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/filesystem.py", line 101, in _save
+    file_move_safe(content.temporary_file_path(), full_path)
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/move.py", line 63, in file_move_safe
+    fd = os.open(
+         ^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/app/media/uploads/docs/expedient_7/wallhaven-9oo8k1_1920x1080_Zzd32KP.png'
+ERROR 2026-06-12 15:04:51,067 log 14 124075096642368 Internal Server Error: /api/documents/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/mixins.py", line 19, in create
+    self.perform_create(serializer)
+  File "/app/documents/views.py", line 49, in perform_create
+    document = serializer.save(uploaded_by=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/documents/serializers.py", line 89, in create
+    return super().create(validated_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 991, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 658, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/documents/models.py", line 63, in save
+    super().save(*args, **kwargs)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1805, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1821, in execute_sql
+    for sql, params in self.as_sql():
+                       ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1747, in as_sql
+    self.prepare_value(field, self.pre_save_val(field, obj))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1695, in pre_save_val
+    return field.pre_save(obj, add=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 317, in pre_save
+    file.save(file.name, file.file, save=False)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 93, in save
+    self.name = self.storage.save(name, content, max_length=self.field.max_length)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/base.py", line 49, in save
+    name = self._save(name, content)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/filesystem.py", line 101, in _save
+    file_move_safe(content.temporary_file_path(), full_path)
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/move.py", line 63, in file_move_safe
+    fd = os.open(
+         ^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/app/media/uploads/docs/expedient_7/wallhaven-9oo8k1_1920x1080_Xk6j8eI.png'
+ERROR 2026-06-12 15:05:00,008 log 11 124075096642368 Internal Server Error: /api/documents/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/mixins.py", line 19, in create
+    self.perform_create(serializer)
+  File "/app/documents/views.py", line 49, in perform_create
+    document = serializer.save(uploaded_by=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/documents/serializers.py", line 89, in create
+    return super().create(validated_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 991, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 658, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/documents/models.py", line 63, in save
+    super().save(*args, **kwargs)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1805, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1821, in execute_sql
+    for sql, params in self.as_sql():
+                       ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1747, in as_sql
+    self.prepare_value(field, self.pre_save_val(field, obj))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1695, in pre_save_val
+    return field.pre_save(obj, add=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 317, in pre_save
+    file.save(file.name, file.file, save=False)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 93, in save
+    self.name = self.storage.save(name, content, max_length=self.field.max_length)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/base.py", line 49, in save
+    name = self._save(name, content)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/filesystem.py", line 101, in _save
+    file_move_safe(content.temporary_file_path(), full_path)
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/move.py", line 63, in file_move_safe
+    fd = os.open(
+         ^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/app/media/uploads/docs/expedient_7/wallhaven-9oo8k1_1920x1080_1ckNNVu.png'
+ERROR 2026-06-12 15:06:16,067 log 12 124075096642368 Internal Server Error: /api/documents/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/mixins.py", line 19, in create
+    self.perform_create(serializer)
+  File "/app/documents/views.py", line 49, in perform_create
+    document = serializer.save(uploaded_by=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/documents/serializers.py", line 89, in create
+    return super().create(validated_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 991, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 658, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/documents/models.py", line 63, in save
+    super().save(*args, **kwargs)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1805, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1821, in execute_sql
+    for sql, params in self.as_sql():
+                       ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1747, in as_sql
+    self.prepare_value(field, self.pre_save_val(field, obj))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1695, in pre_save_val
+    return field.pre_save(obj, add=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 317, in pre_save
+    file.save(file.name, file.file, save=False)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 93, in save
+    self.name = self.storage.save(name, content, max_length=self.field.max_length)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/base.py", line 49, in save
+    name = self._save(name, content)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/filesystem.py", line 101, in _save
+    file_move_safe(content.temporary_file_path(), full_path)
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/move.py", line 63, in file_move_safe
+    fd = os.open(
+         ^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/app/media/uploads/docs/expedient_7/wallhaven-9oo8k1_1920x1080_elyU4QG.png'
+ERROR 2026-06-12 15:11:27,054 log 14 124075096642368 Internal Server Error: /api/documents/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/mixins.py", line 19, in create
+    self.perform_create(serializer)
+  File "/app/documents/views.py", line 49, in perform_create
+    document = serializer.save(uploaded_by=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/documents/serializers.py", line 89, in create
+    return super().create(validated_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 991, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 658, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/documents/models.py", line 63, in save
+    super().save(*args, **kwargs)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1805, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1821, in execute_sql
+    for sql, params in self.as_sql():
+                       ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1747, in as_sql
+    self.prepare_value(field, self.pre_save_val(field, obj))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1695, in pre_save_val
+    return field.pre_save(obj, add=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 317, in pre_save
+    file.save(file.name, file.file, save=False)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 93, in save
+    self.name = self.storage.save(name, content, max_length=self.field.max_length)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/base.py", line 49, in save
+    name = self._save(name, content)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/filesystem.py", line 101, in _save
+    file_move_safe(content.temporary_file_path(), full_path)
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/move.py", line 63, in file_move_safe
+    fd = os.open(
+         ^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/app/media/uploads/docs/expedient_7/wallhaven-9oo8k1_1920x1080_VgoNVCN.png'
+WARNING 2026-06-12 15:12:01,633 log 13 124075096642368 Bad Request: /api/documents/
+ERROR 2026-06-12 15:12:27,035 log 11 124075096642368 Internal Server Error: /api/documents/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/mixins.py", line 19, in create
+    self.perform_create(serializer)
+  File "/app/documents/views.py", line 49, in perform_create
+    document = serializer.save(uploaded_by=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/documents/serializers.py", line 89, in create
+    return super().create(validated_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 991, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 658, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/documents/models.py", line 63, in save
+    super().save(*args, **kwargs)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1805, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1821, in execute_sql
+    for sql, params in self.as_sql():
+                       ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1747, in as_sql
+    self.prepare_value(field, self.pre_save_val(field, obj))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1695, in pre_save_val
+    return field.pre_save(obj, add=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 317, in pre_save
+    file.save(file.name, file.file, save=False)
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/fields/files.py", line 93, in save
+    self.name = self.storage.save(name, content, max_length=self.field.max_length)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/base.py", line 49, in save
+    name = self._save(name, content)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/files/storage/filesystem.py", line 106, in _save
+    fd = os.open(full_path, self.OS_OPEN_FLAGS, 0o666)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/app/media/uploads/docs/expedient_7/photo_4983697931240148099_y.jpg'
+WARNING 2026-06-12 15:14:39,964 log 14 123622687146816 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 15:14:40,100 log 15 123622687146816 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 15:14:40,114 log 17 123622687146816 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 15:14:40,511 log 15 123622687146816 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 15:14:55,871 log 16 123622687146816 Not Found: /api/token/
+WARNING 2026-06-12 15:15:28,761 log 17 123622687146816 Not Found: /api/token/
+WARNING 2026-06-12 15:15:42,134 log 15 123622687146816 Not Found: /api/token/
+WARNING 2026-06-12 15:15:54,291 log 17 123622687146816 Unauthorized: /users/api/v1/token/
+WARNING 2026-06-12 15:29:07,786 log 16 123622687146816 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 15:29:07,874 log 16 123622687146816 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 15:29:08,193 log 16 123622687146816 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 15:29:08,317 log 15 123622687146816 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 15:31:36,944 log 15 123622687146816 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 15:31:37,196 log 14 123622687146816 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 15:35:23,053 log 16 123622687146816 Forbidden: /api/documents/13/review/
+WARNING 2026-06-12 15:35:51,692 log 17 123622687146816 Forbidden: /api/documents/13/review/
+WARNING 2026-06-12 15:36:02,610 log 15 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:36:38,598 log 15 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:36:39,850 log 15 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:36:40,665 log 16 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:36:41,128 log 14 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:38:37,265 log 16 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:39:20,114 log 15 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:39:40,639 log 17 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:40:13,094 log 17 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:40:27,029 log 16 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:42:01,269 log 14 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:43:32,658 log 16 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:44:07,880 log 17 123622687146816 Forbidden: /api/documents/14/review/
+WARNING 2026-06-12 15:46:51,621 log 15 135073386087232 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 15:46:51,674 log 15 135073386087232 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 15:49:05,816 log 15 135073386087232 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 15:49:05,865 log 15 135073386087232 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:31:13,721 log 16 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:31:13,723 log 18 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:31:14,122 log 16 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:31:17,342 log 16 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:31:17,830 log 18 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:31:18,908 log 17 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:31:19,174 log 16 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:38:38,792 log 19 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:38:38,848 log 19 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:41:28,038 log 17 123623846638400 Bad Request: /api/expedients/4/
+WARNING 2026-06-12 17:45:04,801 log 16 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:45:04,859 log 16 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:50:38,370 log 19 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:50:38,428 log 18 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:52:10,154 log 19 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:52:10,197 log 16 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:53:27,995 log 19 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:53:28,053 log 19 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:54:57,636 log 17 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:54:57,684 log 17 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:56:56,533 log 18 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:56:56,597 log 17 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:59:07,945 log 18 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:59:08,007 log 19 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 17:59:08,107 log 18 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 17:59:08,440 log 18 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:00:13,792 log 17 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:00:13,847 log 17 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:00:29,249 log 19 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:00:29,294 log 17 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:00:48,455 log 16 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:00:48,503 log 16 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:05:43,809 log 16 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:05:43,855 log 17 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:06:32,603 log 17 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:06:32,661 log 18 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:07:04,018 log 17 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:07:04,053 log 19 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:07:49,099 log 18 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:07:49,217 log 19 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:09:30,443 log 17 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:09:30,498 log 17 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:10:08,821 log 17 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:10:08,863 log 19 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:10:34,677 log 19 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:10:34,723 log 19 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-12 18:11:54,234 log 17 123623846638400 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-12 18:11:54,277 log 17 123623846638400 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-16 17:53:24,431 log 19 123239433380672 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-16 17:53:24,435 log 16 123239433380672 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-16 17:53:24,689 log 19 123239433380672 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-16 17:53:26,770 log 19 123239433380672 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-16 17:53:27,959 log 17 123239433380672 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-16 17:53:28,093 log 18 123239433380672 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-16 17:53:28,116 log 19 123239433380672 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-17 19:21:03,815 log 19 130884780262208 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-17 19:21:03,817 log 18 130884780262208 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-17 19:21:04,070 log 18 130884780262208 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-17 19:21:06,263 log 18 130884780262208 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-17 19:21:06,444 log 18 130884780262208 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-17 19:21:06,567 log 18 130884780262208 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-17 19:21:07,558 log 16 130884780262208 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 02:54:31,076 log 16 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 02:54:31,312 log 16 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 02:54:31,570 log 16 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 02:54:34,162 log 17 139615296529216 Not Found: /
+WARNING 2026-06-21 02:59:27,048 log 17 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 02:59:27,098 log 17 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:05:49,366 log 17 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:05:49,655 log 14 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:05:49,677 log 15 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:05:49,773 log 14 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:07:57,487 log 17 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:07:57,664 log 16 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:07:57,810 log 15 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:07:57,923 log 15 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:14:26,145 log 17 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:14:26,201 log 16 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:14:26,464 log 17 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:14:26,508 log 15 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:17:17,713 log 17 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:17:18,464 log 14 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:17:18,891 log 14 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:23:49,093 log 15 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:23:49,164 log 15 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:24:02,335 log 17 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:24:02,514 log 16 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:24:02,606 log 16 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:24:02,642 log 17 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:24:29,956 log 16 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:24:30,010 log 14 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:24:55,169 log 14 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:24:55,251 log 14 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:25:25,225 log 15 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:25:25,349 log 15 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:25:25,529 log 14 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:25:25,567 log 16 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:25:37,743 log 14 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:25:37,820 log 14 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:25:37,998 log 15 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:25:38,032 log 17 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-21 03:27:52,985 log 17 139615296529216 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-21 03:27:53,171 log 17 139615296529216 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 18:08:33,325 log 17 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 18:08:33,392 log 17 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 18:08:34,371 log 18 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 18:08:36,014 log 18 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 18:08:36,182 log 18 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 18:08:36,294 log 17 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 18:08:36,616 log 17 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 18:33:13,930 log 16 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 18:33:13,974 log 19 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 19:26:18,149 log 18 128693948093248 Unauthorized: /api/activity-logs/
+WARNING 2026-06-23 19:47:27,000 log 19 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 19:47:27,077 log 18 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:06:46,050 log 19 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:06:46,104 log 17 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:10:44,309 log 19 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:10:44,343 log 16 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:13:31,760 log 19 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:13:31,810 log 18 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:14:02,309 log 19 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:14:02,362 log 17 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:14:31,868 log 18 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:14:31,911 log 19 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:15:35,256 log 17 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:15:35,288 log 18 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:16:19,431 log 16 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:16:19,461 log 18 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:17:27,400 log 18 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:17:27,450 log 18 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:18:24,018 log 18 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:18:24,098 log 17 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:19:11,149 log 18 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:19:11,181 log 16 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:19:39,049 log 16 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:19:39,106 log 16 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:20:02,362 log 19 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:20:02,407 log 19 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-06-23 20:20:48,926 log 16 128693948093248 Unauthorized: /users/api/v1/me/
+WARNING 2026-06-23 20:20:48,963 log 16 128693948093248 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 17:00:20,144 log 17 132598564623168 Not Found: /
+WARNING 2026-07-15 17:00:38,199 log 17 132598564623168 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 17:00:39,284 log 16 132598564623168 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 17:00:39,332 log 15 132598564623168 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 17:00:40,383 log 15 132598564623168 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 17:00:40,474 log 15 132598564623168 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 17:00:41,411 log 14 132598564623168 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 17:00:41,442 log 14 132598564623168 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 17:00:44,402 log 14 132598564623168 Unauthorized: /api/
+WARNING 2026-07-15 14:32:05,367 log 8580 9984 Unauthorized: /api/expedients/
+WARNING 2026-07-15 14:32:05,369 basehttp 8580 9984 "GET /api/expedients/ HTTP/1.1" 401 58
+WARNING 2026-07-15 14:32:57,076 log 8580 12808 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 14:32:57,083 log 8580 19420 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 14:32:57,085 basehttp 8580 12808 "GET /users/api/v1/me/ HTTP/1.1" 401 58
+WARNING 2026-07-15 14:32:57,087 basehttp 8580 19420 "GET /users/api/v1/me/ HTTP/1.1" 401 58
+WARNING 2026-07-15 14:33:46,302 log 8580 3200 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 14:33:46,306 basehttp 8580 3200 "GET /users/api/v1/me/ HTTP/1.1" 401 58
+WARNING 2026-07-15 14:33:46,350 log 8580 3200 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 14:33:46,352 basehttp 8580 3200 "POST /users/api/v1/token/refresh/ HTTP/1.1" 400 39
+WARNING 2026-07-15 14:33:46,480 log 8580 3200 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 14:33:46,481 basehttp 8580 3200 "GET /users/api/v1/me/ HTTP/1.1" 401 58
+WARNING 2026-07-15 14:33:46,533 log 8580 3200 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 14:33:46,534 basehttp 8580 3200 "POST /users/api/v1/token/refresh/ HTTP/1.1" 400 39
+WARNING 2026-07-15 14:33:49,631 log 8580 3200 Unauthorized: /users/api/v1/login/cookie/
+WARNING 2026-07-15 14:33:49,633 basehttp 8580 3200 "POST /users/api/v1/login/cookie/ HTTP/1.1" 401 63
+WARNING 2026-07-15 14:33:49,654 log 8580 3200 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 14:33:49,655 basehttp 8580 3200 "POST /users/api/v1/token/refresh/ HTTP/1.1" 400 39
+WARNING 2026-07-15 14:33:54,791 log 8580 3200 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 14:33:54,793 basehttp 8580 3200 "GET /users/api/v1/me/ HTTP/1.1" 401 58
+WARNING 2026-07-15 14:33:54,854 log 8580 3200 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 14:33:54,855 basehttp 8580 3200 "POST /users/api/v1/token/refresh/ HTTP/1.1" 400 39
+WARNING 2026-07-15 14:33:55,074 log 8580 3200 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-15 14:33:55,075 basehttp 8580 3200 "GET /users/api/v1/me/ HTTP/1.1" 401 58
+WARNING 2026-07-15 14:33:55,117 log 8580 3200 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 14:33:55,119 basehttp 8580 3200 "POST /users/api/v1/token/refresh/ HTTP/1.1" 400 39
+WARNING 2026-07-15 14:34:19,801 log 8580 3200 Unauthorized: /users/api/v1/login/cookie/
+WARNING 2026-07-15 14:34:19,802 basehttp 8580 3200 "POST /users/api/v1/login/cookie/ HTTP/1.1" 401 63
+WARNING 2026-07-15 14:34:19,817 log 8580 3200 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 14:34:19,818 basehttp 8580 3200 "POST /users/api/v1/token/refresh/ HTTP/1.1" 400 39
+WARNING 2026-07-15 14:35:43,785 log 8580 3200 Unauthorized: /users/api/v1/login/cookie/
+WARNING 2026-07-15 14:35:43,786 basehttp 8580 3200 "POST /users/api/v1/login/cookie/ HTTP/1.1" 401 63
+WARNING 2026-07-15 14:35:43,817 log 8580 3200 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-15 14:35:43,818 basehttp 8580 3200 "POST /users/api/v1/token/refresh/ HTTP/1.1" 400 39
+WARNING 2026-07-15 18:45:49,188 log 14 126235402408768 Unauthorized: /api/expedients/
+WARNING 2026-07-18 21:22:33,856 log 16 125380984210240 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-18 21:22:35,468 log 18 125380984210240 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-18 21:22:35,493 log 19 125380984210240 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-18 21:22:36,722 log 17 125380984210240 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-18 22:28:09,327 log 16 125380984210240 Unauthorized: /api/expedients/pending_admin/
+WARNING 2026-07-18 22:28:09,333 log 17 125380984210240 Unauthorized: /api/expedients/approved/
+WARNING 2026-07-18 22:35:05,549 log 16 139047896220480 Unauthorized: /api/document-types/
+WARNING 2026-07-19 00:00:45,831 log 15 128915934090048 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 00:00:45,864 log 14 128915934090048 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 01:03:53,979 log 14 128915934090048 Unauthorized: /api/document-types/
+WARNING 2026-07-19 01:03:53,980 log 17 128915934090048 Unauthorized: /api/expedients/my/
+ERROR 2026-07-19 01:47:07,948 log 17 128915934090048 Internal Server Error: /api/documents/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.NotNullViolation: null value in column "pending_update_request" of relation "documents_document" violates not-null constraint
+DETAIL:  Failing row contains (23, carta de trabajo, uploads/docs/expedient_2/832814156084831352-Photoroom_TgILN2c.pn..., 832814156084831352-Photoroom.png, 832814156084831352-Photoroom.png, null, patata, null, null, null, 2026-07-19 01:47:07.260113+00, 7, 2, 2, null).
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/mixins.py", line 19, in create
+    self.perform_create(serializer)
+  File "/app/documents/views.py", line 49, in perform_create
+    document = serializer.save(uploaded_by=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/documents/serializers.py", line 92, in create
+    return super().create(validated_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 991, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 658, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/documents/models.py", line 63, in save
+    self.path = self.file.name
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1805, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1822, in execute_sql
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: null value in column "pending_update_request" of relation "documents_document" violates not-null constraint
+DETAIL:  Failing row contains (23, carta de trabajo, uploads/docs/expedient_2/832814156084831352-Photoroom_TgILN2c.pn..., 832814156084831352-Photoroom.png, 832814156084831352-Photoroom.png, null, patata, null, null, null, 2026-07-19 01:47:07.260113+00, 7, 2, 2, null).
+
+ERROR 2026-07-19 01:47:23,731 log 16 128915934090048 Internal Server Error: /api/documents/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.NotNullViolation: null value in column "pending_update_request" of relation "documents_document" violates not-null constraint
+DETAIL:  Failing row contains (24, carta de trabajo, uploads/docs/expedient_2/832814156084831352-Photoroom_Zt1AVpu.pn..., 832814156084831352-Photoroom.png, 832814156084831352-Photoroom.png, null, , null, null, null, 2026-07-19 01:47:23.383728+00, 7, 2, 2, null).
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/mixins.py", line 19, in create
+    self.perform_create(serializer)
+  File "/app/documents/views.py", line 49, in perform_create
+    document = serializer.save(uploaded_by=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/documents/serializers.py", line 92, in create
+    return super().create(validated_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 991, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 658, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/documents/models.py", line 63, in save
+    self.path = self.file.name
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1805, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1822, in execute_sql
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: null value in column "pending_update_request" of relation "documents_document" violates not-null constraint
+DETAIL:  Failing row contains (24, carta de trabajo, uploads/docs/expedient_2/832814156084831352-Photoroom_Zt1AVpu.pn..., 832814156084831352-Photoroom.png, 832814156084831352-Photoroom.png, null, , null, null, null, 2026-07-19 01:47:23.383728+00, 7, 2, 2, null).
+
+ERROR 2026-07-19 01:49:17,967 log 14 128915934090048 Internal Server Error: /api/documents/
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.NotNullViolation: null value in column "pending_update_request" of relation "documents_document" violates not-null constraint
+DETAIL:  Failing row contains (25, carta de trabajo, uploads/docs/expedient_2/imagen-Photoroom3.png, imagen-Photoroom(3).png, imagen-Photoroom(3).png, null, , null, null, null, 2026-07-19 01:49:17.391252+00, 7, 2, 2, null).
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/mixins.py", line 19, in create
+    self.perform_create(serializer)
+  File "/app/documents/views.py", line 49, in perform_create
+    document = serializer.save(uploaded_by=self.request.user)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/documents/serializers.py", line 92, in create
+    return super().create(validated_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework/serializers.py", line 991, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 658, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/documents/models.py", line 63, in save
+    self.path = self.file.name
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1020, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/base.py", line 1061, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/query.py", line 1805, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1822, in execute_sql
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/usr/local/lib/python3.12/site-packages/django/db/backends/utils.py", line 89, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: null value in column "pending_update_request" of relation "documents_document" violates not-null constraint
+DETAIL:  Failing row contains (25, carta de trabajo, uploads/docs/expedient_2/imagen-Photoroom3.png, imagen-Photoroom(3).png, imagen-Photoroom(3).png, null, , null, null, null, 2026-07-19 01:49:17.391252+00, 7, 2, 2, null).
+
+WARNING 2026-07-19 02:30:33,036 log 17 128915934090048 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 02:30:33,041 log 14 128915934090048 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 02:47:27,414 log 16 128915934090048 Bad Request: /api/documents/21/upload_requested_file/
+WARNING 2026-07-19 02:50:45,767 log 15 128915934090048 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 02:50:45,945 log 14 128915934090048 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 02:50:46,058 log 14 128915934090048 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 02:50:46,224 log 15 128915934090048 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 02:54:29,613 log 17 128915934090048 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 02:54:29,665 log 15 128915934090048 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 05:08:26,970 log 16 128915934090048 Unauthorized: /api/expedients/approved/
+WARNING 2026-07-19 05:08:26,975 log 15 128915934090048 Unauthorized: /api/expedients/pending_admin/
+WARNING 2026-07-19 05:25:57,322 log 15 128915934090048 Bad Request: /api/expedients/request_document_only/
+WARNING 2026-07-19 05:26:02,505 log 16 128915934090048 Bad Request: /api/expedients/request_document_only/
+WARNING 2026-07-19 05:30:22,658 log 17 128915934090048 Bad Request: /api/expedients/request_document_only/
+WARNING 2026-07-19 05:42:12,568 log 16 136771050468160 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 05:42:12,634 log 16 136771050468160 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 05:42:12,827 log 17 136771050468160 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 05:42:12,896 log 14 136771050468160 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 05:43:16,672 log 15 136771050468160 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 05:43:16,709 log 14 136771050468160 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 05:43:39,920 log 17 136771050468160 Not Found: /favicon.ico
+WARNING 2026-07-19 05:43:55,927 log 16 136771050468160 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 05:43:55,970 log 16 136771050468160 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 09:17:15,430 log 14 136771050468160 Unauthorized: /api/documents/
+WARNING 2026-07-19 09:20:18,500 log 15 136771050468160 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 09:20:18,823 log 14 136771050468160 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 09:20:19,343 log 16 136771050468160 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 09:20:19,632 log 15 136771050468160 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 09:47:08,271 log 14 134620270334784 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 09:47:08,346 log 17 134620270334784 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 09:47:08,765 log 14 134620270334784 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 09:47:08,879 log 15 134620270334784 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 09:48:01,578 log 15 134620270334784 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 09:48:01,613 log 17 134620270334784 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 09:48:42,109 log 16 134620270334784 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 09:48:42,161 log 16 134620270334784 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 10:00:10,336 log 16 134933014864704 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 10:00:10,379 log 17 134933014864704 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 10:00:48,062 log 16 134933014864704 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 10:00:48,119 log 17 134933014864704 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-19 10:01:06,131 log 14 134933014864704 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-19 10:01:06,174 log 16 134933014864704 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-20 18:37:30,663 log 16 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 18:37:30,665 log 19 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 18:37:30,735 log 16 125712088310592 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-20 18:37:32,085 log 16 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 18:37:32,251 log 19 125712088310592 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-20 18:37:32,805 log 18 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 18:37:32,835 log 18 125712088310592 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-20 18:43:35,063 log 18 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 18:43:35,084 log 16 125712088310592 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-20 15:34:28,832 log 16592 3364 Unauthorized: /api/departments/
+WARNING 2026-07-20 15:34:35,155 log 16592 3364 Unauthorized: /api/document-types/
+WARNING 2026-07-20 19:39:02,127 log 19 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 19:39:02,214 log 17 125712088310592 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-20 19:58:02,695 log 18 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 19:58:02,760 log 16 125712088310592 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-20 19:59:07,192 log 16 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 19:59:07,234 log 19 125712088310592 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-20 20:00:02,174 log 17 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 20:00:02,278 log 17 125712088310592 Bad Request: /users/api/v1/token/refresh/
+WARNING 2026-07-20 20:00:02,407 log 16 125712088310592 Unauthorized: /users/api/v1/me/
+WARNING 2026-07-20 20:00:02,489 log 16 125712088310592 Bad Request: /users/api/v1/token/refresh/

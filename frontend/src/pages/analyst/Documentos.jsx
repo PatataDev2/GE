@@ -6,13 +6,13 @@ import DocumentForm from '../../components/DocumentForm';
 import Modal from '../../components/Modal';
 import { logError } from '../../utils/logger';
 
-export default function GestionDocumentos({ expedientId = 1 }) { // ID de prueba
+export default function GestionDocumentos({ expedientId }) {
   const [documentos, setDocumentos] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchDocumentos = useCallback(async (signal) => {
     try {
-      const res = await api.get(`documents/?expedient=${expedientId}`, { signal });
+      const res = await api.get(`api/documents/?expedient=${expedientId}`, { signal });
       setDocumentos(res.data);
     } catch (err) {
       if (err.name !== 'CanceledError') {
@@ -22,10 +22,15 @@ export default function GestionDocumentos({ expedientId = 1 }) { // ID de prueba
   }, [expedientId]);
 
   useEffect(() => {
+    if (!expedientId) return;
     const ac = new AbortController();
     fetchDocumentos(ac.signal);
     return () => ac.abort();
-  }, [fetchDocumentos]);
+  }, [fetchDocumentos, expedientId]);
+
+  if (!expedientId) {
+    return <div className="card p-6 text-center text-gray-400">Selecciona un expediente para ver sus documentos</div>;
+  }
 
   return (
     <div className="card p-6">

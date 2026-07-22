@@ -56,6 +56,8 @@ class Expedient(models.Model):
         verbose_name="Rechazado por"
     )
 
+    rejection_reason = models.TextField(blank=True, null=True, help_text="Razón del rechazo del expediente")
+
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 

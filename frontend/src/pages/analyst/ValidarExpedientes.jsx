@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
@@ -6,11 +6,13 @@ import DocxPreview from './DocxPreview';
 import api from '../../api/axios';
 import { useToast } from '../../context/ToastContext';
 import { logError } from '../../utils/logger';
+import { getFileType, resolveFileUrl, downloadFile } from '../../utils/preview';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 export default function ValidarExpedientes() {
   const { showToast } = useToast();
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError] = useState(null);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [documents, setDocuments] = useState([]);
@@ -24,6 +26,8 @@ export default function ValidarExpedientes() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [docxBlob, setDocxBlob] = useState(null);
+  const [expandedTitles, setExpandedTitles] = useState({});
+  const toggleTitle = (id) => setExpandedTitles(prev => ({ ...prev, [id]: !prev[id] }));
   const fetchExpedientes = async (signal) => {
     setLoading(true);
     try {
@@ -74,16 +78,6 @@ export default function ValidarExpedientes() {
     if (doc.approval_status === false) return 'rechazado';
     return 'pendiente';
   };
-  const getFileType = (doc) => {
-    if (doc.file) {
-      const ext = doc.file.split('.').pop().toLowerCase();
-      if (['pdf'].includes(ext)) return 'pdf';
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
-      if (['mp4', 'webm', 'ogg'].includes(ext)) return 'video';
-      if (['docx'].includes(ext)) return 'docx';
-    }
-    return 'other';
-  };
   const handleOpenReject = (exp) => {
     setSelectedExpediente(exp);
     setCorrecciones('');
@@ -125,59 +119,29 @@ export default function ValidarExpedientes() {
     }
   };
   const handlePreviewDoc = async (doc) => {
-    let fileUrl = null;
-    if (doc.file) {
-      const filePath = doc.file;
-      if (filePath.startsWith('http')) {
-        fileUrl = filePath;
-      } else if (filePath.startsWith('/')) {
-        fileUrl = `${BASE_API_URL}${filePath}`;
-      } else {
-        fileUrl = `${BASE_API_URL}/media/${filePath}`;
-      }
-    }
-    if (fileUrl) {
-      setPreviewDoc(doc);
-      setPreviewUrl(fileUrl);
-      setDocxBlob(null);
-      const ext = doc.file.split('.').pop().toLowerCase();
-      if (ext === 'docx') {
-        try {
-          setShowPreviewModal(true);
-          const response = await api.get(fileUrl, { responseType: 'blob' });
-          const blob = response.data;
-          setDocxBlob(blob);
-        } catch (err) {
-          logError('Error loading DOCX:', err);
-        }
-      } else if (getFileType(doc) !== 'image') {
-        window.open(fileUrl, '_blank', 'noopener,noreferrer');
-      } else {
+    const fileUrl = resolveFileUrl(doc, BASE_API_URL);
+    if (!fileUrl) return;
+    setPreviewDoc(doc);
+    setPreviewUrl(fileUrl);
+    setDocxBlob(null);
+    const ext = doc.file.split('.').pop().toLowerCase();
+    if (ext === 'docx') {
+      try {
         setShowPreviewModal(true);
+        const response = await api.get(fileUrl, { responseType: 'blob' });
+        setDocxBlob(response.data);
+      } catch (err) {
+        logError('Error loading DOCX:', err);
       }
+    } else if (getFileType(doc) === 'pdf' || getFileType(doc) === 'image' || getFileType(doc) === 'video') {
+      setShowPreviewModal(true);
+    } else {
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
   const handleDownloadDoc = (doc) => {
-    let fileUrl = null;
-    if (doc.file) {
-      const filePath = doc.file;
-      if (filePath.startsWith('http')) {
-        fileUrl = filePath;
-      } else if (filePath.startsWith('/')) {
-        fileUrl = `${BASE_API_URL}${filePath}`;
-      } else {
-        fileUrl = `${BASE_API_URL}/media/${filePath}`;
-      }
-    }
-    if (fileUrl) {
-      const link = document.createElement('a');
-      link.href = fileUrl;
-      link.download = doc.title || 'documento';
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+    const url = resolveFileUrl(doc, BASE_API_URL);
+    if (url) downloadFile(url, doc.title);
   };
   const filtered = expedientes.filter(exp => {
     if (filterStatus === 'todos') return true;
@@ -203,8 +167,7 @@ export default function ValidarExpedientes() {
             { key: 'todos', label: 'Todos' },
             { key: 'pendiente', label: `Pendientes (${pendingCount})` },
             { key: 'pre_aprobado', label: `Pre-Aprobados (${preApprovedCount})` },
-            { key: 'aprobado', label: 'Aprobados' },
-            { key: 'rechazado', label: 'Rechazados' }
+            { key: 'aprobado', label: 'Aprobados' }
           ].map(f => (
             <button
               key={f.key}
@@ -216,7 +179,9 @@ export default function ValidarExpedientes() {
           ))}
         </div>
       </div>
-      {loading ? (
+      {fetchError ? (
+          <div className='p-8 text-center text-red-400'>{fetchError}</div>
+        ) : loading ? (
         <div className="p-8 text-center text-gray-400">Cargando...</div>
       ) : filtered.length === 0 ? (
         <div className="card">
@@ -241,10 +206,15 @@ export default function ValidarExpedientes() {
                       </div>
                       <h4 className="text-lg font-semibold mb-1">{exp.title}</h4>
                       <p className="text-slate-500 text-sm">
-                        {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
+                        {exp.department_name} - Asignado a: {exp.asinged_to_username || 'Sin asignar'}
                       </p>
                       {exp.description && (
                         <p className="text-slate-400 text-xs mt-1">{exp.description}</p>
+                      )}
+                      {exp.rejection_reason && (
+                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                          <strong>Correcciones pendientes:</strong> {exp.rejection_reason}
+                        </div>
                       )}
                     </div>
                     <button
@@ -293,6 +263,11 @@ export default function ValidarExpedientes() {
               <p><strong>Departamento:</strong> {selectedExpediente.department_name}</p>
               <p><strong>Asignado a:</strong> {selectedExpediente.asinged_to_username || 'Sin asignar'}</p>
               {selectedExpediente.description && <p><strong>Descripción:</strong> {selectedExpediente.description}</p>}
+              {selectedExpediente.rejection_reason && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <strong>Correcciones pendientes:</strong> {selectedExpediente.rejection_reason}
+                </div>
+              )}
               <p className="mt-2">
                 <strong>Estado:</strong>{' '}
                 <span className={`badge ${getExpedienteStatus(selectedExpediente) === 'aprobado' ? 'badge-success' : getExpedienteStatus(selectedExpediente) === 'rechazado' ? 'badge-danger' : getExpedienteStatus(selectedExpediente) === 'pre_aprobado' ? 'badge-info' : 'badge-warning'}`}>
@@ -321,8 +296,8 @@ export default function ValidarExpedientes() {
                           <polyline points="14 2 14 8 20 8"/>
                         </svg>
                       </div>
-                      <div className="document-info flex-1 min-w-0">
-                        <div className="document-name font-semibold text-sm">{doc.title}</div>
+                      <div className="document-info flex-1 min-w-0" style={{overflow:'hidden'}}>
+                        <div className="document-name font-semibold text-sm" onClick={() => toggleTitle(doc.id)} style={{cursor:'pointer', overflow:'hidden', textOverflow:'ellipsis', whiteSpace: expandedTitles[doc.id] ? 'normal' : 'nowrap', wordBreak: expandedTitles[doc.id] ? 'break-all' : undefined}}>{doc.title}</div>
                         <div className="document-size text-xs text-slate-500">{doc.document_type_name || 'Sin tipo'}</div>
                       </div>
                       <span className={`badge ${status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : 'badge-warning'} text-[0.7rem]`}>
@@ -503,3 +478,4 @@ export default function ValidarExpedientes() {
     </div>
   );
 }
+

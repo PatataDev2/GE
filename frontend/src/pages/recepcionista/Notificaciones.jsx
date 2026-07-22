@@ -86,7 +86,8 @@ function formatFecha(dateStr) {
 export default function Notificaciones() {
   const [notificaciones, setNotificaciones] = useState([]);
   const [filtro, setFiltro] = useState('todas');
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const cargarNotificaciones = useCallback(async (signal) => {
     try {
@@ -95,6 +96,7 @@ export default function Notificaciones() {
     } catch (err) {
       if (err.name !== 'CanceledError') {
         logError('Error cargando notificaciones:', err);
+      setError('Error al cargar las notificaciones.');
       }
     } finally {
       setLoading(false);
@@ -195,7 +197,7 @@ export default function Notificaciones() {
           </div>
           <div>
             <div className="stat-value">{notificaciones.filter(n => n.notification_type === 'rechazado' || n.notification_type === 'correccion').length}</div>
-            <div className="stat-label">Requieren Accion</div>
+            <div className="stat-label">Rechazos / Correcciones</div>
           </div>
         </div>
       </div>
@@ -228,15 +230,27 @@ export default function Notificaciones() {
             >
               Rechazos
             </button>
+            <button 
+              className={`tab ${filtro === 'revision' ? 'active' : ''}`}
+              onClick={() => setFiltro('revision')}
+            >
+              Revisiones
+            </button>
+            <button 
+              className={`tab ${filtro === 'asignado' ? 'active' : ''}`}
+              onClick={() => setFiltro('asignado')}
+            >
+              Asignaciones
+            </button>
+            <button 
+              className={`tab ${filtro === 'correccion' ? 'active' : ''}`}
+              onClick={() => setFiltro('correccion')}
+            >
+              Correcciones
+            </button>
           </div>
           
-          <button className="btn btn-secondary" onClick={() => cargarNotificaciones()}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="23 4 23 10 17 10"/>
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-            </svg>
-            Refrescar
-          </button>
+
           {noLeidas > 0 && (
             <button className="btn btn-secondary" onClick={handleMarcarTodasComoLeidas}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -250,7 +264,7 @@ export default function Notificaciones() {
 
       {/* Notifications List */}
       <div className="card mt-4">
-        {loading ? (
+        {error ? (
           <div className="empty-state">
             <p>Cargando notificaciones...</p>
           </div>
@@ -281,15 +295,15 @@ export default function Notificaciones() {
                     
                     <div className="flex-1">
                       <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-semibold flex items-center gap-2">
+                        <h4 className="font-semibold flex items-center gap-2 min-w-0 truncate">
                           {notif.title}
                           {!notif.read && (
-                            <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            <span className="w-2 h-2 bg-blue-600 rounded-full shrink-0"></span>
                           )}
                         </h4>
-                        <span className="text-xs text-slate-500">{formatFecha(notif.created_at)}</span>
+                        <span className="text-xs text-slate-500 shrink-0 whitespace-nowrap">{formatFecha(notif.created_at)}</span>
                       </div>
-                      <p className="text-sm text-slate-600 mb-2">
+                      <p className="text-sm text-slate-600 mb-2 line-clamp-2">
                         {notif.message}
                       </p>
                       <div className="flex gap-2 items-center flex-wrap">

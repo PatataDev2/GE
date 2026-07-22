@@ -201,24 +201,23 @@ class AdminDashboardView(generics.GenericAPIView):
 
     def get(self, request):
         from expedients.models import Expedient
-        from notifications.models import Notification
+        from notifications.models import ActivityLog
 
         total_users = UsersCustom.objects.count()
         active_users = UsersCustom.objects.filter(cuenta_activa=True).count()
 
         today = timezone.now().date()
-        today_actions = Notification.objects.filter(created_at__date=today).count()
+        today_actions = ActivityLog.objects.filter(created_at__date=today).count()
 
-        recent_activity = Notification.objects.select_related('actor').all()[:10]
+        recent_activity = ActivityLog.objects.select_related('user').all()[:10]
         activity_data = [{
-            'id': n.id,
-            'actor_username': n.actor.username if n.actor else 'Sistema',
-            'notification_type': n.notification_type,
-            'title': n.title,
-            'message': n.message,
-            'expedient_id': n.expedient_id,
-            'created_at': n.created_at.isoformat(),
-        } for n in recent_activity]
+            'id': a.id,
+            'actor_username': a.user.username if a.user else 'Sistema',
+            'action_type': a.action_type,
+            'action': a.action,
+            'target': a.target,
+            'created_at': a.created_at.isoformat(),
+        } for a in recent_activity]
 
         total_exp = Expedient.objects.count()
         pending = Expedient.objects.filter(status='Pendiente').count()

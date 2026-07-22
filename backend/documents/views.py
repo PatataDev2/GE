@@ -175,6 +175,79 @@ class DocumentViewSet(viewsets.ModelViewSet):
             'document': DocumentSerializer(document).data
         })
 
+    @action(detail=True, methods=['post'])
+    def upload_requested_file(self, request, pk=None):
+        """Recepcionista sube el archivo a un documento solicitado por el admin.
+        Funciona para documentos sin archivo (file=null) y documentos con solicitud de actualización (pending_update_request=True).
+        """
+        document = self.get_object()
+        user = request.user
+
+        if user.rol != 'recepcionista':
+            return Response({'error': 'No tienes permiso'}, status=status.HTTP_403_FORBIDDEN)
+
+        if document.expedient.asinged_to != user:
+            return Response({'error': 'Este documento no te pertenece'}, status=status.HTTP_403_FORBIDDEN)
+
+        if not document.pending_update_request and document.file is not None:
+            return Response({'error': 'Este documento no tiene una actualización pendiente'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if 'file' not in request.data:
+            return Response({'error': 'Debes proporcionar un archivo'}, status=status.HTTP_400_BAD_REQUEST)
+
+        uploaded_file = request.data['file']
+        ext = os.path.splitext(uploaded_file.name)[1].lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            return Response({'error': f'Tipo de archivo no permitido ({ext})'}, status=status.HTTP_400_BAD_REQUEST)
+        if uploaded_file.size > MAX_FILE_SIZE:
+            return Response({'error': 'El archivo excede el tamaño máximo de 10 MB'}, status=status.HTTP_400_BAD_REQUEST)
+        detected_ext = validate_file_magic(uploaded_file)
+        if detected_ext is None:
+            return Response({'error': 'No se pudo verificar el tipo de archivo'}, status=status.HTTP_400_BAD_REQUEST)
+        if detected_ext != ext:
+            return Response({'error': 'El contenido del archivo no coincide con la extensión'}, status=status.HTTP_400_BAD_REQUEST)
+
+        old_file_path = document.file.path if document.file else None
+
+        document.file = uploaded_file
+        document.uploaded_by = user
+        document.approval_status = None
+        document.description_state = 'pendiente'
+        document.save()
+
+        if old_file_path and os.path.exists(old_file_path):
+            os.remove(old_file_path)
+
+        expedient = document.expedient
+        if expedient.status == 'Aprobado':
+            expedient.has_pending_updates = True
+            expedient.save(update_fields=['has_pending_updates', 'updated_at'])
+
+        from users.models import UsersCustom
+        analysts = UsersCustom.objects.filter(rol='analyst')
+        bulk_create_notifications(
+            recipients=analysts,
+            actor=user,
+            notification_type='revision',
+            title='Documento Actualizado para Revisión',
+            message=f'El recepcionista {user.username} ha actualizado el documento "{document.title}" del expediente "{document.expedient.title}". Requiere revisión.',
+            expedient_id=document.expedient.id,
+            document_id=document.id,
+        )
+
+        create_activity_log(
+            user=user,
+            action='Subió archivo de documento solicitado',
+            action_type='upload',
+            target=document.file.name,
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
+
+        return Response({
+            'message': 'Archivo subido exitosamente',
+            'document': DocumentSerializer(document).data
+        })
+
     @action(detail=True, methods=['get'])
     def view_pdf(self, request, pk=None):
         """Convierte DOCX a PDF y lo devuelve para visualizacion en el navegador"""
@@ -325,11 +398,17 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document.save()
 
         expedient = document.expedient
-        if expedient.status == 'Aprobado' and expedient.has_pending_updates:
-            still_pending = Document.objects.filter(expedient=expedient, approval_status=None).exists()
-            if not still_pending:
+
+        if document.pending_update_request and (action_type == 'reject' or request.user.rol == 'admin'):
+            document.pending_update_request = False
+            document.save(update_fields=['pending_update_request'])
+            if expedient.has_pending_updates:
                 expedient.has_pending_updates = False
                 expedient.save(update_fields=['has_pending_updates', 'updated_at'])
+        elif expedient.status == 'Aprobado':
+            if action_type == 'approve':
+                expedient.has_pending_updates = True
+            expedient.save(update_fields=['has_pending_updates', 'updated_at'])
 
         return Response({
             'id': document.id,

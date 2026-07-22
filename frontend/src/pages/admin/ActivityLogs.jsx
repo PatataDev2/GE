@@ -15,13 +15,14 @@ const actionTypes = {
 
 export default function ActivityLogs() {
   const [logs, setLogs] = useState([]);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
   useEffect(() => {
+    let mounted = true;
     const fetchLogs = () => {
       const params = {};
       if (filterType) params.action_type = filterType;
@@ -30,6 +31,7 @@ export default function ActivityLogs() {
 
       api.get('api/activity-logs/', { params })
         .then(res => {
+          if (!mounted) return;
           const data = Array.isArray(res.data) ? res.data : res.data.results || [];
           setLogs(data.map(log => ({
             id: log.id,
@@ -41,15 +43,21 @@ export default function ActivityLogs() {
             type: log.action_type,
           })));
         })
-        .catch(() => setLogs([]))
-        .finally(() => setLoading(false));
+        .catch(() => {
+          if (mounted) setLogs([]);
+        })
+        .finally(() => {
+          if (mounted) setLoading(false);
+        });
     };
 
     fetchLogs();
     const interval = setInterval(fetchLogs, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, [filterType, dateFrom, dateTo]);
-
   const filteredLogs = logs.filter(log => {
     const matchesSearch = !search || log.user?.toLowerCase().includes(search.toLowerCase()) ||
                           log.action?.toLowerCase().includes(search.toLowerCase()) ||
@@ -232,6 +240,11 @@ export default function ActivityLogs() {
 
         {/* Table */}
         <div className="table-container">
+          {loading ? (
+            <div className="p-8 text-center text-gray-400">Cargando actividad...</div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="p-8 text-center text-gray-400">No se encontraron registros de actividad</div>
+          ) : (
           <table>
             <thead>
               <tr>
@@ -278,8 +291,10 @@ export default function ActivityLogs() {
               ))}
             </tbody>
           </table>
+          )}
         </div>
       </div>
     </div>
   );
 }
+

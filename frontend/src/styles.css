@@ -215,7 +215,7 @@ body {
   display: flex;
   flex-direction: column;
   width: calc(100% - 260px);
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .header {
@@ -852,6 +852,7 @@ tr:hover {
   display: flex;
   border-bottom: 1px solid var(--border);
   margin-bottom: 1.5rem;
+  overflow-x: auto;
 }
 
 .tab {
@@ -1035,8 +1036,8 @@ tr:hover {
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  min-width: 320px;
-  max-height: 400px;
+  width: 380px;
+  max-height: 340px;
   overflow-y: auto;
   z-index: 100;
   animation: scaleIn 0.2s ease-out;

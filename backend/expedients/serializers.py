@@ -34,6 +34,7 @@ class ExpedientSerializer(serializers.ModelSerializer):
         'approved_by_username',
         'created_by',
         'created_by_username',
+        'rejection_reason',
         'created_at',
         'updated_at'
             ]

@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense } from 'react'
+import { lazy, Suspense } from 'react'
 import './styles.css'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -17,13 +17,13 @@ const DocumentTypesManagement = lazy(() => import('./pages/admin/DocumentTypesMa
 const ActivityLogs = lazy(() => import('./pages/admin/ActivityLogs'));
 const AprobarExpedientes = lazy(() => import('./pages/admin/AprobarExpedientes'));
 const SolicitarExpediente = lazy(() => import('./pages/admin/SolicitarExpediente'));
-const DocumentosPendientes = lazy(() => import('./pages/analyst/DocumentosPendientes'));
 const Expedientes = lazy(() => import('./pages/analyst/Expedientes'));
 const ValidarExpedientes = lazy(() => import('./pages/analyst/ValidarExpedientes'));
 const Reportes = lazy(() => import('./pages/analyst/Reportes'));
 const MisExpedientes = lazy(() => import('./pages/recepcionista/MisExpedientes'));
 const Notificaciones = lazy(() => import('./pages/recepcionista/Notificaciones'));
 const GestionCorrecciones = lazy(() => import('./pages/recepcionista/GestionCorrecciones'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 const spinner = (
   <div className="h-screen flex items-center justify-center bg-slate-100">
@@ -68,8 +68,6 @@ export default function App() {
            <Route path="admin/notificaciones" element={<ProtectedRoute allowedRoles={['admin', 'analyst', 'recepcionista']}><Notificaciones /></ProtectedRoute>} />
            <Route path="admin/aprobar-expedientes" element={<ProtectedRoute allowedRoles={['admin']}><AprobarExpedientes /></ProtectedRoute>} />
            <Route path="admin/solicitar-expediente" element={<ProtectedRoute allowedRoles={['admin']}><SolicitarExpediente /></ProtectedRoute>} />
-           <Route path="admin/pendientes" element={<ProtectedRoute allowedRoles={['admin', 'analyst']}><DocumentosPendientes /></ProtectedRoute>} />
-           <Route path="analyst/pendientes" element={<ProtectedRoute allowedRoles={['admin', 'analyst']}><DocumentosPendientes /></ProtectedRoute>} />
            <Route path="analyst/expedientes" element={<ProtectedRoute allowedRoles={['admin', 'analyst']}><Expedientes /></ProtectedRoute>} />
            <Route path="analyst/validar" element={<ProtectedRoute allowedRoles={['admin', 'analyst']}><ValidarExpedientes /></ProtectedRoute>} />
            <Route path="analyst/reportes" element={<ProtectedRoute allowedRoles={['admin', 'analyst']}><Reportes /></ProtectedRoute>} />
@@ -78,7 +76,7 @@ export default function App() {
            <Route path="recepcionista/gestion-correcciones" element={<ProtectedRoute allowedRoles={['admin', 'recepcionista']}><GestionCorrecciones /></ProtectedRoute>} />
            <Route path="recepcionista/notificaciones" element={<ProtectedRoute allowedRoles={['admin', 'analyst', 'recepcionista']}><Notificaciones /></ProtectedRoute>} />
          </Route>
-         <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
         </ErrorBoundary>

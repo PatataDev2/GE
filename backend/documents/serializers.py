@@ -29,16 +29,20 @@ class DocumentSerializer(serializers.ModelSerializer):
     docname = serializers.CharField(read_only=True)
     uploaded_by_name = serializers.CharField(source='uploaded_by.username', read_only=True)
     document_type_name = serializers.CharField(source='document_type.name', read_only=True, allow_null=True)
+    expedient_title = serializers.CharField(source='expedient.title', read_only=True)
 
     class Meta:
         model = Document
         fields = [
             'id', 'title', 'file', 'path', 'docname',
             'description_state', 'description_content', 'description_corrections',
-            'expedient', 'document_type', 'document_type_name', 'uploaded_by', 'uploaded_by_name',
-            'approval_status', 'expiration_date', 'uploaded_at'
+            'expedient', 'expedient_title', 'document_type', 'document_type_name', 'uploaded_by', 'uploaded_by_name',
+            'approval_status', 'pending_update_request', 'expiration_date', 'uploaded_at'
         ]
-        read_only_fields = ['uploaded_at', 'uploaded_by', 'approval_status']
+        read_only_fields = ['uploaded_at', 'uploaded_by', 'approval_status', 'pending_update_request']
+        extra_kwargs = {
+            'file': {'required': False, 'allow_null': True},
+        }
 
     def validate(self, data):
         request = self.context.get('request')

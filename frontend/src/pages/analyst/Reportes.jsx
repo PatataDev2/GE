@@ -6,8 +6,8 @@ const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', '
 const STATUS_MAP = {
   'Aprobado': 'Activos',
   'Finalizado': 'Activos',
-  'Pendiente': 'En Revisi\u00f3n',
-  'Proceso': 'En Revisi\u00f3n',
+  'Pendiente': 'En Revisión',
+  'Proceso': 'En Revisión',
   'Rechazado': 'Cerrados'
 };
 export default function Reportes() {
@@ -28,8 +28,8 @@ export default function Reportes() {
           api.get('api/documents/', { params: { page_size: 1000 }, signal: ac.signal }),
           api.get('api/departments/', { signal: ac.signal })
         ]);
-        setExpedientes(expRes.data);
-        setDocuments(docRes.data);
+        setExpedientes(expRes.data.results ?? expRes.data);
+        setDocuments(docRes.data.results ?? docRes.data);
         setDepartments(deptRes.data);
       } catch (err) {
         if (err.name !== 'CanceledError') {
@@ -43,9 +43,11 @@ export default function Reportes() {
     return () => ac.abort();
   }, []);
   const [filterFeedback, setFilterFeedback] = useState('');
+  const [filterApplied, setFilterApplied] = useState(false);
 
   const handleFilter = () => {
-    setFilterFeedback('Filtrado aplicado: ' + filteredExpedientes.length + ' expedientes');
+    setFilterApplied(true);
+    setFilterFeedback('Filtrado aplicado: ' + expedientes.length + ' expedientes');
     setTimeout(function() { setFilterFeedback(''); }, 3000);
   };
 
@@ -117,22 +119,24 @@ export default function Reportes() {
     const dept = departments.find(d => d.id === deptId);
     return dept?.name || 'Sin departamento';
   };
-  const filteredExpedientes = expedientes.filter(exp => {
-    const created = new Date(exp.created_at);
-    if (fechaDesde && created < new Date(fechaDesde)) return false;
-    if (fechaHasta && created > new Date(fechaHasta + 'T23:59:59')) return false;
-    return true;
-  });
+  const filteredExpedientes = filterApplied
+    ? expedientes.filter(exp => {
+        const created = new Date(exp.created_at);
+        if (fechaDesde && created < new Date(fechaDesde)) return false;
+        if (fechaHasta && created > new Date(fechaHasta + 'T23:59:59')) return false;
+        return true;
+      })
+    : expedientes;
   const expedientesPorEstado = (() => {
-    const groups = { 'Activos': 0, 'En Revisi\u00f3n': 0, 'Cerrados': 0 };
+    const groups = { 'Activos': 0, 'En Revisión': 0, 'Cerrados': 0 };
     filteredExpedientes.forEach(exp => {
-      const mapped = STATUS_MAP[exp.status] || 'En Revisi\u00f3n';
+      const mapped = STATUS_MAP[exp.status] || 'En Revisión';
       groups[mapped]++;
     });
     const total = filteredExpedientes.length || 1;
     return [
       { estado: 'Activos', cantidad: groups['Activos'], porcentaje: Math.round((groups['Activos'] / total) * 100) },
-      { estado: 'En Revisi\u00f3n', cantidad: groups['En Revisi\u00f3n'], porcentaje: Math.round((groups['En Revisi\u00f3n'] / total) * 100) },
+      { estado: 'En Revisión', cantidad: groups['En Revisión'], porcentaje: Math.round((groups['En Revisión'] / total) * 100) },
       { estado: 'Cerrados', cantidad: groups['Cerrados'], porcentaje: Math.round((groups['Cerrados'] / total) * 100) }
     ];
   })();
@@ -210,8 +214,8 @@ export default function Reportes() {
             </svg>
           </div>
           <div>
-            <div className="stat-value">{avgReviewDays} d\u00edas</div>
-            <div className="stat-label">Tiempo Promedio Revisi\u00f3n</div>
+            <div className="stat-value">{avgReviewDays} días</div>
+            <div className="stat-label">Tiempo Promedio Revisión</div>
           </div>
         </div>
         <div className="stat-card">
@@ -223,7 +227,7 @@ export default function Reportes() {
           </div>
           <div>
             <div className="stat-value">{tasaAprobacion}%</div>
-            <div className="stat-label">Tasa de Aprobaci\u00f3n</div>
+            <div className="stat-label">Tasa de Aprobación</div>
           </div>
         </div>
       </div>
@@ -261,6 +265,11 @@ export default function Reportes() {
             </svg>
             Filtrar
           </button>
+          {filterApplied && (
+            <button className="btn btn-secondary" onClick={() => { setFilterApplied(false); setFechaDesde(''); setFechaHasta(''); }}>
+              Limpiar filtros
+            </button>
+          )}
           <button className="btn btn-secondary" onClick={handleExportPDF}>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -280,7 +289,7 @@ export default function Reportes() {
         </div>
       </div>
       <div className="grid-2">
-        {/* Estado de Expedientes */}
+        {['resumen', 'estado'].includes(tipoReporte) && (
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">Expedientes por Estado</h3>
@@ -328,7 +337,7 @@ export default function Reportes() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-amber-500 rounded-sm"></div>
-              <span className="text-sm">En Revisi\u00f3n</span>
+              <span className="text-sm">En Revisión</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-slate-500 rounded-sm"></div>
@@ -336,7 +345,8 @@ export default function Reportes() {
             </div>
           </div>
         </div>
-        {/* Expedientes por Departamento */}
+        )}
+        {['resumen', 'departamento'].includes(tipoReporte) && (
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">Expedientes por Departamento</h3>
@@ -361,8 +371,9 @@ export default function Reportes() {
             ))}
           </div>
         </div>
+        )}
       </div>
-      {/* Actividad Mensual */}
+      {['resumen', 'actividad'].includes(tipoReporte) && (
       <div className="card mt-6">
         <div className="card-header">
           <h3 className="card-title">Actividad Mensual</h3>
@@ -376,7 +387,7 @@ export default function Reportes() {
                 <th>Expedientes Creados</th>
                 <th>Aprobados</th>
                 <th>Rechazados</th>
-                <th>Tasa de Aprobaci\u00f3n</th>
+                <th>Tasa de Aprobación</th>
               </tr>
             </thead>
             <tbody>
@@ -448,6 +459,7 @@ export default function Reportes() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

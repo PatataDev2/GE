@@ -1,11 +1,21 @@
+import os
+
 from django.db.models import Q
+from django.utils.timezone import now
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
 from document_types.models import DocumentType
 from documents.models import Document
+from documents.serializers import (
+    ALLOWED_EXTENSIONS,
+    MAX_FILE_SIZE,
+    DocumentSerializer,
+    validate_file_magic,
+)
 from notifications.utils import (
     bulk_create_notifications,
     create_activity_log,
@@ -59,37 +69,274 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def request_create(self, request):
-        """Admin solicita la creación de un expediente (notifica a analysts)"""
+        """Admin solicita la creación de un expediente. Crea el expediente y notifica al recepcionista + analysts"""
         if request.user.rol != 'admin':
             return Response({'error': 'Solo administradores pueden solicitar creación'}, status=status.HTTP_403_FORBIDDEN)
         person_name = request.data.get('person_name', '')
         description = request.data.get('description', '')
+        recepcionista_id = request.data.get('recepcionista_id')
+
         if not person_name:
             return Response({'error': 'Debes indicar el nombre de la persona'}, status=status.HTTP_400_BAD_REQUEST)
+        if not recepcionista_id:
+            return Response({'error': 'Debes seleccionar un recepcionista'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            recepcionista = UsersCustom.objects.get(id=recepcionista_id, rol='recepcionista')
+        except UsersCustom.DoesNotExist:
+            return Response({'error': 'Recepcionista no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+
+        expedient = Expedient.objects.create(
+            title=person_name,
+            description=description,
+            asinged_to=recepcionista,
+            created_by=request.user,
+            status='Solicitado',
+            is_draft=True,
+        )
+
+        create_notification(
+            recipient=recepcionista,
+            actor=request.user,
+            notification_type='asignado',
+            title='Nuevo Expediente Asignado',
+            message=f'Se te ha asignado el expediente "{expedient.title}" para su gestión. Motivo: {description}',
+            expedient_id=expedient.id,
+        )
         analysts = UsersCustom.objects.filter(rol='analyst')
         bulk_create_notifications(
             recipients=analysts,
             actor=request.user,
             notification_type='revision',
             title='Solicitud de Expediente',
-            message=f'El administrador solicita crear un expediente para {person_name}. Motivo: {description}',
-        )
-        admins = UsersCustom.objects.filter(rol='admin')
-        bulk_create_notifications(
-            recipients=admins,
-            actor=request.user,
-            notification_type='revision',
-            title='Solicitud de Expediente Enviada',
-            message=f'Se ha notificado a los analistas sobre la solicitud de expediente para {person_name}.',
+            message=f'El administrador ha creado un expediente para {person_name}. Asignado a {recepcionista.username}. Motivo: {description}',
+            expedient_id=expedient.id,
         )
         create_activity_log(
             user=request.user,
             action='Solicitó creación de expediente',
             action_type='create',
-            target=person_name,
+            target=f'#{expedient.id} - {person_name} → {recepcionista.username}',
             ip_address=self.request.META.get('REMOTE_ADDR'),
         )
-        return Response({'status': 'solicitud enviada a los analistas'})
+        return Response({'status': 'expediente creado y notificado', 'expedient_id': expedient.id})
+
+    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def request_document_update(self, request):
+        """Admin solicita actualizar documentos de un expediente existente.
+        Recibe analyst_id y recepcionista_id para enviar notificaciones a ambos.
+        """
+        if request.user.rol != 'admin':
+            return Response({'error': 'Solo administradores pueden solicitar actualización'}, status=status.HTTP_403_FORBIDDEN)
+
+        expedient_id = request.data.get('expedient_id')
+        description = request.data.get('description', '')
+        analyst_id = request.data.get('analyst_id')
+        recepcionista_id = request.data.get('recepcionista_id')
+
+        if not expedient_id:
+            return Response({'error': 'Debes seleccionar un expediente'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            expedient = Expedient.objects.get(id=expedient_id)
+        except Expedient.DoesNotExist:
+            return Response({'error': 'Expediente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        analyst = None
+        recepcionista = None
+        if analyst_id:
+            try:
+                analyst = UsersCustom.objects.get(id=analyst_id, rol='analyst')
+            except UsersCustom.DoesNotExist:
+                return Response({'error': 'Analista no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+        if recepcionista_id:
+            try:
+                recepcionista = UsersCustom.objects.get(id=recepcionista_id, rol='recepcionista')
+            except UsersCustom.DoesNotExist:
+                return Response({'error': 'Recepcionista no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+
+        files = request.FILES.getlist('files')
+        replace_doc_ids = request.data.getlist('replace_document_ids')
+        doc_titles = request.data.getlist('doc_titles')
+
+        created_docs = []
+        replaced_docs = []
+
+        for i, f in enumerate(files):
+            ext = os.path.splitext(f.name)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                return Response({'error': f'Tipo de archivo no permitido: {f.name}'}, status=status.HTTP_400_BAD_REQUEST)
+            if f.size > MAX_FILE_SIZE:
+                return Response({'error': f'El archivo excede 10 MB: {f.name}'}, status=status.HTTP_400_BAD_REQUEST)
+            detected = validate_file_magic(f)
+            if detected is None or detected != ext:
+                return Response({'error': f'El contenido no coincide con la extensión: {f.name}'}, status=status.HTTP_400_BAD_REQUEST)
+
+            title = doc_titles[i] if i < len(doc_titles) and doc_titles[i] else f.name
+
+            if i < len(replace_doc_ids) and replace_doc_ids[i] and replace_doc_ids[i] != 'null':
+                try:
+                    original_doc = Document.objects.get(id=replace_doc_ids[i], expedient=expedient)
+                    old_path = original_doc.file.path if original_doc.file else None
+                    original_doc.file = f
+                    original_doc.title = title
+                    original_doc.approval_status = None
+                    original_doc.description_state = 'pendiente'
+                    original_doc.description_corrections = ''
+                    original_doc.save()
+                    if old_path and os.path.exists(old_path):
+                        os.remove(old_path)
+                    replaced_docs.append(original_doc)
+                except Document.DoesNotExist:
+                    return Response({'error': f'Documento a reemplazar no encontrado: {replace_doc_ids[i]}'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                doc = Document.objects.create(
+                    title=title,
+                    file=f,
+                    expedient=expedient,
+                    uploaded_by=request.user,
+                    approval_status=None,
+                    description_state='pendiente',
+                )
+                created_docs.append(doc)
+
+        total_docs = len(created_docs) + len(replaced_docs)
+
+        msg_parts = [f'El administrador solicita actualizar documentos del expediente "{expedient.title}"']
+        if created_docs:
+            doc_names = ', '.join(f'"{d.title}"' for d in created_docs)
+            msg_parts.append(f'Documentos nuevos: {doc_names}')
+        if replaced_docs:
+            doc_names = ', '.join(f'"{d.title}"' for d in replaced_docs)
+            msg_parts.append(f'Documentos reemplazados: {doc_names}')
+        if description:
+            msg_parts.append(f'Motivo: {description}')
+        message = '. '.join(msg_parts)
+
+        if analyst:
+            create_notification(
+                recipient=analyst,
+                actor=request.user,
+                notification_type='revision',
+                title='Actualización de Documento - Revisión',
+                message=f'{message}. Revisa los documentos adjuntos.',
+                expedient_id=expedient.id,
+            )
+
+        if recepcionista:
+            create_notification(
+                recipient=recepcionista,
+                actor=request.user,
+                notification_type='revision',
+                title='Actualización de Documento - Gestión',
+                message=f'{message}. Gestiona los documentos en el expediente.',
+                expedient_id=expedient.id,
+            )
+
+        target_info = f'#{expedient.id} - {expedient.title} ({total_docs} documentos)'
+        if analyst and recepcionista:
+            target_info += f' → {analyst.username} / {recepcionista.username}'
+
+        create_activity_log(
+            user=request.user,
+            action='Subió documentos directamente' if not analyst and not recepcionista else 'Solicitó actualización de documentos',
+            action_type='create',
+            target=target_info,
+            ip_address=request.META.get('REMOTE_ADDR'),
+        )
+
+        return Response({
+            'status': 'documentos subidos exitosamente' if not analyst and not recepcionista else 'actualización enviada',
+            'created_documents': DocumentSerializer(created_docs, many=True).data,
+            'replaced_documents': DocumentSerializer(replaced_docs, many=True).data,
+        })
+
+    @action(detail=False, methods=['post'])
+    def request_document_only(self, request):
+        """Admin solicita que el recepcionista suba o actualice un documento.
+        Acepta document_id (documento existente) o document_type_id (tipo nuevo).
+        """
+        if request.user.rol != 'admin':
+            return Response({'error': 'Solo administradores pueden solicitar'}, status=status.HTTP_403_FORBIDDEN)
+
+        expedient_id = request.data.get('expedient_id')
+        document_id = request.data.get('document_id')
+        document_type_id = request.data.get('document_type_id')
+        description = request.data.get('description', '')
+        analyst_id = request.data.get('analyst_id')
+        recepcionista_id = request.data.get('recepcionista_id')
+
+        if not expedient_id or (not document_id and not document_type_id):
+            return Response({'error': 'Debes seleccionar expediente y documento o tipo de documento'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            expedient = Expedient.objects.get(id=expedient_id)
+        except Expedient.DoesNotExist:
+            return Response({'error': 'Expediente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        document = None
+        doc_name = ''
+        if document_id:
+            try:
+                document = Document.objects.get(id=document_id, expedient=expedient)
+                doc_name = document.title
+                document.pending_update_request = True
+                document.description_content = description
+                document.save(update_fields=['pending_update_request', 'description_content'])
+            except Document.DoesNotExist:
+                return Response({'error': 'Documento no encontrado en este expediente'}, status=status.HTTP_404_NOT_FOUND)
+        elif document_type_id:
+            try:
+                doc_type = DocumentType.objects.get(id=document_type_id)
+                doc_name = doc_type.name
+            except DocumentType.DoesNotExist:
+                return Response({'error': 'Tipo de documento no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        analyst = None
+        recepcionista = None
+        if analyst_id:
+            try:
+                analyst = UsersCustom.objects.get(id=analyst_id, rol='analyst')
+            except UsersCustom.DoesNotExist:
+                return Response({'error': 'Analista no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+        if recepcionista_id:
+            try:
+                recepcionista = UsersCustom.objects.get(id=recepcionista_id, rol='recepcionista')
+            except UsersCustom.DoesNotExist:
+                return Response({'error': 'Recepcionista no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if recepcionista:
+            create_notification(
+                recipient=recepcionista,
+                actor=request.user,
+                notification_type='revision',
+                title='Actualización de Documento Requerida',
+                message=f'Debes subir el documento "{doc_name}" en el expediente "{expedient.title}". Motivo: {description}',
+                expedient_id=expedient.id,
+                document_id=document.id if document else None,
+            )
+        if analyst:
+            create_notification(
+                recipient=analyst,
+                actor=request.user,
+                notification_type='revision',
+                title='Actualización de Documento - Revisión',
+                message=f'Se ha solicitado la actualización del documento "{doc_name}" en el expediente "{expedient.title}". Motivo: {description}',
+                expedient_id=expedient.id,
+                document_id=document.id if document else None,
+            )
+
+        create_activity_log(
+            user=request.user,
+            action='Solicitó actualización de documento',
+            action_type='edit',
+            target=f'#{expedient.id} - {expedient.title} / {doc_name}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
+
+        return Response({
+            'status': 'actualización enviada',
+        })
 
     @action(detail=True, methods=['post'])
     def reassign(self, request, pk=None):
@@ -105,6 +352,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         except UsersCustom.DoesNotExist:
             return Response({'error': 'Usuario no encontrado o no es recepcionista'}, status=status.HTTP_400_BAD_REQUEST)
         expedient.asinged_to = new_user
+        expedient.updated_at = now()
         expedient.save(update_fields=['asinged_to', 'updated_at'])
         create_notification(
             recipient=new_user,
@@ -197,7 +445,8 @@ class ExpedientViewSet(viewsets.ModelViewSet):
 
         expedient.is_draft = False
         expedient.status = 'Pendiente'
-        expedient.save(update_fields=['is_draft', 'status', 'updated_at'])
+        expedient.rejection_reason = None
+        expedient.save(update_fields=['is_draft', 'status', 'rejection_reason', 'updated_at'])
 
         analysts = UsersCustom.objects.filter(rol='analyst')
         bulk_create_notifications(
@@ -385,15 +634,17 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         if request.user.rol not in ['admin', 'analyst']:
             return Response({'error': 'No tienes permiso para rechazar expedientes'}, status=status.HTTP_403_FORBIDDEN)
         expedient = self.get_object()
-        expedient.status = 'Rechazado'
-        expedient.rejected_by = request.user
-        expedient.save(update_fields=['status', 'rejected_by', 'updated_at'])
         correcciones = request.data.get('correcciones', request.data.get('observation', ''))
+        if not correcciones or not correcciones.strip():
+            return Response({'error': 'Debes ingresar las correcciones requeridas'}, status=status.HTTP_400_BAD_REQUEST)
+        expedient.status = 'Pendiente'
+        expedient.is_draft = True
+        expedient.rejected_by = request.user
+        expedient.rejection_reason = correcciones.strip()
+        expedient.save(update_fields=['status', 'is_draft', 'rejected_by', 'rejection_reason', 'updated_at'])
+        Document.objects.filter(expedient=expedient).update(approval_status=None, description_state='pendiente')
         mensaje = f'Tu expediente "{expedient.title}" ha sido rechazado.'
-        if correcciones:
-            mensaje += f' Correcciones requeridas: {correcciones}'
-        else:
-            mensaje += ' Revisa las observaciones.'
+        mensaje += f' Correcciones requeridas: {correcciones}'
         create_notification(
             recipient=expedient.asinged_to,
             actor=request.user,

@@ -45,7 +45,9 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen bg-green-300 flex flex-col items-center justify-center">
+    <div className="h-screen bg-green-300 flex flex-col items-center justify-center relative">
+      <img src="/login-left.png" alt="" className="absolute top-0 left-0 w-32 h-32 object-contain pointer-events-none" />
+      <img src="/login-right.png" alt="" className="absolute top-0 right-0 w-32 h-32 object-contain pointer-events-none" />
       {loading && (
         <div className="fixed inset-0 z-[9999] bg-green-600/95 flex flex-col items-center justify-center" style={{ animation: 'fadeIn 0.25s ease-out' }}>
           <div className="relative w-[100px] h-[120px]" style={{ animation: 'sway 2.5s ease-in-out 1.2s infinite' }}>

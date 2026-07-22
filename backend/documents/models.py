@@ -51,6 +51,7 @@ class Document(models.Model):
     )
 
     approval_status = models.BooleanField(default=None, null=True, blank=True)
+    pending_update_request = models.BooleanField(default=False)
     expiration_date = models.DateField(null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

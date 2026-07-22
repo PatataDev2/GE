@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
@@ -6,6 +6,7 @@ import ManejoDocumentos from './ManejoDocumentos';
 import DocxPreview from './DocxPreview';
 import api from '../../api/axios';
 import { useToast } from '../../context/ToastContext';
+import { getFileType, resolveFileUrl, downloadFile } from '../../utils/preview';
 import { logError } from '../../utils/logger';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 export default function Expedientes() {
@@ -22,6 +23,7 @@ export default function Expedientes() {
   // eslint-disable-next-line no-unused-vars
   const [currentExpedientId, setCurrentExpedientId] = useState(null);
   const [docLoading, setDocLoading] = useState(false);
+  const [fetchError] = useState(null);
   const [showNewExpedienteModal, setShowNewExpedienteModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -32,6 +34,8 @@ export default function Expedientes() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [docxBlob, setDocxBlob] = useState(null);
+  const [expandedTitles, setExpandedTitles] = useState({});
+  const toggleTitle = (id) => setExpandedTitles(prev => ({ ...prev, [id]: !prev[id] }));
   const [kebabMenuId, setKebabMenuId] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReassignModal, setShowReassignModal] = useState(false);
@@ -154,44 +158,16 @@ export default function Expedientes() {
         } catch (err) {
           logError('Error loading DOCX:', err);
         }
-      } else if (getFileType(doc) !== 'image') {
-        window.open(fileUrl, '_blank', 'noopener,noreferrer');
-      } else {
+      } else if (getFileType(doc) === "pdf" || getFileType(doc) === "image" || getFileType(doc) === "video") {
         setShowPreviewModal(true);
+      } else {
+        window.open(fileUrl, "_blank", "noopener,noreferrer");
       }
     }
   };
   const handleDownloadDoc = (doc) => {
-    let fileUrl = null;
-    if (doc.file) {
-      const filePath = doc.file;
-      if (filePath.startsWith('http')) {
-        fileUrl = filePath;
-      } else if (filePath.startsWith('/')) {
-        fileUrl = `${BASE_API_URL}${filePath}`;
-      } else {
-        fileUrl = `${BASE_API_URL}/media/${filePath}`;
-      }
-    }
-    if (fileUrl) {
-      const link = document.createElement('a');
-      link.href = fileUrl;
-      link.download = doc.title || 'documento';
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-  const getFileType = (doc) => {
-    if (doc.file) {
-      const ext = doc.file.split('.').pop().toLowerCase();
-      if (['pdf'].includes(ext)) return 'pdf';
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
-      if (['mp4', 'webm', 'ogg'].includes(ext)) return 'video';
-      if (['docx'].includes(ext)) return 'docx';
-    }
-    return 'other';
+    const url = resolveFileUrl(doc, BASE_API_URL);
+    if (url) downloadFile(url, doc.title);
   };
   const openReviewModal = (doc, action) => {
     setSelectedDoc(doc);
@@ -276,6 +252,7 @@ export default function Expedientes() {
     return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
   const filtered = expedientes.filter(exp => {
+    if (exp.is_draft) return false;
     const matchesSearch = exp.title?.toLowerCase().includes(search.toLowerCase()) || exp.id.toString().includes(search);
      const status = getExpedienteStatus(exp);
     const matchesStatus = filterStatus === 'todos' || status === filterStatus;
@@ -315,7 +292,7 @@ export default function Expedientes() {
           />
         </div>
         <div className="flex bg-gray-100 p-1 rounded-2xl">
-          {['todos', 'en_revision', 'activo', 'rechazado'].map((st) => (
+          {['todos', 'en_revision', 'activo', 'pre_aprobado'].map((st) => (
             <button
               key={st}
               onClick={() => setFilterStatus(st)}
@@ -336,7 +313,9 @@ export default function Expedientes() {
           ))}
         </select>
       </div>
-      {loading ? (
+      {fetchError ? (
+          <div className='p-8 text-center text-red-400'>{fetchError}</div>
+        ) : loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
           {[1,2,3].map(i => <div key={i} className="h-48 bg-gray-200 rounded-3xl"></div>)}
         </div>
@@ -345,9 +324,9 @@ export default function Expedientes() {
           {filtered.map(exp => (
             <div 
               key={exp.id} 
-              className="group bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 relative overflow-hidden"
+              className="group bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 relative min-h-[240px]"
             >
-              <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 transition-transform group-hover:scale-150 ${
+              <div className={`absolute top-3 right-3 w-12 h-12 rounded-full opacity-10 transition-transform group-hover:scale-150 ${
   getExpedienteStatus(exp) === 'activo' ? 'bg-green-500' :
   getExpedienteStatus(exp) === 'pre_aprobado' ? 'bg-purple-500' :
   getExpedienteStatus(exp) === 'rechazado' ? 'bg-red-500' :
@@ -362,19 +341,24 @@ export default function Expedientes() {
   'bg-yellow-50 text-yellow-600 border-yellow-100'
 }`}>
   {getExpedienteStatus(exp) === 'activo' ? '✓ ACTIVO' :
-   getExpedienteStatus(exp) === 'pre_aprobado' ? '⬡ PRE-APROBADO' :
+   getExpedienteStatus(exp) === 'pre_aprobado' ? '✓ PRE-APROBADO' :
    getExpedienteStatus(exp) === 'rechazado' ? '✗ RECHAZADO' :
-   '⏳ REVISIÓN'}
+   'PENDIENTE'}
 </span>
 {exp.has_pending_updates && (
   <span className="text-[10px] font-bold px-3 py-1 rounded-full border bg-orange-50 text-orange-600 border-orange-100 animate-pulse">
-    ⚡ ACTUALIZACIONES
+    ↑ ACTUALIZACIONES
   </span>
 )}
 </div>
    </div>     
               <h3 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">{exp.title}</h3>
-              <p className="text-sm text-gray-500 mb-6 line-clamp-2">{exp.description || 'Sin descripción asignada.'}</p>
+              <p className="text-sm text-gray-500 mb-4 line-clamp-2">{exp.description || 'Sin descripción asignada.'}</p>
+              {exp.rejection_reason && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
+                  <strong>Correcciones pendientes:</strong> {exp.rejection_reason}
+                </div>
+              )}
               <div className="flex items-center gap-3 mb-6 bg-gray-50 p-3 rounded-2xl">
                 <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
                   {exp.asinged_to_username?.charAt(0) || 'A'}
@@ -438,6 +422,7 @@ export default function Expedientes() {
           setDocuments([]);
           setCurrentExpedientId(null);
         }}
+        size="lg"
         title={`Expediente #${selectedExpediente?.id} - ${selectedExpediente?.title}`}
         footer={
           <div className="flex gap-2 w-full">
@@ -484,8 +469,8 @@ export default function Expedientes() {
                           </svg>
                         )}
                       </div>
-                      <div className="document-info">
-                        <div className="document-name">{doc.title}</div>
+                      <div className="document-info flex-1 min-w-0" style={{overflow:'hidden'}}>
+                        <div className="document-name" onClick={() => toggleTitle(doc.id)} style={{cursor:'pointer', overflow:'hidden', textOverflow:'ellipsis', whiteSpace: expandedTitles[doc.id] ? 'normal' : 'nowrap', wordBreak: expandedTitles[doc.id] ? 'break-all' : undefined}}>{doc.title}</div>
                         <div className="document-size">{doc.document_type_name || 'Sin tipo'}</div>
                       </div>
                         {fileUrl && (
@@ -799,7 +784,7 @@ export default function Expedientes() {
               <div className="w-[10px] h-[10px] rounded-full mt-1 shrink-0" style={{ background: selectedExpediente?.status === 'Aprobado' ? '#10b981' : '#f59e0b' }}></div>
               <div>
                 <p className="font-semibold text-sm">Estado actual: {selectedExpediente?.status || 'Pendiente'}</p>
-                <p className="text-xs text-slate-500">Última actualización: {formatDate(selectedExpediente?.updated_at)}</p>
+                <p className="text-xs text-slate-500">última actualización: {formatDate(selectedExpediente?.updated_at)}</p>
               </div>
             </div>
             <div className="flex gap-4 items-start">
@@ -825,3 +810,6 @@ export default function Expedientes() {
     </div>
   );
 }
+
+
+

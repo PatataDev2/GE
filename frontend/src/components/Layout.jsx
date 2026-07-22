@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { getNotifications, getUnreadCount, markAllAsRead } from '../api/notifications.api';
 import { logError } from '../utils/logger';
-import api from '../api/users.api';
+import { useAuth } from '../context/AuthContext';
 
 // Icon components
 const Icons = {
@@ -125,12 +125,11 @@ const getMenuItems = (role) => {
   ];
 
   switch (role) {
-     case 'admin':
-        return [
-          ...commonItems,
-          { path: '/admin/aprobar-expedientes', label: 'Aprobar Expedientes', icon: Icons.CheckCircle },
-          { path: '/admin/solicitar-expediente', label: 'Solicitar Expediente', icon: Icons.Upload },
-          { path: '/admin/pendientes', label: 'Documentos Pendientes', icon: Icons.ClipboardList },
+      case 'admin':
+         return [
+           ...commonItems,
+           { path: '/admin/aprobar-expedientes', label: 'Aprobar Expedientes', icon: Icons.CheckCircle },
+           { path: '/admin/solicitar-expediente', label: 'Solicitar Expediente', icon: Icons.Upload },
           { path: '/admin/users', label: 'Gestión de Usuarios', icon: Icons.Users },
           { path: '/admin/departments', label: 'Gestión de Departamentos', icon: Icons.Folder },
           { path: '/admin/document-types', label: 'Gestión de Tipos de Documento', icon: Icons.FileText },
@@ -143,7 +142,6 @@ const getMenuItems = (role) => {
           ...commonItems,
           { path: '/analyst/expedientes', label: 'Expedientes', icon: Icons.Folder },
           { path: '/analyst/validar', label: 'Validar Expedientes', icon: Icons.CheckCircle },
-          { path: '/analyst/pendientes', label: 'Documentos Pendientes', icon: Icons.ClipboardList },
           { path: '/analyst/reportes', label: 'Reportes', icon: Icons.BarChart },
           { path: '/analyst/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
         ];
@@ -153,12 +151,6 @@ const getMenuItems = (role) => {
         { path: '/recepcionista/mis-expedientes', label: 'Mis Expedientes', icon: Icons.Folder },
         { path: '/recepcionista/gestion-correcciones', label: 'Gestión de Correcciones', icon: Icons.Activity },
         { path: '/recepcionista/notificaciones', label: 'Notificaciones', icon: Icons.Bell }
-      ];
-    case 'user':
-      return [
-        ...commonItems,
-        { path: '/user/profile', label: 'Mi Perfil', icon: Icons.Settings },
-        { path: '/user/expedientes', label: 'Mis Expedientes', icon: Icons.Folder }
       ];
     default:
       return commonItems;
@@ -186,13 +178,10 @@ export default function Layout({ children, user }) {
   
   const notifRoute = user?.role === 'admin' ? '/admin/notificaciones' : user?.role === 'analyst' ? '/analyst/notificaciones' : '/recepcionista/notificaciones';
   const menuItems = getMenuItems(user?.role);
-  
+  const { logout } = useAuth();
+
   const handleLogout = async () => {
-    try {
-      await api.post('users/api/v1/logout/');
-    } catch {
-      // Proceed with logout even if API call fails
-    }
+    await logout();
     navigate('/login');
   };
 
@@ -283,14 +272,19 @@ export default function Layout({ children, user }) {
     <div className="flex">
       {/* Sidebar */}
       <aside className="sidebar">
-        <div className="sidebar-logo flex justify-center">
-          <img 
-            src="/logo.jpg" 
-            alt="Expedientes App" 
-            className="w-16 h-16 rounded-lg mb-2"
-          />
-          <div className="text-center">
-            <span className="ml-2">ExpedientesApp</span>
+        <div className="sidebar-logo">
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center ring-2 ring-white/40">
+              <img 
+                src="/logo.jpg" 
+                alt="Expedientes App" 
+                className="w-14 h-14 rounded-full object-cover"
+              />
+            </div>
+            <div className="text-center mt-1">
+              <div className="text-base font-bold tracking-wide">ExpedientesApp</div>
+              <div className="text-[10px] text-white/60 font-medium -mt-0.5">Sistema de Gestión de Expedientes</div>
+            </div>
           </div>
         </div>
         
@@ -422,3 +416,4 @@ Layout.propTypes = {
     role: PropTypes.string,
   }),
 };
+

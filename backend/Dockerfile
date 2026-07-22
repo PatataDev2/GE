@@ -15,7 +15,10 @@ COPY . .
 
 RUN chmod +x entrypoint.sh
 
-RUN mkdir -p /app/logs /app/media
+RUN mkdir -p /app/logs /app/media && \
+    addgroup --system appgroup && \
+    adduser --system --ingroup appgroup appuser && \
+    chown -R appuser:appgroup /app
 
 EXPOSE 8000
 

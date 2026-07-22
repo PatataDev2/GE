@@ -127,17 +127,31 @@ export default function MisExpedientes() {
     }
     
     setUploading(true);
-    const formData = new FormData();
-    formData.append('title', title || file.name);
-    formData.append('file', file);
-    formData.append('expedient', selectedExpediente.id);
-    formData.append('document_type', documentType);
-    formData.append('description_content', description || '');
+    
+    const pendingRequest = documents.find(
+      d => String(d.document_type) === String(documentType) && (d.pending_update_request || !d.file)
+    );
     
     try {
-      await api.post('api/documents/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      if (pendingRequest) {
+        const formData = new FormData();
+        formData.append('file', file);
+        await api.post(`api/documents/${pendingRequest.id}/upload_requested_file/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        showToast("Archivo subido a la actualización existente", 'success');
+      } else {
+        const formData = new FormData();
+        formData.append('title', title || file.name);
+        formData.append('file', file);
+        formData.append('expedient', selectedExpediente.id);
+        formData.append('document_type', documentType);
+        formData.append('description_content', description || '');
+        await api.post('api/documents/', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        showToast("Documento subido exitosamente", 'success');
+      }
       
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (titleInputRef.current) titleInputRef.current.value = '';
@@ -146,7 +160,6 @@ export default function MisExpedientes() {
       
       await fetchDocuments(selectedExpediente.id);
       await fetchExpedientes();
-      showToast("Documento subido exitosamente", 'success');
     } catch (err) {
       logError("Error uploading:", err);
       showToast("Error al subir documento: " + (err.response?.data?.detail || err.message), 'error');
@@ -220,12 +233,12 @@ export default function MisExpedientes() {
   const totalExpedientes = Array.isArray(expedientes) ? expedientes.length : 0;
   const activosExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => e.status === 'Aprobado').length : 0;
   const enRevisionExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => e.status === 'Pendiente' || e.status === 'Proceso').length : 0;
-  const rechazadosExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => e.status === 'Rechazado').length : 0;
+  const rechazadosExpedientes = Array.isArray(expedientes) ? expedientes.filter((e) => e.rejection_reason).length : 0;
 
   function ExpedienteCard({ exp }) {
-    const statusClass = exp.status === 'Aprobado' ? 'badge-success' : exp.status === 'Rechazado' ? 'badge-danger' : 'badge-warning';
-    const statusText = exp.status === 'Aprobado' ? 'Aprobado' : exp.status === 'Rechazado' ? 'Rechazado' : 'En Revision';
-    const bgColor = exp.status === 'Rechazado' ? '#fef2f2' : (exp.status === 'Pendiente' || exp.status === 'Proceso') ? '#fefce8' : 'white';
+    const statusClass = exp.status === 'Aprobado' ? 'badge-success' : exp.rejection_reason ? 'badge-danger' : 'badge-warning';
+    const statusText = exp.status === 'Aprobado' ? 'Aprobado' : exp.rejection_reason ? 'Rechazado' : 'En Revision';
+    const bgColor = exp.rejection_reason ? '#fef2f2' : (exp.status === 'Pendiente' || exp.status === 'Proceso') ? '#fefce8' : 'white';
 
     return (
       <div className="border border-slate-200 rounded-xl p-6 mb-4" style={{ background: bgColor }}>
@@ -241,6 +254,11 @@ export default function MisExpedientes() {
             <p className="text-slate-500 text-sm">
               Departamento: {exp.department_name || 'No especificado'}
             </p>
+            {exp.rejection_reason && (
+              <div className="mt-2 p-3 bg-red-50 border border-red-200 border-l-4 border-l-red-500 rounded-lg text-xs text-red-700">
+                <strong>Correcciones pendientes:</strong> {exp.rejection_reason}
+              </div>
+            )}
           </div>
           <button className="btn btn-secondary" onClick={() => handleViewExpediente(exp)}>
             Ver Detalles
@@ -251,18 +269,17 @@ export default function MisExpedientes() {
   }
 
   function DocumentCard({ doc }) {
-    // False or None means "pending" until reviewer approves/rejects
     const hasApproved = doc.approval_status === true;
     const hasRejected = doc.approval_status === false;
     const isPending = !hasApproved && !hasRejected;
+    const hasUpdateRequest = doc.pending_update_request;
     
-    const bgColor = hasApproved ? '#d1fae5' : hasRejected ? '#fee2e2' : '#fef3c7';
+    const bgColor = hasUpdateRequest ? '#fff7ed' : hasApproved ? '#d1fae5' : hasRejected ? '#fee2e2' : '#fef3c7';
     const textColor = hasApproved ? '#10b981' : hasRejected ? '#ef4444' : '#f59e0b';
     const badgeClass = hasApproved ? 'badge-success' : hasRejected ? 'badge-danger' : 'badge-warning';
     const badgeText = hasApproved ? 'Aprobado' : hasRejected ? 'Rechazado' : 'Pendiente';
     const showComment = showCommentDocId === doc.id;
     
-    // Try to build the file URL from doc.file path
     let fileUrl = null;
     if (doc.file) {
       const filePath = doc.file;
@@ -286,30 +303,55 @@ export default function MisExpedientes() {
         <div className="document-info flex-1">
           <div className="document-name">{doc.title}</div>
           <div className="document-size">{doc.document_type_name || 'Sin tipo'}</div>
-          {showComment && doc.description_content && (
+          {hasUpdateRequest && (
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Actualización solicitada
+              </span>
+            </div>
+          )}
+          {hasUpdateRequest && doc.description_content && (
+            <div className="mt-1.5 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800">
+              <strong>Actualización:</strong> {doc.description_content}
+            </div>
+          )}
+          {showComment && doc.description_content && !hasUpdateRequest && (
             <div className="mt-2 p-2 bg-white rounded text-sm">
               <strong>Comentario:</strong> {doc.description_content}
             </div>
           )}
         </div>
-        {fileUrl && (
-          <button 
-            className="btn btn-secondary btn-sm mr-2"
-            onClick={() => handlePreviewDoc(doc)}
-          >
-            Ver
-          </button>
-        )}
-        {!isPending && doc.description_content && (
-          <button 
-            className="btn btn-sm mr-2"
-            style={{ background: hasRejected ? '#fecaca' : '#bbf7d0' }}
-            onClick={() => setShowCommentDocId(showComment ? null : doc.id)}
-          >
-            {showComment ? 'Ocultar' : 'Comentario'} 
-          </button>
-        )}
-        <span className={`badge ${badgeClass}`}>{badgeText}</span>
+        
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {hasUpdateRequest && (
+            <span className="badge" style={{ background: '#ffedd5', color: '#c2410c' }}>Actualizar</span>
+          )}
+          <span className={`badge ${badgeClass}`}>{badgeText}</span>
+          
+          {fileUrl && (
+            <button 
+              className="btn btn-secondary btn-sm"
+              onClick={() => handlePreviewDoc(doc)}
+            >
+              Ver
+            </button>
+          )}
+          
+          {!isPending && doc.description_content && !hasUpdateRequest && (
+            <button 
+              className="btn btn-sm"
+              style={{ background: hasRejected ? '#fecaca' : '#bbf7d0' }}
+              onClick={() => setShowCommentDocId(showComment ? null : doc.id)}
+            >
+              {showComment ? 'Ocultar' : 'Comentario'} 
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -406,7 +448,7 @@ export default function MisExpedientes() {
           (() => {
             const filtered = filterStatus === 'all'
               ? expedientes
-              : (Array.isArray(expedientes) ? expedientes.filter(e => e.status === filterStatus) : []);
+              : (Array.isArray(expedientes) ? expedientes.filter(e => filterStatus === 'Rechazado' ? !!e.rejection_reason : e.status === filterStatus) : []);
             return !filtered || filtered.length === 0 ? (
               <div className="empty-state">
                 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

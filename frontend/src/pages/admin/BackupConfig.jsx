@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import api from '../../api/axios';
 import { useToast } from '../../context/ToastContext';
@@ -13,6 +13,9 @@ export default function BackupConfig() {
   const [config] = useState({
     enabled: true, frequency: 'daily', time: '23:00', retention: 30, includeFiles: true
   });
+
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState(null); // { backup, action: 'delete'|'restore', step: 1|2 }
 
   useEffect(() => {
     const ac = new AbortController();
@@ -46,11 +49,17 @@ export default function BackupConfig() {
     }
   };
 
-  const handleDeleteBackup = async (backup) => {
-    if (!confirm(`¿Eliminar respaldo "${backup.name}"?`)) return;
+  const handleDeleteBackup = (backup) => {
+    setConfirmModal({ backup, action: 'delete', step: 1 });
+  };
+
+  const executeDelete = async () => {
+    const backup = confirmModal.backup;
+    setConfirmModal(null);
     try {
       await api.delete(`api/admin/backups/${backup.name}/`);
       setBackups(prev => prev.filter(b => b.id !== backup.id));
+      showToast('Respaldo eliminado', 'success');
     } catch (err) {
       logError('Error deleting backup:', err);
       showToast('Error al eliminar respaldo', 'error');
@@ -72,9 +81,17 @@ export default function BackupConfig() {
     }
   };
 
-  const handleRestoreBackup = async (backup) => {
-    if (!confirm(`¿Restaurar desde "${backup.name}"? Esto reemplazará TODOS los datos actuales.`)) return;
-    if (!confirm('¿Estás SEGURO? Esta acción NO se puede deshacer.')) return;
+  const handleRestoreBackup = (backup) => {
+    setConfirmModal({ backup, action: 'restore', step: 1 });
+  };
+
+  const executeRestore = async () => {
+    const backup = confirmModal.backup;
+    if (confirmModal.step === 1) {
+      setConfirmModal({ backup, action: 'restore', step: 2 });
+      return;
+    }
+    setConfirmModal(null);
     setRestoring(backup.name);
     try {
       await api.post(`api/admin/backups/${backup.name}/`);
@@ -86,6 +103,8 @@ export default function BackupConfig() {
       setRestoring(null);
     }
   };
+
+  const handleCloseConfirm = () => setConfirmModal(null);
 
   const completedCount = backups.filter(b => b.status === 'completado').length;
   const failedCount = backups.filter(b => b.status === 'fallido').length;
@@ -116,7 +135,7 @@ export default function BackupConfig() {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <div>
-            <div className="stat-value">{backups.length > 0 ? backups[0]?.date?.slice(0, 10) || '—' : '—'}</div>
+            <div className="stat-value">{backups.length > 0 ? backups[0]?.date?.slice(0, 10) || '\u2014' : '\u2014'}</div>
             <div className="stat-label">Último Respaldo</div>
           </div>
         </div>
@@ -247,6 +266,57 @@ export default function BackupConfig() {
         </div>
       </div>
 
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={!!confirmModal}
+        onClose={handleCloseConfirm}
+        title={
+          confirmModal?.action === 'delete'
+            ? 'Eliminar Respaldo'
+            : confirmModal?.step === 1
+              ? 'Restaurar Respaldo'
+              : '¿Est\u00e1s SEGURO?'
+        }
+        footer={
+          <div className="flex gap-2">
+            <button className="btn btn-secondary" onClick={handleCloseConfirm}>
+              Cancelar
+            </button>
+            <button
+              className={`btn ${confirmModal?.action === 'delete' ? 'btn-danger' : 'btn-warning'}`}
+              onClick={confirmModal?.action === 'delete' ? executeDelete : executeRestore}
+              disabled={restoring}
+            >
+              {confirmModal?.action === 'delete'
+                ? 'Eliminar'
+                : confirmModal?.step === 1
+                  ? 'Continuar'
+                  : 'Sí, Restaurar'}
+            </button>
+          </div>
+        }
+      >
+        {confirmModal?.action === 'delete' ? (
+          <p>
+            ¿Eliminar respaldo <strong>"{confirmModal?.backup?.name}"</strong>?
+          </p>
+        ) : confirmModal?.step === 1 ? (
+          <p>
+            ¿Restaurar desde <strong>"{confirmModal?.backup?.name}"</strong>?<br />
+            Esto reemplazará TODOS los datos actuales.
+          </p>
+        ) : (
+          <div>
+            <p className="text-red-500 font-bold mb-2">
+              ¡ATENCIÓN!
+            </p>
+            <p>
+              ¿Est\u00e1s SEGURO que deseas restaurar desde <strong>"{confirmModal?.backup?.name}"</strong>?<br />
+              Esta acción NO se puede deshacer.
+            </p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

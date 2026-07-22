@@ -5,19 +5,6 @@ import Layout from '../components/Layout';
 import api from '../api/axios';
 import { logError } from '../utils/logger';
 
-// Admin Dashboard imports
-import UsersManagement from './admin/UsersManagement';
-import ActivityLogs from './admin/ActivityLogs';
-import BackupConfig from './admin/BackupConfig';
-
-// Analyst Dashboard imports
-import Expedientes from './analyst/Expedientes';
-import ValidarExpedientes from './analyst/ValidarExpedientes';
-import Reportes from './analyst/Reportes';
-
-// Recepcionista Dashboard imports
-import MisExpedientes from './recepcionista/MisExpedientes';
-import Notificaciones from './recepcionista/Notificaciones';
 // Real user data from API
 const roleMap = {
   admin: 'admin', analyst: 'analyst', recepcionista: 'recepcionista',
@@ -46,12 +33,15 @@ const timeAgo = (isoString) => {
 };
 
 const typeLabels = {
-  asignado: 'asignó expediente',
-  aprobado: 'aprobó expediente',
-  rechazado: 'rechazó expediente',
-  revision: 'envió a revisión',
-  correccion: 'solicitó corrección',
-  info: 'informó',
+  create: 'creó',
+  edit: 'editó',
+  delete: 'eliminó',
+  approve: 'aprobó',
+  reject: 'rechazó',
+  upload: 'subió',
+  login: 'inició sesión',
+  logout: 'cerró sesión',
+  backup: 'hizo respaldo',
 };
 
 const AdminDashboardContent = () => {
@@ -153,9 +143,8 @@ const AdminDashboardContent = () => {
                   <div className="activity-content">
                     <div className="activity-text">
                       <strong>{item.actor_username}</strong>{' '}
-                      {typeLabels[item.notification_type] || item.notification_type}{' '}
-                      {item.expedient_id && <span className="font-mono text-blue-600">#{item.expedient_id}</span>}
-                      {item.message && !item.expedient_id && item.message}
+                      {typeLabels[item.action_type] || item.action_type}{' '}
+                      {item.target !== '-' ? <span className="font-mono text-blue-600">{item.target}</span> : item.action}
                     </div>
                     <div className="activity-time">{timeAgo(item.created_at)}</div>
                   </div>
@@ -195,6 +184,7 @@ const AdminDashboardContent = () => {
 const AnalystDashboardContent = () => {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   useEffect(() => {
     const ac = new AbortController();
     const fetchData = async () => {
@@ -204,6 +194,7 @@ const AnalystDashboardContent = () => {
       } catch (err) {
         if (err.name !== 'CanceledError') {
           logError('Error fetching expedientes:', err);
+          setError('Error al cargar los expedientes.');
         }
       } finally {
         setLoading(false);
@@ -223,6 +214,7 @@ const AnalystDashboardContent = () => {
   const aprobados = expedientes.filter(e => e.status === 'Aprobado' || e.status === 'Finalizado').length;
   const rechazados = expedientes.filter(e => e.status === 'Rechazado').length;
   const recientes = [...expedientes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+  if (error) return <div className="p-8 text-center text-red-400">{error}</div>;
   if (loading) return <div className="p-8 text-center text-gray-400">Cargando dashboard...</div>;
   return (
     <div>
@@ -338,6 +330,7 @@ const AnalystDashboardContent = () => {
 const RecepcionistaDashboardContent = () => {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [, setError] = useState(null);
   
   useEffect(() => {
     const ac = new AbortController();
@@ -352,6 +345,7 @@ const RecepcionistaDashboardContent = () => {
       } catch (err) {
         if (err.name !== 'CanceledError') {
           logError('Error fetching expedients:', err);
+          setError('Error al cargar mis expedientes.');
         }
       } finally {
         setLoading(false);
@@ -493,15 +487,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-// Export individual page components for routing
-export { 
-  UsersManagement, 
-  ActivityLogs, 
-  BackupConfig,
-  Expedientes,
-  ValidarExpedientes,
-  Reportes,
-  MisExpedientes,
-  Notificaciones
-};

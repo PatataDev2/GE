@@ -39,3 +39,8 @@ backend/media/
 # IDE settings
 .vscode/
 .idea/
+
+# Test artifacts / secrets
+cookies*.txt
+tmp_test_api.py
+*.pdf

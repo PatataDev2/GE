@@ -1,4 +1,3 @@
-﻿'use client';
 import { useState, useEffect } from 'react';
 import Modal from '../../components/Modal';
 import PreviewModal from '../../components/PreviewModal';
@@ -7,6 +6,8 @@ import api from '../../api/axios';
 import { useToast } from '../../context/ToastContext';
 import { logError } from '../../utils/logger';
 const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
+import { getFileType, resolveFileUrl } from '../../utils/preview';
+
 export default function AprobarExpedientes() {
   const { showToast } = useToast();
   const [tab, setTab] = useState('pendientes');
@@ -20,10 +21,12 @@ export default function AprobarExpedientes() {
   const [submitting, setSubmitting] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [correcciones, setCorrecciones] = useState('');
+  const [rejectDocId, setRejectDocId] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [docxBlob, setDocxBlob] = useState(null);
+
   const fetchAll = async (signal) => {
     setLoading(true);
     try {
@@ -67,78 +70,26 @@ export default function AprobarExpedientes() {
     await fetchDocuments(exp.id);
   };
 
-  const getDocStatus = (doc) => {
-    if (doc.approval_status === true) return 'aprobado';
-    if (doc.approval_status === false) return 'rechazado';
-    return 'pendiente';
-  };
-
-  const getFileType = (doc) => {
-    if (doc.file) {
-      const ext = doc.file.split('.').pop().toLowerCase();
-      if (['pdf'].includes(ext)) return 'pdf';
-      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
-      if (['mp4', 'webm', 'ogg'].includes(ext)) return 'video';
-      if (['docx'].includes(ext)) return 'docx';
-    }
-    return 'other';
-  };
-
   const handlePreviewDoc = async (doc) => {
-    let fileUrl = null;
-    if (doc.file) {
-      const filePath = doc.file;
-      if (filePath.startsWith('http')) {
-        fileUrl = filePath;
-      } else if (filePath.startsWith('/')) {
-        fileUrl = `${BASE_API_URL}${filePath}`;
-      } else {
-        fileUrl = `${BASE_API_URL}/media/${filePath}`;
-      }
-    }
-    if (fileUrl) {
-      setPreviewDoc(doc);
-      setPreviewUrl(fileUrl);
-      setDocxBlob(null);
-      const ext = doc.file.split('.').pop().toLowerCase();
-      if (ext === 'docx') {
-        try {
-          setShowPreviewModal(true);
-          const response = await api.get(fileUrl, { responseType: 'blob' });
-          const blob = response.data;
-          setDocxBlob(blob);
-        } catch (err) {
-          logError('Error loading DOCX:', err);
-          showToast('Error al cargar el documento', 'error');
-        }
-      } else if (ext === 'pdf' || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+    const fileUrl = resolveFileUrl(doc, BASE_API_URL);
+    if (!fileUrl) return;
+    setPreviewDoc(doc);
+    setPreviewUrl(fileUrl);
+    setDocxBlob(null);
+    const ext = doc.file.split('.').pop().toLowerCase();
+    if (ext === 'docx') {
+      try {
         setShowPreviewModal(true);
-      } else {
-        window.open(fileUrl, '_blank', 'noopener,noreferrer');
+        const response = await api.get(fileUrl, { responseType: 'blob' });
+        setDocxBlob(response.data);
+      } catch (err) {
+        logError('Error loading DOCX:', err);
+        showToast('Error al cargar el documento', 'error');
       }
-    }
-  };
-
-  const handleDownloadDoc = (doc) => {
-    let fileUrl = null;
-    if (doc.file) {
-      const filePath = doc.file;
-      if (filePath.startsWith('http')) {
-        fileUrl = filePath;
-      } else if (filePath.startsWith('/')) {
-        fileUrl = `${BASE_API_URL}${filePath}`;
-      } else {
-        fileUrl = `${BASE_API_URL}/media/${filePath}`;
-      }
-    }
-    if (fileUrl) {
-      const link = document.createElement('a');
-      link.href = fileUrl;
-      link.download = doc.title || 'documento';
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    } else if (ext === 'pdf' || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+      setShowPreviewModal(true);
+    } else {
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -157,6 +108,7 @@ export default function AprobarExpedientes() {
   };
 
   const handleOpenReject = () => {
+    setRejectDocId(null);
     setCorrecciones('');
     setShowRejectModal(true);
   };
@@ -168,19 +120,57 @@ export default function AprobarExpedientes() {
     }
     setSubmitting(true);
     try {
-      await api.post(`api/expedients/${selectedExp.id}/reject/`, {
-        correcciones: correcciones.trim(),
-      });
-      setShowRejectModal(false);
-      setIsModalOpen(false);
-      fetchAll();
+      if (rejectDocId) {
+        await api.post(`api/documents/${rejectDocId}/review/`, {
+          action: 'reject',
+          message: correcciones.trim(),
+          corrections: correcciones.trim(),
+        });
+        showToast('Documento rechazado', 'success');
+        setShowRejectModal(false);
+        setIsModalOpen(false);
+        fetchAll();
+      } else {
+        await api.post(`api/expedients/${selectedExp.id}/reject/`, {
+          correcciones: correcciones.trim(),
+        });
+        setShowRejectModal(false);
+        setIsModalOpen(false);
+        fetchAll();
+      }
     } catch (err) {
       logError('Error rejecting:', err);
-      showToast('Error al rechazar el expediente', 'error');
+      showToast('Error al rechazar', 'error');
     } finally {
       setSubmitting(false);
     }
   };
+
+  const handleApproveDoc = async (docId) => {
+    setSubmitting(true);
+    try {
+      await api.post(`api/documents/${docId}/review/`, { action: 'approve' });
+      showToast('Documento aprobado', 'success');
+      setIsModalOpen(false);
+      fetchAll();
+    } catch (err) {
+      logError('Error approving doc:', err);
+      showToast('Error al aprobar el documento', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRejectDoc = (docId) => {
+    setRejectDocId(docId);
+    setCorrecciones('');
+    setShowRejectModal(true);
+  };
+
+  const docsConActualizaciones = aprobados.filter(exp => exp.has_pending_updates);
+  const pendingDoc = selectedExp?.has_pending_updates
+    ? documents.find(doc => doc.pending_update_request === true)
+    : null;
 
   return (
     <div>
@@ -201,6 +191,12 @@ export default function AprobarExpedientes() {
           onClick={() => setTab('aprobados')}
         >
           Aprobados ({aprobados.length})
+        </button>
+        <button
+          className={`btn ${tab === 'documentos' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setTab('documentos')}
+        >
+          Documentos ({docsConActualizaciones.length})
         </button>
       </div>
 
@@ -227,7 +223,7 @@ export default function AprobarExpedientes() {
                       </div>
                       <h4 className="text-lg font-semibold mb-1">{exp.title}</h4>
                       <p className="text-slate-500 text-sm">
-                        {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
+                        {exp.department_name} - Asignado a: {exp.asinged_to_username || 'Sin asignar'}
                       </p>
                       {exp.approved_by_username && (
                         <p className="text-purple-500 text-xs mt-1">
@@ -247,45 +243,94 @@ export default function AprobarExpedientes() {
             ))}
           </div>
         )
-      ) : (
+      ) : tab === 'aprobados' ? (
         <div className="flex flex-col gap-4">
-          {aprobados.map(exp => (
-            <div key={exp.id} className="card border-l-4 border-l-green-500 cursor-pointer" onClick={() => handleOpenDetails(exp)}>
-              <div className="card-body">
-                <div className="flex justify-between items-start flex-wrap gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="font-mono font-bold text-base text-blue-600">#{exp.id}</span>
-                      <span className="badge badge-success">Aprobado</span>
-                    </div>
-                    <h4 className="text-lg font-semibold mb-1">{exp.title}</h4>
-                    <p className="text-slate-500 text-sm">
-                      {exp.department_name} • Asignado a: {exp.asinged_to_username || 'Sin asignar'}
-                    </p>
-                    {exp.approved_by_username && (
-                      <p className="text-green-500 text-xs mt-1">
-                        Aprobado por: {exp.approved_by_username}
+          {aprobados.length === 0 ? (
+            <div className="card">
+              <div className="empty-state">
+                <h3>No hay expedientes aprobados</h3>
+                <p>Los expedientes aprobados aparecerán aquí.</p>
+              </div>
+            </div>
+          ) : (
+            aprobados.map(exp => (
+              <div key={exp.id} className="card border-l-4 border-l-green-500 cursor-pointer" onClick={() => handleOpenDetails(exp)}>
+                <div className="card-body">
+                  <div className="flex justify-between items-start flex-wrap gap-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-mono font-bold text-base text-blue-600">#{exp.id}</span>
+                        <span className="badge badge-success">Aprobado</span>
+                      </div>
+                      <h4 className="text-lg font-semibold mb-1">{exp.title}</h4>
+                      <p className="text-slate-500 text-sm">
+                        {exp.department_name} - Asignado a: {exp.asinged_to_username || 'Sin asignar'}
                       </p>
-                    )}
-                    {exp.description && (
-                      <p className="text-slate-400 text-xs mt-1">{exp.description}</p>
-                    )}
-                  </div>
-                  <div className="text-xs text-slate-400 text-right">
-                    {new Date(exp.updated_at).toLocaleDateString()}
+                      {exp.approved_by_username && (
+                        <p className="text-green-500 text-xs mt-1">
+                          Aprobado por: {exp.approved_by_username}
+                        </p>
+                      )}
+                      {exp.description && (
+                        <p className="text-slate-400 text-xs mt-1">{exp.description}</p>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-400 text-right">
+                      {new Date(exp.updated_at).toLocaleDateString()}
+                    </div>
                   </div>
                 </div>
               </div>
+            ))
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {docsConActualizaciones.length === 0 ? (
+            <div className="card">
+              <div className="empty-state">
+                <h3>No hay documentos pendientes de aprobación</h3>
+                <p>Los documentos nuevos subidos a expedientes aprobados aparecerán aquí cuando el analista los haya pre-aprobado.</p>
+              </div>
             </div>
-          ))}
+          ) : (
+            docsConActualizaciones.map(exp => (
+              <div key={exp.id} className="card border-l-4 border-l-blue-500 cursor-pointer" onClick={() => handleOpenDetails(exp)}>
+                <div className="card-body">
+                  <div className="flex justify-between items-start flex-wrap gap-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-mono font-bold text-base text-blue-600">#{exp.id}</span>
+                        <span className="badge badge-info">Actualización</span>
+                      </div>
+                      <h4 className="text-lg font-semibold mb-1">{exp.title}</h4>
+                      <p className="text-slate-500 text-sm">
+                        {exp.department_name} - Asignado a: {exp.asinged_to_username || 'Sin asignar'}
+                      </p>
+                      <p className="text-blue-500 text-xs mt-1 font-medium">
+                        Documento actualizado pendiente de aprobación
+                      </p>
+                    </div>
+                    <div className="text-xs text-slate-400 text-right">
+                      {new Date(exp.updated_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 
       <Modal
         isOpen={isModalOpen && !!selectedExp}
         onClose={() => { setIsModalOpen(false); fetchAll(); }}
-        title={`Expediente #${selectedExp?.id}`}
-        size="md"
+        title={
+          selectedExp?.has_pending_updates
+            ? `Actualización - Expediente #${selectedExp?.id}`
+            : `Expediente #${selectedExp?.id}`
+        }
+        size="lg"
         footer={
           selectedExp?.status === 'Pre_Aprobado' ? (
             <div className="flex gap-2 w-full">
@@ -294,6 +339,15 @@ export default function AprobarExpedientes() {
               </button>
               <button className="btn btn-danger flex-1" onClick={handleOpenReject} disabled={submitting}>
                 Rechazar Expediente
+              </button>
+            </div>
+          ) : selectedExp?.has_pending_updates && pendingDoc ? (
+            <div className="flex gap-2 w-full">
+              <button className="btn btn-success flex-1" onClick={() => handleApproveDoc(pendingDoc.id)} disabled={submitting}>
+                {submitting ? 'Procesando...' : 'Aprobar Cambio'}
+              </button>
+              <button className="btn btn-danger flex-1" onClick={() => handleRejectDoc(pendingDoc.id)} disabled={submitting}>
+                Rechazar Cambio
               </button>
             </div>
           ) : null
@@ -312,64 +366,94 @@ export default function AprobarExpedientes() {
                 <p><strong>{selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Pre-aprobado'} por:</strong> {selectedExp.approved_by_username}</p>
               )}
               {selectedExp.description && <p><strong>Descripcion:</strong> {selectedExp.description}</p>}
-                <p className="mt-2">
-                  <strong>Estado:</strong>{' '}
-                  <span className={`badge ${selectedExp.status === 'Aprobado' ? 'badge-success' : selectedExp.status === 'Rechazado' ? 'badge-danger' : 'badge-warning'}`}>
-                    {selectedExp.status === 'Aprobado' ? 'Aprobado' : selectedExp.status === 'Rechazado' ? 'Rechazado' : 'Pre-Aprobado'}
-                  </span>
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Creado'} el: {new Date(selectedExp.updated_at).toLocaleString()}
-                </p>
+              {selectedExp.rejection_reason && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <strong>Correcciones pendientes:</strong> {selectedExp.rejection_reason}
+                </div>
+              )}
+              <p className="mt-2">
+                <strong>Estado:</strong>{' '}
+                <span className={`badge ${selectedExp.status === 'Aprobado' ? 'badge-success' : selectedExp.rejection_reason ? 'badge-danger' : 'badge-warning'}`}>
+                  {selectedExp.status === 'Aprobado' ? 'Aprobado' : selectedExp.rejection_reason ? 'Rechazado' : 'Pre-Aprobado'}
+                </span>
+              </p>
             </div>
-            <h4 className="mb-4 font-semibold text-base">
-              Documentos ({documents.length})
-            </h4>
-            {docLoading ? (
-              <div className="p-4 text-center">Cargando documentos...</div>
-            ) : documents.length === 0 ? (
-              <div className="p-4 text-center text-gray-400">No hay documentos en este expediente</div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {documents.map(doc => {
-                  const status = getDocStatus(doc);
-                  const bgColor = status === 'aprobado' ? '#f0fdf4' : status === 'rechazado' ? '#fef2f2' : '#fffbeb';
-                  const FileUrl = doc.file ? (doc.file.startsWith('http') ? doc.file : `${BASE_API_URL}${doc.file.startsWith('/') ? '' : '/media/'}${doc.file}`) : null;
-                  return (
-                    <div key={doc.id} className="document-item flex items-center gap-3 p-3 rounded-lg border border-slate-200" style={{ background: bgColor }}>
-                      <div className="document-icon shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                          <polyline points="14 2 14 8 20 8"/>
+
+            {selectedExp?.has_pending_updates ? (
+              docLoading ? (
+                <div className="p-4 text-center">Cargando documento...</div>
+              ) : !pendingDoc ? (
+                <div className="p-4 text-center text-gray-400">
+                  No se encontró el documento con actualización pendiente
+                </div>
+              ) : (
+                <div>
+                  <h4 className="mb-3 font-semibold text-sm text-blue-700">Documento actualizado por el recepcionista</h4>
+                  <div className="p-4 rounded-lg border border-blue-200 bg-blue-50">
+                    <div className="flex items-center gap-3 mb-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500 shrink-0">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-900 truncate">{pendingDoc.title}</p>
+                        <p className="text-xs text-gray-500">{pendingDoc.document_type_name || 'Sin tipo'}</p>
+                      </div>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handlePreviewDoc(pendingDoc)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
                         </svg>
-                      </div>
-                      <div className="document-info flex-1 min-w-0">
-                        <div className="document-name font-semibold text-sm">{doc.title}</div>
-                        <div className="document-size text-xs text-slate-500">{doc.document_type_name || 'Sin tipo'}</div>
-                      </div>
-                      <span className={`badge ${status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : 'badge-warning'} text-[0.7rem]`}>
-                        {status}
-                      </span>
-                      {FileUrl && (
-                        <div className="flex gap-1">
-                          <button className="btn btn-secondary btn-sm" onClick={() => handlePreviewDoc(doc)} title="Vista previa">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                              <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                          </button>
-                          <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadDoc(doc)} title="Descargar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                              <polyline points="7 10 12 15 17 10"/>
-                              <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                          </button>
-                        </div>
-                      )}
+                        Vista previa
+                      </button>
                     </div>
-                  );
-                })}
+                    {pendingDoc.description_content && (
+                      <p className="text-xs text-gray-600 mt-2 p-2 bg-white rounded border border-blue-100">
+                        {pendingDoc.description_content}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )
+            ) : (
+              <div>
+                <h4 className="mb-3 font-semibold text-sm">Documentos ({documents.length})</h4>
+                {documents.length === 0 ? (
+                  <div className="p-4 text-center text-gray-400">No hay documentos en este expediente</div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {documents.map(doc => {
+                      const status = !doc.file ? 'solicitado' : doc.approval_status === true ? 'aprobado' : doc.approval_status === false ? 'rechazado' : 'pendiente';
+                      const hasFile = !!doc.file;
+                      return (
+                        <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border border-slate-200">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400 shrink-0">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                          </svg>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate">{doc.title}</p>
+                            <p className="text-xs text-slate-500">{doc.document_type_name || 'Sin tipo'}</p>
+                          </div>
+                          <span className={`badge text-[0.7rem] ${status === 'aprobado' ? 'badge-success' : status === 'rechazado' ? 'badge-danger' : status === 'solicitado' ? 'badge-info' : 'badge-warning'}`}>
+                            {status === 'solicitado' ? 'Esperando subida' : status}
+                          </span>
+                          {hasFile && (
+                            <button className="btn btn-secondary btn-sm" onClick={() => handlePreviewDoc(doc)} title="Vista previa">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -379,7 +463,7 @@ export default function AprobarExpedientes() {
       <Modal
         isOpen={showRejectModal && !!selectedExp}
         onClose={() => setShowRejectModal(false)}
-        title={`Rechazar Expediente #${selectedExp?.id}`}
+        title={rejectDocId ? `Rechazar Documento` : `Rechazar Expediente #${selectedExp?.id}`}
         footer={
           <>
             <button className="btn btn-secondary flex-1" onClick={() => setShowRejectModal(false)} disabled={submitting}>
@@ -395,9 +479,11 @@ export default function AprobarExpedientes() {
           <p className="mb-2 text-sm text-slate-500">
             Expediente: <strong>{selectedExp?.title}</strong>
           </p>
-          <p className="mb-4 text-sm text-slate-500">
-            Recepcionista: <strong>{selectedExp?.asinged_to_username}</strong>
-          </p>
+          {!rejectDocId && (
+            <p className="mb-4 text-sm text-slate-500">
+              Recepcionista: <strong>{selectedExp?.asinged_to_username}</strong>
+            </p>
+          )}
           <div className="form-group">
             <label className="form-label text-red-500 font-semibold">
               Correcciones requeridas *
@@ -437,27 +523,6 @@ export default function AprobarExpedientes() {
             >
               Cerrar
             </button>
-            {previewUrl && (
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = previewUrl;
-                  link.download = previewDoc?.title || 'documento';
-                  link.target = '_blank';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1.5">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Descargar
-              </button>
-            )}
           </div>
         }
       >
@@ -494,20 +559,6 @@ export default function AprobarExpedientes() {
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
               <p className="text-gray-600 mb-4">La vista previa no está disponible para este tipo de archivo.</p>
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = previewUrl;
-                  link.download = previewDoc?.title || 'documento';
-                  link.target = '_blank';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }}
-              >
-                Descargar documento
-              </button>
             </div>
           )}
         </div>
