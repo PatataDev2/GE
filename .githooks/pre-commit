@@ -18,7 +18,7 @@ fi
 cd frontend || exit 1
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "\.(js|jsx)$" | sed 's|^frontend/||' || true)
 if [ -n "$STAGED_FILES" ]; then
-    echo "$STAGED_FILES" | xargs npx eslint --fix
+    echo "$STAGED_FILES" | xargs npx eslint --quiet --fix
     if [ $? -ne 0 ]; then
         echo ""
         echo "ERROR: ESLint found errors in staged files. Fix them before committing."
