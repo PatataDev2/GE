@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.utils.timezone import now
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
@@ -502,6 +502,9 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         })
 
     def perform_update(self, serializer):
+        expedient = serializer.instance
+        if expedient.status == 'Finalizado':
+            raise ValidationError('No se puede modificar un expediente cerrado')
         expedient = serializer.save()
         create_activity_log(
             user=self.request.user,
@@ -625,7 +628,7 @@ class ExpedientViewSet(viewsets.ModelViewSet):
         """Lista expedientes aprobados definitivamente"""
         if request.user.rol not in ['admin', 'analyst']:
             return Response({'error': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
-        expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by', 'rejected_by').filter(status='Aprobado', is_draft=False).order_by('-updated_at')
+        expedients = Expedient.objects.select_related('department', 'asinged_to', 'approved_by', 'created_by', 'rejected_by').filter(status__in=['Aprobado', 'Finalizado'], is_draft=False).order_by('-updated_at')
         serializer = self.get_serializer(expedients, many=True)
         return Response(serializer.data)
 
@@ -661,6 +664,33 @@ class ExpedientViewSet(viewsets.ModelViewSet):
             ip_address=self.request.META.get('REMOTE_ADDR'),
         )
         return Response({'status': 'expediente rechazado', 'id': expedient.id})
+
+    @action(detail=True, methods=['post'])
+    def close(self, request, pk=None):
+        """Cierra un expediente aprobado, cambiando su estado a Finalizado"""
+        if request.user.rol != 'admin':
+            return Response({'error': 'Solo administradores pueden cerrar expedientes'}, status=status.HTTP_403_FORBIDDEN)
+        expedient = self.get_object()
+        if expedient.status != 'Aprobado':
+            return Response({'error': 'Solo se pueden cerrar expedientes en estado Aprobado'}, status=status.HTTP_400_BAD_REQUEST)
+        expedient.status = 'Finalizado'
+        expedient.save(update_fields=['status', 'updated_at'])
+        create_notification(
+            recipient=expedient.asinged_to,
+            actor=request.user,
+            notification_type='info',
+            title='Expediente Cerrado',
+            message=f'El expediente "{expedient.title}" ha sido cerrado por el administrador.',
+            expedient_id=expedient.id,
+        )
+        create_activity_log(
+            user=request.user,
+            action='Cerró expediente',
+            action_type='edit',
+            target=f'#{expedient.id} - {expedient.title}',
+            ip_address=self.request.META.get('REMOTE_ADDR'),
+        )
+        return Response({'status': 'expediente cerrado', 'id': expedient.id})
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

@@ -26,6 +26,9 @@ export default function AprobarExpedientes() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [docxBlob, setDocxBlob] = useState(null);
+  const [kebabMenuId, setKebabMenuId] = useState(null);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [closeTarget, setCloseTarget] = useState(null);
 
   const fetchAll = async (signal) => {
     setLoading(true);
@@ -46,6 +49,12 @@ export default function AprobarExpedientes() {
   };
 
   useEffect(() => { const ac = new AbortController(); fetchAll(ac.signal); return () => ac.abort(); }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => setKebabMenuId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const fetchDocuments = async (expedientId) => {
     setDocLoading(true);
@@ -167,6 +176,29 @@ export default function AprobarExpedientes() {
     setShowRejectModal(true);
   };
 
+  const handleCloseClick = (exp) => {
+    setCloseTarget(exp);
+    setShowCloseModal(true);
+    setKebabMenuId(null);
+  };
+
+  const executeCloseExpedient = async () => {
+    if (!closeTarget) return;
+    setSubmitting(true);
+    try {
+      await api.post(`api/expedients/${closeTarget.id}/close/`);
+      setShowCloseModal(false);
+      setCloseTarget(null);
+      showToast('Expediente cerrado exitosamente', 'success');
+      fetchAll();
+    } catch (err) {
+      logError('Error closing expedient:', err);
+      showToast('Error al cerrar el expediente', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const docsConActualizaciones = aprobados.filter(exp => exp.has_pending_updates);
   const pendingDoc = selectedExp?.has_pending_updates
     ? documents.find(doc => doc.pending_update_request === true)
@@ -253,14 +285,25 @@ export default function AprobarExpedientes() {
               </div>
             </div>
           ) : (
-            aprobados.map(exp => (
-              <div key={exp.id} className="card border-l-4 border-l-green-500 cursor-pointer" onClick={() => handleOpenDetails(exp)}>
-                <div className="card-body">
+            aprobados.map(exp => {
+              const isClosed = exp.status === 'Finalizado';
+              return (
+              <div
+                key={exp.id}
+                className={`card border-l-4 cursor-pointer ${isClosed ? 'border-l-gray-400 opacity-60' : 'border-l-green-500'}`}
+                onClick={isClosed ? undefined : () => handleOpenDetails(exp)}
+                style={isClosed ? { pointerEvents: 'none' } : undefined}
+              >
+                <div className="card-body" style={isClosed ? { pointerEvents: 'auto' } : undefined}>
                   <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
                         <span className="font-mono font-bold text-base text-blue-600">#{exp.id}</span>
-                        <span className="badge badge-success">Aprobado</span>
+                        {isClosed ? (
+                          <span className="badge" style={{ background: '#e2e8f0', color: '#64748b' }}>Cerrado</span>
+                        ) : (
+                          <span className="badge badge-success">Aprobado</span>
+                        )}
                       </div>
                       <h4 className="text-lg font-semibold mb-1">{exp.title}</h4>
                       <p className="text-slate-500 text-sm">
@@ -275,13 +318,46 @@ export default function AprobarExpedientes() {
                         <p className="text-slate-400 text-xs mt-1">{exp.description}</p>
                       )}
                     </div>
-                    <div className="text-xs text-slate-400 text-right">
-                      {new Date(exp.updated_at).toLocaleDateString()}
+                    <div className="flex items-center gap-2">
+                      <div className="text-xs text-slate-400 text-right">
+                        {new Date(exp.updated_at).toLocaleDateString()}
+                      </div>
+                      {!isClosed && (
+                        <div className="relative">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setKebabMenuId(kebabMenuId === exp.id ? null : exp.id); }}
+                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                          >
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                            </svg>
+                          </button>
+                          {kebabMenuId === exp.id && (
+                            <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleCloseClick(exp); }}
+                                className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors text-red-600"
+                              >
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                                <div>
+                                  <p className="font-semibold">Cerrar Expediente</p>
+                                  <p className="text-xs text-gray-400">Cambiar estado a cerrado</p>
+                                </div>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       ) : (
@@ -356,14 +432,14 @@ export default function AprobarExpedientes() {
         {selectedExp && (
           <div>
             <div className="mb-4 p-4 rounded-lg" style={{
-              background: selectedExp.status === 'Aprobado' ? '#f0fdf4' : '#f8fafc',
-              border: selectedExp.status === 'Aprobado' ? '1px solid #bbf7d0' : '1px solid #e2e8f0'
+              background: selectedExp.status === 'Finalizado' ? '#f1f5f9' : selectedExp.status === 'Aprobado' ? '#f0fdf4' : '#f8fafc',
+              border: selectedExp.status === 'Finalizado' ? '1px solid #cbd5e1' : selectedExp.status === 'Aprobado' ? '1px solid #bbf7d0' : '1px solid #e2e8f0'
             }}>
               <p><strong>Titulo:</strong> {selectedExp.title}</p>
               <p><strong>Departamento:</strong> {selectedExp.department_name}</p>
               <p><strong>Asignado a:</strong> {selectedExp.asinged_to_username || 'Sin asignar'}</p>
               {selectedExp.approved_by_username && (
-                <p><strong>{selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Pre-aprobado'} por:</strong> {selectedExp.approved_by_username}</p>
+                <p><strong>{selectedExp.status === 'Finalizado' ? 'Aprobado' : selectedExp.status === 'Aprobado' ? 'Aprobado' : 'Pre-aprobado'} por:</strong> {selectedExp.approved_by_username}</p>
               )}
               {selectedExp.description && <p><strong>Descripcion:</strong> {selectedExp.description}</p>}
               {selectedExp.rejection_reason && (
@@ -373,8 +449,9 @@ export default function AprobarExpedientes() {
               )}
               <p className="mt-2">
                 <strong>Estado:</strong>{' '}
-                <span className={`badge ${selectedExp.status === 'Aprobado' ? 'badge-success' : selectedExp.rejection_reason ? 'badge-danger' : 'badge-warning'}`}>
-                  {selectedExp.status === 'Aprobado' ? 'Aprobado' : selectedExp.rejection_reason ? 'Rechazado' : 'Pre-Aprobado'}
+                <span className={`badge ${selectedExp.status === 'Finalizado' ? '' : selectedExp.status === 'Aprobado' ? 'badge-success' : selectedExp.rejection_reason ? 'badge-danger' : 'badge-warning'}`}
+                  style={selectedExp.status === 'Finalizado' ? { background: '#e2e8f0', color: '#64748b' } : undefined}>
+                  {selectedExp.status === 'Finalizado' ? 'Cerrado' : selectedExp.status === 'Aprobado' ? 'Aprobado' : selectedExp.rejection_reason ? 'Rechazado' : 'Pre-Aprobado'}
                 </span>
               </p>
             </div>
@@ -563,6 +640,39 @@ export default function AprobarExpedientes() {
           )}
         </div>
       </PreviewModal>
+
+      <Modal
+        isOpen={showCloseModal && !!closeTarget}
+        onClose={() => { setShowCloseModal(false); setCloseTarget(null); }}
+        title="Cerrar Expediente"
+        footer={
+          <div className="flex gap-2 w-full">
+            <button className="btn btn-secondary flex-1" onClick={() => { setShowCloseModal(false); setCloseTarget(null); }} disabled={submitting}>
+              Cancelar
+            </button>
+            <button className="btn btn-danger flex-1" onClick={executeCloseExpedient} disabled={submitting}>
+              {submitting ? 'Cerrando...' : 'Si, Cerrar'}
+            </button>
+          </div>
+        }
+      >
+        <div className="text-center py-4">
+          <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-500">
+              <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <p className="text-slate-600 mb-2">
+            Estas seguro de cerrar el expediente?
+          </p>
+          <p className="text-sm text-slate-400">
+            <strong>{closeTarget?.title}</strong>
+          </p>
+          <p className="text-xs text-slate-400 mt-2">
+            Una vez cerrado, no se podran realizar mas actualizaciones.
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }
